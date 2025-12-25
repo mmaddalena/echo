@@ -11,7 +11,7 @@ defmodule Echo.Application do
       # Start the HTTP server with Cowboy
       {Plug.Cowboy, [
         scheme: :http,
-        plug: Echo.Router,
+        plug: Echo.Http.Router,
         options: [port: 4000]
       ]}
     ]

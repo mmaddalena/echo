@@ -1,10 +1,17 @@
-defmodule Echo.Router do
+defmodule Echo.Http.Router do
   @moduledoc """
   HTTP router for the Echo chat application.
   Handles incoming HTTP requests and returns responses.
   """
 
   import Plug.Conn
+
+  defp extract_token(conn) do
+    case Plug.Conn.get_req_header(conn, "authorization") do
+      ["Bearer " <> token] -> {:ok, token}
+      _ -> {:error, :token_missing}
+    end
+  end
 
   def init(opts) do
     opts
@@ -28,12 +35,45 @@ defmodule Echo.Router do
     |> send_resp(200, ~s({"status": "ok"}))
   end
 
+
+
+
+  defp route(conn, "POST", "/api/login") do
+    with {:ok, body, conn} <- read_body(conn),
+         {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
+         {:ok, token} <- Echo.Auth.Accounts.login(u, p)
+    do
+      send_resp(conn, 200, Jason.encode!(%{token: token}))
+    else
+      _ -> send_resp(conn, 401, "Invalid credentials")
+    end
+  end
+
+
+  defp route(conn, "POST", "/api/message") do
+    with {:ok, body, conn} <- read_body(conn),
+         {:ok, %{"chat_id" => chat_id, "text" => text}} <- Jason.decode(body),
+         {:ok, token} <- extract_token(conn),
+         {:ok, result} <- Echo.Messages.send_message(token, chat_id, text)
+    do
+      send_resp(conn, 200, Jason.encode!(result))
+    else
+      {:error, :token_missing} -> send_resp(conn, 401, "Token Missing")
+      {:error, reason} -> send_resp(conn, 400, Jason.encode!(%{error: reason}))
+    end
+  end
+
+
+
+
+
   # Fallback for unmapped routes
   defp route(conn, _method, _path) do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(404, ~s({"error": "Not found"}))
   end
+
 
   defp html_response do
     """
