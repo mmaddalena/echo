@@ -6,13 +6,6 @@ defmodule Echo.Http.Router do
 
   import Plug.Conn
 
-  defp extract_token(conn) do
-    case Plug.Conn.get_req_header(conn, "authorization") do
-      ["Bearer " <> token] -> {:ok, token}
-      _ -> {:error, :token_missing}
-    end
-  end
-
   def init(opts) do
     opts
   end
@@ -74,8 +67,15 @@ defmodule Echo.Http.Router do
     |> send_resp(404, ~s({"error": "Not found"}))
   end
 
+  # Helper
+  defp extract_token(conn) do
+    case Plug.Conn.get_req_header(conn, "authorization") do
+      ["Bearer " <> token] -> {:ok, token}
+      _ -> {:error, :token_missing}
+    end
+  end
 
-  defp html_response do
+    defp html_response do
     """
     <!DOCTYPE html>
     <html>

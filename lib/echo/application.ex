@@ -7,6 +7,27 @@ defmodule Echo.Application do
 
   @impl true
   def start(_type, _args) do
+
+
+#    # Para que ande con el websocket
+#    dispatch = :cowboy_router.compile([
+#      {:_, [
+#        {"/ws", Echo.Websocket.UserSocket, []},
+#        {:_, Plug.Cowboy.Handler, {Echo.Router, []}}
+#      ]}
+#    ])
+#
+#    children = [
+#      {
+#        :cowboy_clear,
+#        %{
+#          id: :http,
+#          port: 4000,
+#          dispatch: dispatch
+#        }
+#      }
+#    ]
+#
     children = [
       # Start the HTTP server with Cowboy
       {Plug.Cowboy, [
