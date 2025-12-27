@@ -18,16 +18,27 @@ defmodule Echo.Users.UserSession do
   use GenServer
 
   def start_link(user_id) do
-    GenServer.start_link(__MODULE__, user_id)
+    GenServer.start_link(__MODULE__, %{user_id: user_id})
   end
 
   def attach_socket(us_pid, socket_pid) do
     GenServer.cast(us_pid, {:attach_socket, socket_pid})
   end
 
+  def open_chat(us_pid, chat_id) do
+    GenServer.cast(us_pid, {:open_chat, chat_id})
+  end
+
+  def send_msg(us_pid, chat_id, text) do
+    GenServer.cast(us_pid, {:send_msg, %{chat_id: chat_id, text: text}})
+  end
+
   def receive_message(us_pid, msg) do
     GenServer.cast(us_pid, {:receive_message, msg})
   end
+
+
+
 
 
 
@@ -47,6 +58,14 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:attach_socket, socket_pid}, state) do
     Process.link(socket_pid)
     {:noreply, %{state | socket: socket_pid}}
+  end
+
+  @impl true
+  def handle_cast({:open_chat, chat_id}, state) do
+    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
+    {:ok, chat_info} = Echo.Chats.ChatSession.open_chat(cs_pid)
+    send(state.socket, {:send, chat_info}) # TODO asumimos que chat_info es un map
+    {:noreply, state} # TODO: ACTUALIZAR LAST ACTIVITY
   end
 
   @impl true

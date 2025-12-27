@@ -43,18 +43,7 @@ defmodule Echo.Http.Router do
   end
 
 
-  defp route(conn, "POST", "/api/message") do
-    with {:ok, body, conn} <- read_body(conn),
-         {:ok, %{"chat_id" => chat_id, "text" => text}} <- Jason.decode(body),
-         {:ok, token} <- extract_token(conn),
-         {:ok, result} <- Echo.Messages.send_message(token, chat_id, text)
-    do
-      send_resp(conn, 200, Jason.encode!(result))
-    else
-      {:error, :token_missing} -> send_resp(conn, 401, "Token Missing")
-      {:error, reason} -> send_resp(conn, 400, Jason.encode!(%{error: reason}))
-    end
-  end
+
 
 
 
@@ -67,13 +56,6 @@ defmodule Echo.Http.Router do
     |> send_resp(404, ~s({"error": "Not found"}))
   end
 
-  # Helper
-  defp extract_token(conn) do
-    case Plug.Conn.get_req_header(conn, "authorization") do
-      ["Bearer " <> token] -> {:ok, token}
-      _ -> {:error, :token_missing}
-    end
-  end
 
     defp html_response do
     """
