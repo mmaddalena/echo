@@ -1,21 +1,29 @@
 # Echo
 
-**TODO: Add description**
+**Chat Application**
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `echo` to your list of dependencies in `mix.exs`:
+### Get dependencies
 
-```elixir
-def deps do
-  [
-    {:echo, "~> 0.1.0"}
-  ]
-end
+```
+mix deps.get
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/echo>.
+### Up the database
 
+```
+make db
+```
+
+### Create the db
+
+```
+mix ecto.create
+```
+
+### Create the tables in the db
+
+```
+mix ecto.migrate
+```

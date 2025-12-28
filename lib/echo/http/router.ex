@@ -28,26 +28,66 @@ defmodule Echo.Http.Router do
     |> send_resp(200, ~s({"status": "ok"}))
   end
 
-
-
-
   defp route(conn, "POST", "/api/login") do
     with {:ok, body, conn} <- read_body(conn),
          {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
-         {:ok, token} <- Echo.Auth.Accounts.login(u, p)
-    do
+         {:ok, token} <- Echo.Auth.Accounts.login(u, p) do
       send_resp(conn, 200, Jason.encode!(%{token: token}))
     else
-      _ -> send_resp(conn, 401, "Invalid credentials")
+      {:error, :user_not_found} ->
+        send_resp(conn, 401, Jason.encode!(%{error: "User not found"}))
+
+      {:error, :invalid_password} ->
+        send_resp(conn, 401, Jason.encode!(%{error: "Invalid password"}))
+
+      _ ->
+        send_resp(conn, 401, Jason.encode!(%{error: "Invalid credentials"}))
     end
   end
 
+  defp route(conn, "POST", "/api/register") do
+    with {:ok, body, conn} <- read_body(conn),
+         {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
+         email = Map.get(body, "email", nil),
+         {:ok, token} <- Echo.Auth.Accounts.register(u, p, email) do
+      send_resp(conn, 201, Jason.encode!(%{token: token}))
+    else
+      {:error, :username_taken} ->
+        send_resp(conn, 409, Jason.encode!(%{error: "Username already taken"}))
 
+      {:error, changeset} when is_map(changeset) ->
+        errors = Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
+        send_resp(conn, 400, Jason.encode!(%{error: "Validation failed", details: errors}))
 
+      _ ->
+        send_resp(conn, 400, Jason.encode!(%{error: "Registration failed"}))
+    end
+  end
 
+  defp route(conn, "POST", "/api/validate-token") do
+    with {:ok, body, conn} <- read_body(conn),
+         {:ok, %{"token" => token}} <- Jason.decode(body),
+         {:ok, user_id} <- Echo.Auth.Auth.verify_token(token) do
+      send_resp(conn, 200, Jason.encode!(%{valid: true, user_id: user_id}))
+    else
+      {:error, :token_expired} ->
+        send_resp(conn, 401, Jason.encode!(%{valid: false, error: "Token expired"}))
 
+      {:error, _} ->
+        send_resp(conn, 401, Jason.encode!(%{valid: false, error: "Invalid token"}))
 
+      _ ->
+        send_resp(conn, 400, Jason.encode!(%{error: "Bad request"}))
+    end
+  end
 
+  # Helper para errores de Ecto (si usas base de datos)
+  defp translate_error({msg, opts}) do
+    # Implementación básica - puedes expandir esto
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", to_string(value))
+    end)
+  end
 
   # Fallback for unmapped routes
   defp route(conn, _method, _path) do
@@ -56,8 +96,7 @@ defmodule Echo.Http.Router do
     |> send_resp(404, ~s({"error": "Not found"}))
   end
 
-
-    defp html_response do
+  defp html_response do
     """
     <!DOCTYPE html>
     <html>
