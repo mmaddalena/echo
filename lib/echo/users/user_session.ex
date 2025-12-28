@@ -54,15 +54,16 @@ defmodule Echo.Users.UserSession do
 
 
 
-
-
   ##### Callbacks
 
   @impl true
   def init(user_id) do
+    user = Echo.Users.User.get(user_id)
     state = %{
       user_id: user_id,
-      socket: nil
+      user: user,
+      socket: nil,
+      current_chat_id: nil
     }
     {:ok, state}
   end
@@ -72,6 +73,13 @@ defmodule Echo.Users.UserSession do
   @impl true
   def handle_cast({:attach_socket, socket_pid}, state) do
     Process.link(socket_pid)
+    user_info = %{
+      user_id: user_id,
+      user: state.user,
+      current_chat_id: state.current_chat_id
+      # TODO: Faltan los n últimos chats, para listárselos
+    }
+    send(state.socket, {:send, {:user_info, user_info}}) # Le mandamos el state inicial al front D1
     {:noreply, %{state | socket: socket_pid}}
   end
 
@@ -79,7 +87,7 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:open_chat, chat_id}, state) do
     {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
     {:ok, chat_info} = Echo.Chats.ChatSession.open_chat(cs_pid)
-    send(state.socket, {:send, {:chat_info, chat_info}}) # TODO asumimos que chat_info es un map
+    send(state.socket, {:send, {:chat_info, chat_info}}) # asumimos que chat_info es un map
     {:noreply, state} # TODO: ACTUALIZAR LAST ACTIVITY
   end
 
