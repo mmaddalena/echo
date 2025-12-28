@@ -18,8 +18,15 @@ defmodule Echo.Users.UserSession do
   use GenServer
 
   def start_link(user_id) do
-    GenServer.start_link(__MODULE__, %{user_id: user_id})
+    GenServer.start_link(
+      __MODULE__,
+      user_id,
+      name: {:via, Registry, {Echo.ProcessRegistry, {:user, user_id}}}
+    )
   end
+
+
+  ##### Funciones llamadas desde el socket
 
   def attach_socket(us_pid, socket_pid) do
     GenServer.cast(us_pid, {:attach_socket, socket_pid})
@@ -29,8 +36,15 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:open_chat, chat_id})
   end
 
-  def send_msg(us_pid, chat_id, text) do
-    GenServer.cast(us_pid, {:send_msg, %{chat_id: chat_id, text: text}})
+  def send_message(us_pid, chat_id, text) do
+    GenServer.cast(us_pid, {:send_message, %{chat_id: chat_id, text: text}})
+  end
+
+
+  ##### Funciones llamadas desde el dominio
+
+  def message_sent(us_pid, msg) do
+    GenServer.cast(us_pid, {:message_sent, msg})
   end
 
   def receive_message(us_pid, msg) do
@@ -54,6 +68,7 @@ defmodule Echo.Users.UserSession do
   end
 
 
+
   @impl true
   def handle_cast({:attach_socket, socket_pid}, state) do
     Process.link(socket_pid)
@@ -64,15 +79,29 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:open_chat, chat_id}, state) do
     {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
     {:ok, chat_info} = Echo.Chats.ChatSession.open_chat(cs_pid)
-    send(state.socket, {:send, chat_info}) # TODO asumimos que chat_info es un map
+    send(state.socket, {:send, {:chat_info, chat_info}}) # TODO asumimos que chat_info es un map
     {:noreply, state} # TODO: ACTUALIZAR LAST ACTIVITY
   end
 
   @impl true
-  def handle_info({:ws_msg, payload}, state) do
-    # Mensaje entrante del socket.
-    {:noreply, state}
+  def handle_cast({:send_message, %{chat_id: chat_id, client_msg_id: client_msg_id, text: text}}, state) do
+    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
+    Echo.Chats.ChatSession.send_message(cs_pid, state.user_id, client_msg_id, text)
+    {:noreply, state} # TODO: ACTUALIZAR LAST ACTIVITY
   end
+
+  @impl true
+  def handle_cast({:message_sent, msg}, state) do
+    send(state.socket, {:send, {:message_sent, msg}}) # msg contiene el client_msg_id
+    {:noreply, state} # TODO: ACTUALIZAR LAST ACTIVITY
+  end
+
+
+
+
+
+
+
 
   @impl true
   def terminate(_reason, state) do
