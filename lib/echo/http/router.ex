@@ -11,8 +11,19 @@ defmodule Echo.Http.Router do
   end
 
   def call(conn, _opts) do
-    route(conn, conn.method, conn.request_path)
+    conn
+    |> CORSPlug.call(cors_opts())
+    |> route(conn.method, conn.request_path)
   end
+
+  defp cors_opts do
+    CORSPlug.init(
+      origin: ["http://localhost:5173"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      headers: ["Content-Type", "Authorization"]
+    )
+  end
+
 
   # Route for GET /
   defp route(conn, "GET", "/") do
@@ -32,6 +43,7 @@ defmodule Echo.Http.Router do
     with {:ok, body, conn} <- read_body(conn),
          {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
          {:ok, token} <- Echo.Auth.Accounts.login(u, p) do
+          #IO.puts("body: #{body}\n User: #{u}\n pass: #{p}\n token: #{token}")
       send_resp(conn, 200, Jason.encode!(%{token: token}))
     else
       {:error, :user_not_found} ->
@@ -157,4 +169,7 @@ defmodule Echo.Http.Router do
     </html>
     """
   end
+
+
+
 end
