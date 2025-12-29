@@ -7,7 +7,9 @@ deps:
 	mix deps.get
 setup:
 	mix ecto.setup
-make run:
+run:
 	mix run --no-halt
 stop:
 	docker compose down
+seed_users:
+	mix run priv/repo/seeds/seed_usuarios.exs
