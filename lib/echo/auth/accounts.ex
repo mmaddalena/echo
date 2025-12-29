@@ -19,7 +19,9 @@ defmodule Echo.Auth.Accounts do
          {:ok, token} <- Auth.create_token(user_id) do
       {:ok, token}
     else
-      {:error, reason} -> {:error, reason}
+      {:error, reason} ->
+        IO.puts(reason)
+        {:error, reason}
     end
   end
 

@@ -9,8 +9,39 @@ function handleLogin() {
   console.log('Username:', username.value)
   console.log('Password:', password.value)
 
-  // Cambiar por
-  // llamada al login backend -> guardar el token -> abrir WS -> redirigir a /chats
+  try {
+    const res = fetch('http://localhost:4000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username.value, password: password.value })
+    })
+
+    if (!res.ok) throw new Error('Credenciales incorrectas')
+
+    const data = res.json()
+    const token = data.token
+
+    // Guardás token (temporal, memoria)
+    sessionStorage.setItem('token', token)
+
+    // Abrir WebSocket con token
+    const ws = new WebSocket(`http://localhost:4000/ws?token=${token}`)
+
+    ws.onopen = () => {
+      console.log('WS conectado')
+    }
+
+    ws.onmessage = (event) => {
+      console.log('Mensaje del backend:', event.data)
+    }
+
+    // Redirigir a chats
+    router.push('/chats')
+
+  } catch (err) {
+    console.error(err)
+    alert('Login fallido')
+  }
 }
 </script>
 

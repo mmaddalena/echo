@@ -25,6 +25,7 @@ defmodule Echo.MixProject do
     [
       {:plug_cowboy, "~> 2.6"},
       {:plug, "~> 1.14"},
+      {:cors_plug, "~> 3.0"},
       {:jason, "~> 1.4"},
       {:joken, "~> 2.5"},
       {:ecto_sql, "~> 3.10"},
