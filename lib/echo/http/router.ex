@@ -64,6 +64,10 @@ defmodule Echo.Http.Router do
     end
   end
 
+  defp route(conn, "POST", "/ws") do
+    Plug.Cowboy.upgrade_adapter(conn, Echo.Websocket.UserSocket, [])
+  end
+
   defp route(conn, "POST", "/api/validate-token") do
     with {:ok, body, conn} <- read_body(conn),
          {:ok, %{"token" => token}} <- Jason.decode(body),
@@ -81,6 +85,9 @@ defmodule Echo.Http.Router do
     end
   end
 
+
+
+
   # Helper para errores de Ecto (si usas base de datos)
   defp translate_error({msg, opts}) do
     # Implementación básica - puedes expandir esto
@@ -88,6 +95,9 @@ defmodule Echo.Http.Router do
       String.replace(acc, "%{#{key}}", to_string(value))
     end)
   end
+
+
+
 
   # Fallback for unmapped routes
   defp route(conn, _method, _path) do

@@ -74,7 +74,7 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:attach_socket, socket_pid}, state) do
     Process.link(socket_pid)
     user_info = %{
-      user_id: user_id,
+      user_id: state.user_id,
       user: state.user,
       current_chat_id: state.current_chat_id
       # TODO: Faltan los n últimos chats, para listárselos
