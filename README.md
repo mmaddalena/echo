@@ -35,3 +35,6 @@ Compilar dependencias (CLAVE para Windows) con `mix deps.compile`
 4. `make deps` -> Para instalar las dependencias necesarias.
 5. `make setup` -> Para preparar la DB.
 6. `make run` -> Correr la app.
+
+
+
