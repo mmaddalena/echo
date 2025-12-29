@@ -7,7 +7,8 @@ defmodule Echo.MixProject do
       version: "0.1.0",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
@@ -29,6 +30,14 @@ defmodule Echo.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:bcrypt_elixir, "~> 3.0"}
+    ]
+  end
+
+  defp aliases do
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
+      #test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
   end
 end
