@@ -10,7 +10,8 @@ defmodule Echo.Schemas.User do
     field :password_hash, :string
 
     # Timestamps solo con created_at/updated_at (sin inserted_at)
-    timestamps(type: :utc_datetime)
+    #timestamps(type: :utc_datetime)
+    timestamps(inserted_at: :created_at, updated_at: :updated_at, type: :utc_datetime)
 
     # Relaciones
     has_one :user_status, Echo.Schemas.UserStatus
@@ -31,9 +32,14 @@ defmodule Echo.Schemas.User do
 
   def registration_changeset(user, attrs) do
     user
-    |> changeset(attrs)
+    |> cast(attrs, [:username])
+    |> validate_required([:username])
     |> put_password_hash(attrs["password"])
+    |> validate_required([:password_hash])
+    |> unique_constraint(:username, name: :users_username_index)
+    |> validate_length(:username, min: 3, max: 50)
   end
+
 
   defp put_password_hash(changeset, password) when is_binary(password) do
     # En producción usar Bcrypt o Argon2
