@@ -1,15 +1,9 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+
 </script>
 
 <template>
-  <div>
-    <h1>Echo Front</h1>
-    <p>Conectando con el backend...</p>
-    <a href="https://github.com/rochimgg/echo" target="_blank">
-      <img src="/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
-    </a>
-  </div>
+  <router-view />
 </template>
 
 <style scoped>
