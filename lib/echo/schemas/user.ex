@@ -10,7 +10,7 @@ defmodule Echo.Schemas.User do
     field :password_hash, :string
 
     # Timestamps solo con created_at/updated_at (sin inserted_at)
-    #timestamps(type: :utc_datetime)
+    # timestamps(type: :utc_datetime)
     timestamps(inserted_at: :created_at, updated_at: :updated_at, type: :utc_datetime)
 
     # Relaciones
@@ -40,10 +40,9 @@ defmodule Echo.Schemas.User do
     |> validate_length(:username, min: 3, max: 50)
   end
 
-
   defp put_password_hash(changeset, password) when is_binary(password) do
     # En producción usar Bcrypt o Argon2
-    hash = Base.encode16(:crypto.hash(:sha256, password))
+    hash = Bcrypt.hash_pwd_salt(password)
     put_change(changeset, :password_hash, hash)
   end
 

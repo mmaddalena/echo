@@ -7,14 +7,14 @@ defmodule Echo.Application do
 
   @impl true
   def start(_type, _args) do
-
     children = [
       # Ecto
       Echo.Repo,
 
       # Registries
-      {Registry, keys: :unique, name: Echo.UserSessionRegistry},
-      {Registry, keys: :unique, name: Echo.ChatSessionRegistry},
+      # {Registry, keys: :unique, name: Echo.UserSessionRegistry},
+      # {Registry, keys: :unique, name: Echo.ChatSessionRegistry},
+      Echo.ProcessRegistry,
 
       # Dynamic Supervisors
       Echo.Users.UserSessionSup,
@@ -26,7 +26,7 @@ defmodule Echo.Application do
         scheme: :http,
         plug: Echo.Http.Router,
         options: [
-          port: 4000,
+          port: 4000
         ]
       )
     ]
