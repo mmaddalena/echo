@@ -11,9 +11,7 @@ defmodule Echo.Application do
       # Ecto
       Echo.Repo,
 
-      # Registries
-      # {Registry, keys: :unique, name: Echo.UserSessionRegistry},
-      # {Registry, keys: :unique, name: Echo.ChatSessionRegistry},
+      # Registry
       Echo.ProcessRegistry,
 
       # Dynamic Supervisors
