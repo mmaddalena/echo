@@ -8,7 +8,9 @@ defmodule Echo.Users.UserSessionSup do
 
   @impl true
   def init(:ok) do
-    DynamicSupervisor.init(strategy: :one_for_one)
+    DynamicSupervisor.init(
+      strategy: :one_for_one
+    )
   end
 
   def get_or_start(user_id) do
