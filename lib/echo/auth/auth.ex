@@ -65,12 +65,6 @@ defmodule Echo.Auth.Auth do
   # Private functions
 
   defp verify_password(password, password_hash) do
-    # En desarrollo, si no hay bcrypt configurado, usa comparación simple
-    if function_exported?(Bcrypt, :verify_pass, 2) do
-      Bcrypt.verify_pass(password, password_hash)
-    else
-      # Solo para desarrollo - NO USAR EN PRODUCCIÓN
-      password == password_hash
-    end
+    Bcrypt.verify_pass(password, password_hash)
   end
 end
