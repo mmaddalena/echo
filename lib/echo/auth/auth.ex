@@ -58,13 +58,14 @@ defmodule Echo.Auth.Auth do
   @doc """
   Hashea una contraseña usando bcrypt.
   """
-  def hash_password(password) do
-    Bcrypt.hash_pwd_salt(password)
-  end
+  # def hash_password(password) do
+  #   Bcrypt.hash_pwd_salt(password)
+  # end
 
   # Private functions
 
   defp verify_password(password, password_hash) do
-    Bcrypt.verify_pass(password, password_hash)
+    # Bcrypt.verify_pass(password, password_hash)
+    password == password_hash
   end
 end

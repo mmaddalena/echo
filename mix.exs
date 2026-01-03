@@ -30,7 +30,7 @@ defmodule Echo.MixProject do
       {:joken, "~> 2.5"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:bcrypt_elixir, "~> 3.0"}
+      # {:bcrypt_elixir, "~> 3.0"}
     ]
   end
 
