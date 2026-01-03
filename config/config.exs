@@ -21,4 +21,4 @@ config :echo,
   jwt_expiration_hours: 24
 
 # Configuración de BCrypt
-config :bcrypt_elixir, log_rounds: 12
+# config :bcrypt_elixir, log_rounds: 12

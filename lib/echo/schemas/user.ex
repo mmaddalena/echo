@@ -42,8 +42,9 @@ defmodule Echo.Schemas.User do
 
   defp put_password_hash(changeset, password) when is_binary(password) do
     # En producción usar Bcrypt o Argon2
-    hash = Bcrypt.hash_pwd_salt(password)
-    put_change(changeset, :password_hash, hash)
+    # hash = Bcrypt.hash_pwd_salt(password)
+    # put_change(changeset, :password_hash, hash)
+    put_change(changeset, :password_hash, password)
   end
 
   defp put_password_hash(changeset, _), do: changeset
