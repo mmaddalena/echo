@@ -2,14 +2,18 @@
 dev:
 	iex -S mix
 up:
-	docker compose up -d
+	docker compose up -d db
+build:
+	docker compose build
 deps:
 	mix deps.get
 setup:
-	mix ecto.setup
+	docker compose run --rm app mix ecto.setup
+seed:
+	docker compose run --rm app mix run priv/repo/seeds/seed_usuarios.exs
 run:
-	mix run --no-halt
+	docker compose up app
+shell:
+	docker compose run --rm app sh
 stop:
-	docker compose down
-seed_users:
-	mix run priv/repo/seeds/seed_usuarios.exs
+	docker compose down -v

@@ -1,5 +1,5 @@
 services:
-  postgres:
+  db:
     image: postgres:15
     ports:
       - 127.0.0.1:5432:5432
@@ -10,3 +10,23 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - ./.volumes/postgres/data:/var/lib/postgresql/data/
+    networks:
+      - echo_net
+
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: ecto://postgres:postgres@db:5432/echo_dev
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+    command: mix run --no-halt
+    networks:
+      - echo_net
+
+networks:
+  echo_net:
+    driver: bridge
