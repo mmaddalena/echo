@@ -33,14 +33,16 @@ defmodule Echo.Auth.Accounts do
     - {:error, changeset} si hay errores de validación
     - {:error, :username_taken} si el username ya existe
   """
-  def register(username, password) do
+  def register(username, password, name, email) do
     # Hashear la contraseña
     password_hash = Auth.hash_password(password)
 
     # Crear usuario (aquí iría la lógica de base de datos)
     case User.create(%{
            username: username,
-           password_hash: password_hash
+           password_hash: password_hash,
+           name: name,
+           email: email
          }) do
       {:ok, user} ->
         # Iniciar sesión automáticamente después del registro
