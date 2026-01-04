@@ -23,3 +23,17 @@ echo-*.tar
 /tmp/
 
 .volumes/
+
+.git
+.gitignore
+
+_build
+deps
+node_modules
+
+.DS_Store
+*.log
+
+# Windows
+Thumbs.db
+Desktop.ini

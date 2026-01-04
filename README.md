@@ -11,7 +11,7 @@ __Alumnos:__
 - Rocío Mariana Gallo (97490)
 
 ## Compilación, Empaquetación y Ejecución
-  Instalar previamente (TODO ESTO DEBERÍA HACERSE DENTRO DE UN DOCKER, PARA NO TENER QUE INSTALAR TODO ESTO, ES UN QUILOMBO SINO):
+	Instalar previamente (TODO ESTO DEBERÍA HACERSE DENTRO DE UN DOCKER, PARA NO TENER QUE INSTALAR TODO ESTO, ES UN QUILOMBO SINO):
 
 - **Erlang**
 - **Elixir**
@@ -21,11 +21,11 @@ __Alumnos:__
 
 En **Windows**, además instalar **Visual Studio Build Tools**:
 - En la instalación, incluir mínimamente:
-  - C++ Build Tools
-  - MSVC
-  - Windows SDK
-  
-  <br>
+	- C++ Build Tools
+	- MSVC
+	- Windows SDK
+	
+	<br>
 
 Compilar dependencias (CLAVE para Windows) con `mix deps.compile`
 
