@@ -4,11 +4,14 @@ alias Echo.Schemas.User
 users = [
   %{
     "username" => "lucas",
-    "password" => "123456"
+    "password" => "123456",
+    "email" => "lucas@coutt.com",
+    "name" => "Lucas Couttulenc"
   },
   %{
     "username" => "martin",
-    "password" => "123456"
+    "password" => "123456",
+    "email" => "martin@maddalena.com"
   }
 ]
 

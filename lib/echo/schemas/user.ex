@@ -8,6 +8,8 @@ defmodule Echo.Schemas.User do
   schema "users" do
     field :username, :string
     field :password_hash, :string
+    field :name, :string
+    field :email, :string
 
     # Timestamps solo con created_at/updated_at (sin inserted_at)
     # timestamps(type: :utc_datetime)
@@ -22,6 +24,7 @@ defmodule Echo.Schemas.User do
     has_many :notifications, Echo.Schemas.Notification
   end
 
+  # Login
   def changeset(user, attrs) do
     user
     |> cast(attrs, [:username, :password_hash])
@@ -30,14 +33,17 @@ defmodule Echo.Schemas.User do
     |> validate_length(:username, min: 3, max: 50)
   end
 
+  # Register
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:username])
-    |> validate_required([:username])
+    |> cast(attrs, [:username, :email])
+    |> validate_required([:username, :email])
     |> put_password_hash(attrs["password"])
     |> validate_required([:password_hash])
     |> unique_constraint(:username, name: :users_username_index)
+    |> unique_constraint(:email, name: :users_email_index)
     |> validate_length(:username, min: 3, max: 50)
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/)
   end
 
   defp put_password_hash(changeset, password) when is_binary(password) do

@@ -59,9 +59,9 @@ defmodule Echo.Http.Router do
 
   defp route(conn, "POST", "/api/register") do
     with {:ok, body, conn} <- read_body(conn),
-         {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
+         {:ok, %{"username" => u, "password" => p, "name" => name}} <- Jason.decode(body),
          email = Map.get(body, "email", nil),
-         {:ok, token} <- Echo.Auth.Accounts.register(u, p, email) do
+         {:ok, token} <- Echo.Auth.Accounts.register(u, p, name, email) do
       send_resp(conn, 201, Jason.encode!(%{token: token}))
     else
       {:error, :username_taken} ->
