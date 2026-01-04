@@ -34,14 +34,13 @@ async function handleLogin() {
 
 		ws.onopen = () => {
 			console.log("WS conectado");
+			router.push("/chats");
 		};
 
-		ws.onmessage = (event) => {
-			console.log("Mensaje del backend:", event.data);
+		ws.onerror = () => {
+			console.log("No se pudo conectar al websocket");
 		};
 
-		// Redirigir a chats
-		router.push("/chats");
 	} catch (err) {
 		console.error(err);
 		alert("Login fallido");

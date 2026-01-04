@@ -8,7 +8,7 @@ defmodule Echo.WS.UserSocket do
   def init(req, _opts) do
     case extract_token(req) do
       {:ok, token} ->
-        case Auth.verify_token(token) do
+        case Echo.Auth.Auth.verify_token(token) do
           {:ok, user_id} ->
             state = %{
               user_id: user_id,
@@ -20,16 +20,16 @@ defmodule Echo.WS.UserSocket do
             {:cowboy_websocket, req, state, %{idle_timeout: 300_000}}
 
           {:error, :token_expired} ->
-            Logger.warn("Token expired for WebSocket connection")
+            Logger.warning("Token expired for WebSocket connection", nil)
             {:reply, {:close, 1008, "Token expired"}, req, %{}}
 
           {:error, _reason} ->
-            Logger.warn("Invalid token for WebSocket connection")
+            Logger.warning("Invalid token for WebSocket connection", nil)
             {:reply, {:close, 1008, "Unauthorized"}, req, %{}}
         end
 
       :error ->
-        Logger.warn("Missing token for WebSocket connection")
+        Logger.warning("Missing token for WebSocket connection", nil)
         {:reply, {:close, 1008, "Token missing"}, req, %{}}
     end
   end
