@@ -7,26 +7,32 @@ defmodule Echo.Application do
 
   @impl true
   def start(_type, _args) do
+    dispatch =
+      :cowboy_router.compile([
+        {:_, [
+          {"/ws", Echo.WS.UserSocket, []},
+          {:_, Plug.Cowboy.Handler, {Echo.Http.Router, []}}
+        ]}
+    ])
+
     children = [
-      # Ecto
       Echo.Repo,
-
-      # Registry
       Echo.ProcessRegistry,
-
-      # Dynamic Supervisors
       Echo.Users.UserSessionSup,
       Echo.Chats.ChatSessionSup,
 
-      # Cowboy Server HTTP + WebSocket
-
-      Plug.Cowboy.child_spec(
-        scheme: :http,
-        plug: Echo.Http.Router,
-        options: [
-          port: 4000
-        ]
-      )
+      %{
+        id: :http_listener,
+        start: {
+          :cowboy,
+          :start_clear,
+          [
+            :http_listener,
+            [port: 4000],
+            %{env: %{dispatch: dispatch}}
+          ]
+        }
+      }
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

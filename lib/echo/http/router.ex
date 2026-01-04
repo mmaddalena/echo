@@ -76,26 +76,6 @@ defmodule Echo.Http.Router do
     end
   end
 
-  defp route(conn, "POST", "/ws") do
-    Plug.Cowboy.upgrade_adapter(conn, Echo.Websocket.UserSocket, [])
-  end
-
-  defp route(conn, "POST", "/api/validate-token") do
-    with {:ok, body, conn} <- read_body(conn),
-         {:ok, %{"token" => token}} <- Jason.decode(body),
-         {:ok, user_id} <- Echo.Auth.Auth.verify_token(token) do
-      send_resp(conn, 200, Jason.encode!(%{valid: true, user_id: user_id}))
-    else
-      {:error, :token_expired} ->
-        send_resp(conn, 401, Jason.encode!(%{valid: false, error: "Token expired"}))
-
-      {:error, _} ->
-        send_resp(conn, 401, Jason.encode!(%{valid: false, error: "Invalid token"}))
-
-      _ ->
-        send_resp(conn, 400, Jason.encode!(%{error: "Bad request"}))
-    end
-  end
 
 
 
