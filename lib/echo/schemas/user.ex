@@ -7,6 +7,7 @@ defmodule Echo.Schemas.User do
 
   schema "users" do
     field :username, :string
+    field :password, :string, virtual: true
     field :password_hash, :string
     field :name, :string
     field :email, :string
@@ -36,22 +37,24 @@ defmodule Echo.Schemas.User do
   # Register
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :email])
-    |> validate_required([:username, :email])
-    |> put_password_hash(attrs["password"])
-    |> validate_required([:password_hash])
+    |> cast(attrs, [:username, :email, :password])
+    |> validate_required([:username, :email, :password])
+    |> validate_length(:password, min: 8)
     |> unique_constraint(:username, name: :users_username_index)
     |> unique_constraint(:email, name: :users_email_index)
     |> validate_length(:username, min: 3, max: 50)
     |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/)
+    |> put_password_hash()
   end
 
-  defp put_password_hash(changeset, password) when is_binary(password) do
-    # En producción usar Bcrypt o Argon2
-    # hash = Bcrypt.hash_pwd_salt(password)
-    # put_change(changeset, :password_hash, hash)
-    put_change(changeset, :password_hash, password)
+
+  defp put_password_hash(%Ecto.Changeset{
+        valid?: true,
+        changes: %{password: password}
+      } = changeset) do
+    hash = Echo.Auth.Auth.hash_password(password)
+    put_change(changeset, :password_hash, hash)
   end
 
-  defp put_password_hash(changeset, _), do: changeset
+  defp put_password_hash(changeset), do: changeset
 end

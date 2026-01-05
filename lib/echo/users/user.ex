@@ -30,4 +30,26 @@ defmodule Echo.Users.User do
   end
 
 
+  def change_password(user_id, new_pw) do
+    user = Repo.get(User, user_id)
+
+    case user do
+      nil ->
+        {:error, :not_found}
+
+      user ->
+        user
+        |> User.registration_changeset(%{password: new_pw})
+        |> Repo.update()
+        # Devuelve {:ok, %User{}} o {:error, %Ecto.Changeset{}}
+    end
+  end
+
+  def create(attrs) do
+    %User{}
+    |> User.registration_changeset(attrs)
+    |> Repo.insert()
+  end
+
+
 end
