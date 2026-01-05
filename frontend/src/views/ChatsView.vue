@@ -1,9 +1,17 @@
 <script setup>
   import { computed } from "vue";
+  import { onMounted } from "vue";
   import { useSocketStore } from "@/stores/socket";
 
   const socketStore = useSocketStore();
   const user = computed(() => socketStore.userInfo);
+
+  onMounted(() => {
+    const token = sessionStorage.getItem("token");
+    if (token){
+      socketStore.connect(token);
+    }
+  });
 </script>
 
 <template>
