@@ -11,10 +11,16 @@ defmodule Echo.Http.Router do
   end
 
   def call(conn, _opts) do
-    conn
-    |> CORSPlug.call(cors_opts())
-    |> route(conn.method, conn.request_path)
+    conn = CORSPlug.call(conn, cors_opts())
+
+    if conn.halted do
+      conn
+    else
+      route(conn, conn.method, conn.request_path)
+    end
   end
+
+
 
   defp cors_opts do
     CORSPlug.init(
@@ -59,24 +65,36 @@ defmodule Echo.Http.Router do
 
   defp route(conn, "POST", "/api/register") do
     with {:ok, body, conn} <- read_body(conn),
-         {:ok, %{"username" => u, "password" => p, "name" => name}} <- Jason.decode(body),
-         email = Map.get(body, "email", nil),
-         {:ok, token} <- Echo.Auth.Accounts.register(u, p, name, email) do
-      send_resp(conn, 201, Jason.encode!(%{token: token}))
+        {:ok, params} <- Jason.decode(body),
+        %{
+          "username" => username,
+          "password" => pw
+        } <- params do
+
+      name  = Map.get(params, "name")
+      email = Map.get(params, "email")
+
+      case Echo.Auth.Accounts.register(username, pw, name, email) do
+        {:ok, token} ->
+          send_resp(conn, 201, Jason.encode!(%{token: token}))
+
+        {:error, :username_taken} ->
+          send_resp(conn, 409, Jason.encode!(%{error: "Username already taken"}))
+
+        {:error, changeset} ->
+          errors =
+            Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
+
+          send_resp(conn, 400, Jason.encode!(%{
+            error: "Validation failed",
+            details: errors
+          }))
+      end
     else
-      {:error, :username_taken} ->
-        send_resp(conn, 409, Jason.encode!(%{error: "Username already taken"}))
-
-      {:error, changeset} when is_map(changeset) ->
-        errors = Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
-        send_resp(conn, 400, Jason.encode!(%{error: "Validation failed", details: errors}))
-
       _ ->
-        send_resp(conn, 400, Jason.encode!(%{error: "Registration failed"}))
+        send_resp(conn, 400, Jason.encode!(%{error: "Invalid payload"}))
     end
   end
-
-
 
 
 

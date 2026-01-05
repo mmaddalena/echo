@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useSocketStore } from "@/stores/socket";
 
-// estado (antes: variables JS sueltas)
+
 const username = ref("");
 const password = ref("");
 const router = useRouter();
@@ -28,9 +28,10 @@ async function handleLogin() {
 		const data = await res.json();
 		const token = data.token;
 
-		// Guardás token (temporal, memoria)
+		
 		sessionStorage.setItem("token", token);
 
+		socketStore.disconnect();
 		socketStore.connect(token);
 		router.push("/chats");
 		
