@@ -69,14 +69,18 @@ defmodule Echo.Users.UserSession do
     Process.link(socket_pid)
 
     user_info = %{
-      user_id: state.user_id,
-      user: state.user,
+      type: "user_info",
+      user: %{
+        user_id: state.user_id,
+        username: state.user.username,
+        email: state.user.email
+        },
       current_chat_id: state.current_chat_id
       # TODO: Faltan los n últimos chats, para listárselos
     }
 
     # Le mandamos el state inicial al front D1
-    send(state.socket, {:send, {:user_info, user_info}})
+    send(socket_pid, {:send, user_info})
     {:noreply, %{state | socket: socket_pid}}
   end
 

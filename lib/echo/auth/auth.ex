@@ -64,6 +64,10 @@ defmodule Echo.Auth.Auth do
 
   # Private functions
 
+  def hash_password(pw) do
+    pw
+  end
+
   defp verify_password(password, password_hash) do
     # Bcrypt.verify_pass(password, password_hash)
     password == password_hash

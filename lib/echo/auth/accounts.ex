@@ -5,6 +5,7 @@ defmodule Echo.Auth.Accounts do
 
   alias Echo.Auth.Auth
   alias Echo.Users.UserSessionSup
+  alias Echo.Users.User
 
   @doc """
   Inicia sesión de un usuario.
@@ -15,7 +16,6 @@ defmodule Echo.Auth.Accounts do
   """
   def login(username, password) do
     with {:ok, user_id} <- Auth.authenticate(username, password),
-         {:ok, _user_session} <- UserSessionSup.get_or_start(user_id),
          {:ok, token} <- Auth.create_token(user_id) do
       {:ok, token}
     else
@@ -29,22 +29,18 @@ defmodule Echo.Auth.Accounts do
   Registra un nuevo usuario.
 
   Returns:
-    - {:ok, user} si el registro es exitoso
+    - {:ok, token} si el registro (y post login) es exitoso
     - {:error, changeset} si hay errores de validación
     - {:error, :username_taken} si el username ya existe
   """
   def register(username, password, name, email) do
-    # Hashear la contraseña
-    password_hash = Auth.hash_password(password)
-
-    # Crear usuario (aquí iría la lógica de base de datos)
     case User.create(%{
            username: username,
-           password_hash: password_hash,
+           password: password,
            name: name,
            email: email
          }) do
-      {:ok, user} ->
+      {:ok, _user} ->
         # Iniciar sesión automáticamente después del registro
         login(username, password)
 

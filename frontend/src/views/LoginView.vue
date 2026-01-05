@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useSocketStore } from "@/stores/socket";
 
 // estado (antes: variables JS sueltas)
 const username = ref("");
 const password = ref("");
 const router = useRouter();
+const socketStore = useSocketStore();
 
 async function handleLogin() {
 	console.log("Username:", username.value);
@@ -29,18 +31,9 @@ async function handleLogin() {
 		// Guardás token (temporal, memoria)
 		sessionStorage.setItem("token", token);
 
-		// Abrir WebSocket con token
-		const ws = new WebSocket(`ws://localhost:4000/ws?token=${token}`);
-
-		ws.onopen = () => {
-			console.log("WS conectado");
-			router.push("/chats");
-		};
-
-		ws.onerror = () => {
-			console.log("No se pudo conectar al websocket");
-		};
-
+		socketStore.connect(token);
+		router.push("/chats");
+		
 	} catch (err) {
 		console.error(err);
 		alert("Login fallido");
