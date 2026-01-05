@@ -27,6 +27,14 @@ export const useSocketStore = defineStore("socket", () => {
     };
   }
 
+  function disconnect() {
+    if (socket.value) {
+      socket.value.close();
+    }
+    socket.value = null;
+    userInfo.value = null;
+  }
+
   function send(data) {
     if (socket.value?.readyState === WebSocket.OPEN) {
       socket.value.send(JSON.stringify(data));
@@ -39,6 +47,7 @@ export const useSocketStore = defineStore("socket", () => {
     socket,
     userInfo,
     connect,
+    disconnect,
     send
   };
 });
