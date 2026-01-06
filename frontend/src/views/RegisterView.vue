@@ -1,46 +1,46 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useSocketStore } from "@/stores/socket";
+	import { ref } from "vue";
+	import { useRouter } from "vue-router";
+	import { useSocketStore } from "@/stores/socket";
 
 
-const username = ref("");
-const password = ref("");
-const name = ref("");
-const email = ref("");
+	const username = ref("");
+	const password = ref("");
+	const name = ref("");
+	const email = ref("");
 
-const router = useRouter();
-const socketStore = useSocketStore();
+	const router = useRouter();
+	const socketStore = useSocketStore();
 
-async function handleRegister() {
-	try {
-		const res = await fetch("http://localhost:4000/api/register", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				username: username.value,
-				password: password.value,
-        name: name.value,
-        email: email.value,
-			}),
-		});
+	async function handleRegister() {
+		try {
+			const res = await fetch("http://localhost:4000/api/register", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					username: username.value,
+					password: password.value,
+			name: name.value,
+			email: email.value,
+				}),
+			});
 
-		if (!res.ok) throw new Error("Error en los datos");
+			if (!res.ok) throw new Error("Error en los datos");
 
-		const data = await res.json();
-		const token = data.token;
+			const data = await res.json();
+			const token = data.token;
 
-		sessionStorage.setItem("token", token);
+			sessionStorage.setItem("token", token);
 
-		socketStore.disconnect();
-    socketStore.connect(token);
-		router.push("/chats");
-		
-	} catch (err) {
-		console.error(err);
-		alert("Registro fallido");
+			socketStore.disconnect();
+			socketStore.connect(token);
+			router.push("/chats");
+			
+		} catch (err) {
+			console.error(err);
+			alert("Registro fallido");
+		}
 	}
-}
 </script>
 
 <template>

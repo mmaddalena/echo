@@ -1,45 +1,45 @@
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import { useSocketStore } from "@/stores/socket";
+	import { ref } from "vue";
+	import { useRouter } from "vue-router";
+	import { useSocketStore } from "@/stores/socket";
 
 
-const username = ref("");
-const password = ref("");
-const router = useRouter();
-const socketStore = useSocketStore();
+	const username = ref("");
+	const password = ref("");
+	const router = useRouter();
+	const socketStore = useSocketStore();
 
-async function handleLogin() {
-	console.log("Username:", username.value);
-	console.log("Password:", password.value);
+	async function handleLogin() {
+		console.log("Username:", username.value);
+		console.log("Password:", password.value);
 
-	try {
-		const res = await fetch("http://localhost:4000/api/login", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				username: username.value,
-				password: password.value,
-			}),
-		});
+		try {
+			const res = await fetch("http://localhost:4000/api/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					username: username.value,
+					password: password.value,
+				}),
+			});
 
-		if (!res.ok) throw new Error("Credenciales incorrectas");
+			if (!res.ok) throw new Error("Credenciales incorrectas");
 
-		const data = await res.json();
-		const token = data.token;
+			const data = await res.json();
+			const token = data.token;
 
-		
-		sessionStorage.setItem("token", token);
+			
+			sessionStorage.setItem("token", token);
 
-		socketStore.disconnect();
-		socketStore.connect(token);
-		router.push("/chats");
-		
-	} catch (err) {
-		console.error(err);
-		alert("Login fallido");
+			socketStore.disconnect();
+			socketStore.connect(token);
+			router.push("/chats");
+			
+		} catch (err) {
+			console.error(err);
+			alert("Login fallido");
+		}
 	}
-}
 </script>
 
 <template>
