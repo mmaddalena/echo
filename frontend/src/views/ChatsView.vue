@@ -1,8 +1,10 @@
 <script setup>
   import { computed } from "vue";
   import { onMounted } from "vue";
+  import { useRouter } from "vue-router";
   import { useSocketStore } from "@/stores/socket";
 
+  const router = useRouter();
   const socketStore = useSocketStore();
   const user = computed(() => socketStore.userInfo);
 
@@ -12,6 +14,12 @@
       socketStore.connect(token);
     }
   });
+
+  function logout() {
+    sessionStorage.removeItem("token");
+    socketStore.disconnect();
+    router.push("/login");
+  }
 </script>
 
 <template>
@@ -22,8 +30,9 @@
       <p><strong>Usuario:</strong> {{ user.username }}</p>
       <p><strong>Email:</strong> {{ user.email }}</p>
     </div>
-
     <p v-else>Cargando usuario...</p>
+
+    <button @click="logout">Logout</button>
   </div>
 </template>
 
@@ -51,5 +60,9 @@
   padding: 16px 24px;
   border-radius: 10px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+button {
+  margin: 10px 5px;
 }
 </style>
