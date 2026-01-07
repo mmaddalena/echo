@@ -31,7 +31,7 @@
 <template>
   <div class="chats-layout">
     <div class="left">
-      <img src="/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
+      <img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
       <div class="main">
         <Sidebar />
         <ChatList />
@@ -55,13 +55,13 @@
 .left {
   display: flex;
   flex-direction: column;
-  align-items: baseline;
+  align-items: flex-start;
   height: 100%;
-  width: 40%;
+  width: var(--left-section-width);
 }
 .logo {
   height: 6rem;
-	padding: 2rem;
+	margin: 2rem;
 }
 .main {
   display: flex;

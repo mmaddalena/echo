@@ -23,7 +23,8 @@
   cursor: pointer;
 }
 .chat-item:hover {
-  background: rgba(255,255,255,0.05);
+  background: #233356;
+  border-radius: 1.5rem;
 }
 .name {
   color: var(--text-main);

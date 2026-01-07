@@ -31,6 +31,7 @@
   border-radius: 3rem;
 }
 input {
+  flex: 1;
   height: 5rem;
   border: none;
   background: none;
