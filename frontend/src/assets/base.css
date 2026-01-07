@@ -1,0 +1,17 @@
+:root {
+  --bg-main: #0b1220;
+  --bg-chatlist-panel: #111A2E;
+  --bg-chat: #0f172a;
+  --bg-chat-header: #141E36;
+  --bg-input: #233356;
+
+  --text-main: #f2f3f4;
+  --text-muted: #9aa4bf;
+
+  --msg-in: #2D4CBA;
+  --msg-out: #742abf;
+
+  --accent: #5b8cff;
+
+  
+}

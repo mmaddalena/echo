@@ -4,6 +4,12 @@
   import { useRouter } from "vue-router";
   import { useSocketStore } from "@/stores/socket";
 
+  import Sidebar from "@/components/layout/Sidebar.vue";
+  import ChatList from "@/components/chats/ChatList.vue";
+  import ChatHeader from "@/components/chats/ChatHeader.vue";
+  import ChatMessages from "@/components/chats/ChatMessages.vue";
+  import ChatInput from "@/components/chats/ChatInput.vue";
+
   const router = useRouter();
   const socketStore = useSocketStore();
   const user = computed(() => socketStore.userInfo);
@@ -23,46 +29,56 @@
 </script>
 
 <template>
-  <div class="chat-container">
-    <img src="/Echo_Logo_Completo_Negativo.svg" class="logo" />
-
-    <div v-if="user" class="user-card">
-      <p><strong>Usuario:</strong> {{ user.username }}</p>
-      <p><strong>Email:</strong> {{ user.email }}</p>
+  <div class="chats-layout">
+    <div class="left">
+      <img src="/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
+      <div class="main">
+        <Sidebar />
+        <ChatList />
+      </div>
     </div>
-    <p v-else>Cargando usuario...</p>
-
-    <button @click="logout">Logout</button>
+    <div class="right">
+      <ChatHeader />
+      <ChatMessages />
+      <ChatInput />
+    </div>
   </div>
 </template>
 
 <style scoped>
-.chat-container {
-  min-height: 100vh;
-  width: 600px;
-  border-radius: 20px;
-  background: #0f172a;
-  color: white;
+.chats-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  /*overflow: hidden;     /* no scroll global */
+}
+.left {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding-top: 40px;
+  align-items: baseline;
+  height: 100%;
+  width: 40%;
 }
-
 .logo {
-  height: 3em;
-  margin-bottom: 24px;
+  height: 6rem;
+	padding: 2rem;
+}
+.main {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  width: 100%;
+}
+.right {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
 }
 
-.user-card {
-  background: #1e293b;
-  width: 200px;
-  padding: 16px 24px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-button {
-  margin: 10px 5px;
+.chat-area {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
 }
 </style>
