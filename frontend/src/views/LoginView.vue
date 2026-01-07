@@ -45,7 +45,7 @@
 <template>
 	<div class="body">
 		<div class="login-container">
-			<img src="/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
+			<img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
 			<p>Iniciar sesión</p>
 
 			<form @submit.prevent="handleLogin">
@@ -74,7 +74,7 @@ p {
 	margin-bottom: 20px;
 }
 .logo {
-	height: 8rem;
+	height: 12rem;
 	padding: 0 0 4.5rem 0;
 	will-change: filter;
 	transition: filter 300ms;
