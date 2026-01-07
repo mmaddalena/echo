@@ -44,41 +44,54 @@
 </script>
 
 <template>
-	<div class="register-container">
-		<img src="/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
-		<p>Iniciar sesión</p>
+	<div class="body">
+		<div class="register-container">
+			<img src="/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
+			<p>Iniciar sesión</p>
 
-		<form @submit.prevent="handleRegister">
-			<input type="text" placeholder="Username" v-model="username" />
+			<form @submit.prevent="handleRegister">
+				<input type="text" placeholder="Username" v-model="username" />
 
-      <input type="text" placeholder="Nombre Completo" v-model="name" />
+		<input type="text" placeholder="Nombre Completo" v-model="name" />
 
-      <input type="email" placeholder="Correo electrónico" v-model="email" />
+		<input type="email" placeholder="Correo electrónico" v-model="email" />
 
-			<input type="password" placeholder="Contraseña" v-model="password" />
+				<input type="password" placeholder="Contraseña" v-model="password" />
 
-			<button type="submit">Entrar</button>
-		</form>
+				<button type="submit">Entrar</button>
+			</form>
+		</div>
+		<p>¿Ya tenés cuenta?</p>
+		<router-link to="/login" class="login-link"> Iniciar Sesión </router-link>
 	</div>
-	<p>¿Ya tenés cuenta?</p>
-	<router-link to="/login" class="register-link"> Iniciar Sesión </router-link>
 </template>
 
 <style scoped>
+.body {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	place-items: center;
+	min-width: 320px;
+	min-height: 100vh;
+}
+p {
+	margin-bottom: 20px;
+}
 .logo {
-	height: 4em;
-	padding: 1.5em;
+	height: 8rem;
+	padding: 0 0 4.5rem 0;
 	will-change: filter;
 	transition: filter 300ms;
 }
 
 .register-container {
-	min-height: 50vh;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	color: white;
+	margin-bottom: 4rem;
 }
 
 form {
@@ -103,13 +116,12 @@ button {
 	cursor: pointer;
 }
 
-.register-link {
-	margin-top: 16px;
+.login-link {
 	color: #93c5fd;
 	cursor: pointer;
 	text-decoration: none;
 }
-.register-link:hover {
+.login-link:hover {
 	color: #6b8fb8;
 }
 </style>
