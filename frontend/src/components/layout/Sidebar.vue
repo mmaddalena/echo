@@ -14,7 +14,10 @@
     </div>
     <div class="config_opts">
       <button>
-        <IconThemeMode class="icon" variant="light"/>
+        <IconThemeMode class="icon icon-light" variant="light"/>
+      </button>
+      <button>
+        <IconThemeMode class="icon icon-dark" variant="dark"/>
       </button>
       <button>
         <IconSettings class="icon"/>
@@ -30,6 +33,7 @@
   background: none;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   flex-shrink: 0;
   align-items: center;
   padding: 16px 0;
@@ -59,7 +63,13 @@ button {
 }
 .icon {
   height: 4rem;
-  fill: var(--text-main);
+  color: var(--text-main);
+}
+.icon-light {
+  color: var(--msg-in);
+}
+.icon-dark{
+  color: var(--msg-out);
 }
 .outline {
   stroke: var(--text-main);

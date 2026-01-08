@@ -1,17 +1,31 @@
 <script setup>
-    defineProps({
-        chat: Object
-    });
+  defineProps({
+    chat: Object
+  });
+  import IconSettings from '../icons/IconSettings.vue';
 </script>
 
 <template>
   <div class="chat-item">
     <img class="avatar" />
     <div class="info">
-      <p class="name">Manu</p>
-      <p class="last-message">Sale cs?</p>
+      <div class="up">
+        <div class="texto">
+          <p class="name">Manu</p>
+          <p class="status">Activo</p>
+        </div>
+        <div class="unread-messages">
+          5
+        </div>
+      </div>
+      <div class="down">
+        <div class="last-message">
+          <IconSettings class="icon"/>
+          <p class="text">Sale cs?</p>
+        </div>
+        <span class="time">9:25</span>
+      </div>
     </div>
-    <span class="time">9:25</span>
   </div>
 </template>
 
@@ -26,17 +40,63 @@
   background: #233356;
   border-radius: 1.5rem;
 }
+.avatar {
+  height: 7rem;
+  width: 7rem;
+  background-color: cyan;
+  border-radius: 50%;
+}
+.info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.up {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+.texto {
+  margin-right: 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  line-height: 1;
+}
 .name {
   color: var(--text-main);
   font-weight: 600;
+  margin-right: 1.5rem;
+}
+.status, .last-message .text{
+  color: var(--text-muted);
+  font-size: 1.4rem;
+}
+.unread-messages {
+  height: 2.4rem;
+  width: 2.4rem;
+  background-color: var(--msg-out);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.down {
+  display: flex;
+  justify-content: space-between;
 }
 .last-message {
-  color: var(--text-muted);
-  font-size: 13px;
+  display: flex;
+  margin-right: 1.5rem;
+}
+.icon {
+  height: 2.2rem;
+  margin-right: 0.5rem;
 }
 .time {
-  margin-left: auto;
-  font-size: 12px;
+  font-size: 1.2rem;
   color: var(--text-muted);
 }
 </style>
