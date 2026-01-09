@@ -1,8 +1,13 @@
 <script setup>
-  defineProps({
+  const props = defineProps({
     chat: Object
   });
-  import IconSettings from '../icons/IconSettings.vue';
+  import IconMessageState from '../icons/IconMessageState.vue';
+
+  const isMuted = 
+    props.chat.lastMessage.type === 'outgoing' ||
+    (props.chat.lastMessage.type === 'incoming' &&
+     props.chat.lastMessage.state === 'read')
 </script>
 
 <template>
@@ -11,19 +16,36 @@
     <div class="info">
       <div class="up">
         <div class="texto">
-          <p class="name">Manu</p>
-          <p class="status">Activo</p>
+          <p class="name">{{ chat.name }}</p>
+          <p class="status">{{ chat.status }}</p>
         </div>
-        <div class="unread-messages">
-          5
+        <div 
+          class="unread-messages"
+          v-if="chat.unread > 0"
+        >
+          {{ chat.unread }}
         </div>
       </div>
       <div class="down">
         <div class="last-message">
-          <IconSettings class="icon"/>
-          <p class="text">Sale cs?</p>
+        <IconMessageState 
+          v-if="chat.lastMessage.type === 'outgoing'"
+          class="icon" 
+          :state="chat.lastMessage.state" 
+        />
+          <p 
+            class="text"
+            :class="{muted: isMuted}"
+          >
+            {{ chat.lastMessage.text }}
+          </p>
         </div>
-        <span class="time">9:25</span>
+        <span 
+          class="time"
+          :class="{muted: isMuted}"
+        >
+          {{ chat.lastMessage.time }}
+        </span>
       </div>
     </div>
   </div>
@@ -41,8 +63,8 @@
   border-radius: 1.5rem;
 }
 .avatar {
-  height: 7rem;
-  width: 7rem;
+  height: 5rem;
+  width: 5rem;
   background-color: cyan;
   border-radius: 50%;
 }
@@ -69,8 +91,11 @@
   font-weight: 600;
   margin-right: 1.5rem;
 }
-.status, .last-message .text{
+.status {
+  font-size: 1.4rem;
   color: var(--text-muted);
+}
+.last-message .text{
   font-size: 1.4rem;
 }
 .unread-messages {
@@ -94,9 +119,12 @@
 .icon {
   height: 2.2rem;
   margin-right: 0.5rem;
+  color: var(--msg-out);
 }
 .time {
   font-size: 1.2rem;
+}
+.muted{
   color: var(--text-muted);
 }
 </style>
