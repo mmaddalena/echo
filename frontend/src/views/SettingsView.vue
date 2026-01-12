@@ -5,10 +5,8 @@
   import { useSocketStore } from "@/stores/socket";
 
   import Sidebar from "@/components/layout/Sidebar.vue";
-  import ChatList from "@/components/chats/ChatList.vue";
-  import ChatHeader from "@/components/chats/ChatHeader.vue";
-  import ChatMessages from "@/components/chats/ChatMessages.vue";
-  import ChatInput from "@/components/chats/ChatInput.vue";
+  import SettingsSectionsList from "../components/settings/SettingsSectionsList.vue";
+  import SettingsPanel from "../components/settings/SettingsPanel.vue";
 
   const router = useRouter();
   const socketStore = useSocketStore();
@@ -20,31 +18,34 @@
       socketStore.connect(token);
     }
   });
+
+  function logout() {
+    sessionStorage.removeItem("token");
+    socketStore.disconnect();
+    router.push("/login");
+  }
 </script>
 
 <template>
-  <div class="chats-layout">
+  <div class="settings-layout">
     <div class="left">
       <img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
       <div class="main">
         <Sidebar />
-        <ChatList />
+        <SettingsSectionsList @logout="logout" />
       </div>
     </div>
     <div class="right">
-      <ChatHeader />
-      <ChatMessages />
-      <ChatInput />
+      <SettingsPanel />
     </div>
   </div>
 </template>
 
 <style scoped>
-.chats-layout {
+.settings-layout {
   display: flex;
   flex-direction: row;
   height: 100vh;
-  /*overflow: hidden;     /* no scroll global */
 }
 .left {
   display: flex;
