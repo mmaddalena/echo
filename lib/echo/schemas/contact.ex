@@ -6,22 +6,20 @@ defmodule Echo.Schemas.Contact do
   @foreign_key_type :binary_id
 
   schema "contacts" do
-    field :added_at, :utc_datetime
+    field :nickname, :string
+    timestamps(type: :utc_datetime)
 
-    # Relaciones
     belongs_to :user, Echo.Schemas.User
     belongs_to :contact, Echo.Schemas.User, foreign_key: :contact_id
 
-    # Índice compuesto para evitar duplicados
-    # timestamps no necesarios aquí
+
   end
 
   def changeset(contact, attrs) do
     contact
-    |> cast(attrs, [:user_id, :contact_id, :added_at])
-    |> validate_required([:user_id, :contact_id])
-    |> put_change(:added_at, attrs[:added_at] || DateTime.utc_now())
-    |> unique_constraint([:user_id, :contact_id], name: :contacts_user_contact_unique)
+    |> cast(attrs, [:nickname, :user_id, :contact_id])
+    |> validate_required([:nickname, :user_id, :contact_id])
+    |> unique_constraint([:user_id, :contact_id], name: :contacts_user_id_contact_id_index)
     |> check_constraint(:user_id,
       name: :contact_cannot_be_self,
       message: "Cannot add yourself as contact"
@@ -30,12 +28,12 @@ defmodule Echo.Schemas.Contact do
     |> foreign_key_constraint(:contact_id)
   end
 
-  def add_contact_changeset(user_id, contact_id) do
+  def add_contact_changeset(user_id, contact_id, nickname) do
     %__MODULE__{}
     |> changeset(%{
       user_id: user_id,
       contact_id: contact_id,
-      added_at: DateTime.utc_now()
+      nickname: nickname
     })
   end
 end

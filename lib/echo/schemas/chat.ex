@@ -7,32 +7,54 @@ defmodule Echo.Schemas.Chat do
 
   schema "chats" do
     field :name, :string
-    # "private" | "group"
     field :type, :string, default: "private"
-
-    # Timestamps para posible edición de nombre
     timestamps(type: :utc_datetime)
 
-    # Relaciones
-    belongs_to :created_by, Echo.Schemas.User
+    belongs_to :creator, Echo.Schemas.User
     has_many :chat_members, Echo.Schemas.ChatMember
     has_many :messages, Echo.Schemas.Message
   end
 
   def changeset(chat, attrs) do
     chat
-    |> cast(attrs, [:name, :type, :created_by_id])
-    |> validate_required([:type, :created_by_id])
+    |> cast(attrs, [:name, :type, :creator_id])
+    |> validate_required([:type, :creator_id])
     |> validate_inclusion(:type, ["private", "group"])
-    |> foreign_key_constraint(:created_by_id)
+    |> validate_name_based_on_type()
+    |> foreign_key_constraint(:creator_id)
   end
 
-  def private_chat_changeset(user1_id) do
+  defp validate_name_based_on_type(changeset) do
+    type = get_field(changeset, :type)
+    name = get_field(changeset, :name)
+
+    case type do
+      "private" ->
+        # Private chats should not have names
+        if is_nil(name) do
+          changeset
+        else
+          add_error(changeset, :name, "Private chats cannot have names")
+        end
+
+      "group" ->
+        # Group chats must have names
+        if is_nil(name) or String.trim(name) == "" do
+          add_error(changeset, :name, "Group chats require a name")
+        else
+          changeset
+        end
+
+      _ ->
+        changeset
+    end
+  end
+
+  def private_chat_changeset(creator_id) do
     %__MODULE__{}
     |> changeset(%{
       type: "private",
-      created_by_id: user1_id,
-      # Los chats privados no tienen nombre
+      creator_id: creator_id,
       name: nil
     })
   end
@@ -41,8 +63,8 @@ defmodule Echo.Schemas.Chat do
     %__MODULE__{}
     |> changeset(%{
       type: "group",
-      name: name,
-      created_by_id: creator_id
+      creator_id: creator_id,
+      name: name
     })
   end
 end
