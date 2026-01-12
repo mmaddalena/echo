@@ -1,7 +1,26 @@
 <script setup>
+  import { computed } from "vue";
+  import { onMounted } from "vue";
+  import { useRouter } from "vue-router";
+  import { useRoute } from 'vue-router';
+  import { useSocketStore } from "@/stores/socket";
+
   import IconContacts from '../icons/IconContacts.vue';
   import IconThemeMode from '../icons/IconThemeMode.vue';
   import IconSettings from '../icons/IconSettings.vue';
+  import IconChats from '../icons/IconChats.vue';
+
+  const router = useRouter();
+  const route = useRoute();
+  const socketStore = useSocketStore();
+  const user = computed(() => socketStore.userInfo);
+
+  onMounted(() => {
+    const token = sessionStorage.getItem("token");
+    if (token){
+      socketStore.connect(token);
+    }
+  });
 </script>
 
 <template>
@@ -19,8 +38,18 @@
       <button>
         <IconThemeMode class="icon icon-dark" variant="dark"/>
       </button>
-      <button>
-        <IconSettings class="icon"/>
+
+      <button 
+        v-if="route.name === 'chats'"
+        @click="router.push('/settings')"
+      >
+        <IconSettings class="icon" />
+      </button>
+      <button 
+        v-else-if="route.name === 'settings'"
+        @click="router.push('/chats')"
+      >
+        <IconChats class="icon" />
       </button>
     </div>
   </aside>

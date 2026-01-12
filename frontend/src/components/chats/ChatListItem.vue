@@ -28,11 +28,11 @@
       </div>
       <div class="down">
         <div class="last-message">
-        <IconMessageState 
-          v-if="chat.lastMessage.type === 'outgoing'"
-          class="icon" 
-          :state="chat.lastMessage.state" 
-        />
+          <IconMessageState 
+            v-if="chat.lastMessage.type === 'outgoing'"
+            class="icon" 
+            :state="chat.lastMessage.state" 
+          />
           <p 
             class="text"
             :class="{muted: isMuted}"
@@ -59,7 +59,7 @@
   cursor: pointer;
 }
 .chat-item:hover {
-  background: #233356;
+  background: var(--bg-chatlist-hover);
   border-radius: 1.5rem;
 }
 .avatar {
@@ -72,6 +72,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
 }
 .up {
   display: flex;
@@ -97,6 +98,11 @@
 }
 .last-message .text{
   font-size: 1.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 .unread-messages {
   height: 2.4rem;
@@ -115,6 +121,9 @@
 .last-message {
   display: flex;
   margin-right: 1.5rem;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
 }
 .icon {
   height: 2.2rem;

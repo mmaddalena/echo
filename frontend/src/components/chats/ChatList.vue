@@ -40,7 +40,7 @@
       unread: 3,
       lastMessage: {
         type: "incoming",
-        text: "Dale entreguen el tp",
+        text: "Dale entreguen el tp que mañana a la mañana lo tienen que tener listo",
         state: "delivered",
         time: "9:25"
       }
