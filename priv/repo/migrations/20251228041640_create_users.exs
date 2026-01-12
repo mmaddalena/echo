@@ -6,15 +6,17 @@ defmodule Echo.Repo.Migrations.CreateUsers do
           add :id, :binary_id, primary_key: true
           add :username, :string, null: false
           add :password_hash, :string, null: false
-          add :name, :string
+          add :name, :string, null: false
           add :email, :string, null: false
-
-          # Timestamps sin inserted_at
-          add :created_at, :utc_datetime, null: false
-          add :updated_at, :utc_datetime, null: false
+          add :avatar_url, :string
+          add :status, :string, default: "offline", null: false
+          add :last_seen_at, :utc_datetime
+          timestamps(type: :utc_datetime)
       end
 
-    create unique_index(:users, [:username], name: :users_username_index)
-    create index(:users, [:created_at])
+    create unique_index(:users, [:username])
+    create unique_index(:users, [:email])
+    create index(:users, [:status, :last_seen_at])
+    create index(:users, [:inserted_at])
   end
 end

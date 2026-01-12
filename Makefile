@@ -10,7 +10,7 @@ setup:
 reset:
 	docker compose run --rm app mix ecto.reset
 seed:
-	docker compose run --rm app mix run priv/repo/seeds/seed_usuarios.exs
+	docker compose run --rm app mix run priv/repo/seeds/seeds.exs
 run:
 	docker compose up app
 shell:

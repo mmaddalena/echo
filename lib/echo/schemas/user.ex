@@ -2,6 +2,9 @@ defmodule Echo.Schemas.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @username_regex ~r/^[a-zA-Z0-9_]+$/
+  @email_regex ~r/^[^\s]+@[^\s]+$/
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
@@ -11,18 +14,17 @@ defmodule Echo.Schemas.User do
     field :password_hash, :string
     field :name, :string
     field :email, :string
+    field :avatar_url, :string
+    field :status, :string, default: "offline"
+    field :last_seen_at, :utc_datetime
+    timestamps(type: :utc_datetime)
 
-    # Timestamps solo con created_at/updated_at (sin inserted_at)
-    # timestamps(type: :utc_datetime)
-    timestamps(inserted_at: :created_at, updated_at: :updated_at, type: :utc_datetime)
-
-    # Relaciones
-    has_one :user_status, Echo.Schemas.UserStatus
     has_many :contacts, Echo.Schemas.Contact, foreign_key: :user_id
-    has_many :blocked_contacts, Echo.Schemas.BlockedContact, foreign_key: :user_id
-    has_many :chat_members, Echo.Schemas.ChatMember
-    has_many :messages, Echo.Schemas.Message
-    has_many :notifications, Echo.Schemas.Notification
+    has_many :blocked_contacts_as_blocker, Echo.Schemas.BlockedContact, foreign_key: :blocker_id
+    has_many :blocked_contacts_as_blocked, Echo.Schemas.BlockedContact, foreign_key: :blocked_id
+    has_many :chat_members, Echo.Schemas.ChatMember, foreign_key: :user_id
+    has_many :created_chats, Echo.Schemas.Chat, foreign_key: :creator_id
+    has_many :messages, Echo.Schemas.Message, foreign_key: :user_id
   end
 
   # Login
@@ -37,13 +39,14 @@ defmodule Echo.Schemas.User do
   # Register
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :password])
-    |> validate_required([:username, :email, :password])
-    |> validate_length(:password, min: 8)
-    |> unique_constraint(:username, name: :users_username_index)
-    |> unique_constraint(:email, name: :users_email_index)
-    |> validate_length(:username, min: 3, max: 50)
-    |> validate_format(:email, ~r/^[^\s]+@[^\s]+$/)
+    |> cast(attrs, [:username, :email, :password_hash, :name, :status])
+    |> validate_required([:username, :email, :password_hash, :name, :status])
+    |> validate_length(:username, min: 3, max: 30)
+    |> validate_format(:username, @username_regex, message: "can only contain letters, numbers, and underscores")
+    |> validate_format(:email, @email_regex)
+    |> validate_length(:password_hash, min: 8)
+    |> unique_constraint(:username)
+    |> unique_constraint(:email)
     |> put_password_hash()
   end
 
