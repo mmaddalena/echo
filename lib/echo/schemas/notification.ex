@@ -9,9 +9,9 @@ defmodule Echo.Schemas.Notification do
     field :read_at, :utc_datetime
     timestamps(type: :utc_datetime)
 
-    belongs_to :user, YourApp.Accounts.User
-    belongs_to :chat, YourApp.Chats.Chat
-    belongs_to :message, YourApp.Messages.Message
+    belongs_to :user, Echo.Accounts.User
+    belongs_to :chat, Echo.Chats.Chat
+    belongs_to :message, Echo.Messages.Message
   end
 
   def changeset(notification, attrs) do

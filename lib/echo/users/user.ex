@@ -5,6 +5,9 @@ defmodule Echo.Users.User do
 
   alias Echo.Repo
   alias Echo.Schemas.User
+  alias Echo.Schemas.Chat
+  alias Echo.Schemas.ChatMember
+  alias Echo.Schemas.Contact
 
   def get(id) do
     Repo.get(User, id)
@@ -51,5 +54,61 @@ defmodule Echo.Users.User do
     |> Repo.insert()
   end
 
+  def last_chats(user_id) do
+    from chat in Chat,
+      join: cm in ChatMember,
+      on: cm.chat_id == chat.id,
+      where: cm.user_id == ^user_id,
+
+      # otro miembro del chat
+      join: other_cm in ChatMember,
+      on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
+
+      join: other_user in User,
+      on: other_user.id == other_cm.user_id,
+
+      # contacto (puede no existir)
+      left_join: contact in Contact,
+      on:
+        contact.user_id == ^user_id and
+        contact.contact_id == other_user.id,
+
+      order_by: [desc: chat.updated_at],
+
+      select: %{
+        chat_id: chat.id,
+        chat_type: chat.type,
+
+        chat_name:
+          fragment(
+            """
+            CASE
+              WHEN ? = 'privado'
+              THEN COALESCE(?, ?, ?)
+              ELSE ?
+            END
+            """,
+            chat.type,
+            contact.nickname,
+            other_user.name,
+            other_user.username,
+            chat.name
+          ),
+
+        avatar_url:
+        fragment(
+          """
+          CASE
+            WHEN ? = 'privado'
+            THEN ?
+            ELSE ?
+          END
+          """,
+          chat.type,
+          other_user.avatar_url,
+          chat.avatar_url
+        )
+      }
+  end
 
 end

@@ -42,8 +42,13 @@ defmodule Echo.WS.UserSocket do
 
     Echo.Users.UserSession.attach_socket(us_pid, self())
 
+    Echo.Users.UserSession.send_user_info(us_pid)
+
     {:ok, %{state | user_session: us_pid}}
   end
+
+
+
 
   # Mensajes que llegan DESDE el cliente
   @impl true
@@ -57,17 +62,6 @@ defmodule Echo.WS.UserSocket do
     end
   end
 
-  # Mensajes que llegan DESDE el backend (OTP)
-  # El :reply hace que Cowboy le mande el segundo arg al Cliente
-  @impl true
-  def websocket_info({:send, payload}, state) do
-    {:reply, {:text, Jason.encode!(payload)}, state}
-  end
-
-  @impl true
-  def websocket_info(_msg, state) do
-    {:ok, state}
-  end
 
   # Dispatch de mensajes del cliente
   defp dispatch(%{"type" => "open_chat", "chat_id" => chat}, state) do
@@ -83,6 +77,21 @@ defmodule Echo.WS.UserSocket do
   defp dispatch(_unknown, state) do
     {:ok, state}
   end
+
+
+
+  # Mensajes que llegan DESDE el backend (OTP)
+  # El :reply hace que Cowboy le mande el segundo arg al Cliente
+  @impl true
+  def websocket_info({:send, payload}, state) do
+    {:reply, {:text, Jason.encode!(payload)}, state}
+  end
+
+  @impl true
+  def websocket_info(_msg, state) do
+    {:ok, state}
+  end
+
 
   # Helper
   defp extract_token(req) do
@@ -112,4 +121,5 @@ defmodule Echo.WS.UserSocket do
         end
     end
   end
+
 end
