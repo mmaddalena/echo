@@ -1,6 +1,7 @@
 :root {
   --bg-main: #0b1220;
   --bg-chatlist-panel: #111A2E;
+  --bg-chatlist-hover: #233356;
   --bg-chat: #0f172a;
   --bg-chat-header: #141E36;
   --bg-input: #233356;
