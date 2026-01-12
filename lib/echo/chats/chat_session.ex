@@ -30,4 +30,8 @@ defmodule Echo.Chats.ChatSession do
     # Si sí: le llama a userSession.recieve_message (ACA NO MANDA EL client_msg_id, porque los receptores no lo necesitan)
     # Si no: crea una notificacion para ese usuario y lo persiste.
   end
+
+  def get_chat_info(cs_pid) do
+    # GenServer.cast(...)
+  end
 end

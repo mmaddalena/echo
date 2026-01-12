@@ -12,7 +12,7 @@
 
   const router = useRouter();
   const socketStore = useSocketStore();
-  const user = computed(() => socketStore.userInfo);
+  const user_info = computed(() => socketStore.userInfo);
 
   onMounted(() => {
     const token = sessionStorage.getItem("token");
@@ -27,8 +27,8 @@
     <div class="left">
       <img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
       <div class="main">
-        <Sidebar />
-        <ChatList />
+        <Sidebar /> <!-- TODO: Pasarle user.avatar_url del user_info --> 
+        <ChatList /> <!-- TODO: Pasarle last_chats del user_info --> 
       </div>
     </div>
     <div class="right">
@@ -44,7 +44,6 @@
   display: flex;
   flex-direction: row;
   height: 100vh;
-  /*overflow: hidden;     /* no scroll global */
 }
 .left {
   display: flex;
