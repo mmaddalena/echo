@@ -3,6 +3,7 @@
   import { onMounted } from "vue";
   import { useRouter } from "vue-router";
   import { useSocketStore } from "@/stores/socket";
+  import { storeToRefs } from "pinia";
 
   import Sidebar from "@/components/layout/Sidebar.vue";
   import ChatList from "@/components/chats/ChatList.vue";
@@ -12,7 +13,8 @@
 
   const router = useRouter();
   const socketStore = useSocketStore();
-  const user_info = computed(() => socketStore.userInfo);
+  const { userInfo } = storeToRefs(socketStore);
+  const chats = computed(() => userInfo.value?.last_chats ?? []);
 
   onMounted(() => {
     const token = sessionStorage.getItem("token");
@@ -28,7 +30,7 @@
       <img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
       <div class="main">
         <Sidebar /> <!-- TODO: Pasarle user.avatar_url del user_info --> 
-        <ChatList /> <!-- TODO: Pasarle last_chats del user_info --> 
+        <ChatList :chats="chats" />
       </div>
     </div>
     <div class="right">

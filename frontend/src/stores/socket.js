@@ -19,7 +19,7 @@ export const useSocketStore = defineStore("socket", () => {
       const payload = JSON.parse(event.data);
 
       if (payload.type === "user_info") {
-        userInfo.value = payload.user;
+        userInfo.value = payload;
       }
       else if (payload.type === "chat_info") {
         chatInfo.value = payload.chat;

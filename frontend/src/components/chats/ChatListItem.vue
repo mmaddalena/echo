@@ -1,13 +1,14 @@
 <script setup>
-  const props = defineProps({
+  const { chat } = defineProps({
     chat: Object
   });
+  console.log(chat)
   import IconMessageState from '../icons/IconMessageState.vue';
 
-  const isMuted = 
-    props.chat.lastMessage.type === 'outgoing' ||
-    (props.chat.lastMessage.type === 'incoming' &&
-     props.chat.lastMessage.state === 'read')
+  // const isMuted = 
+  //   props.chat.lastMessage.type === 'outgoing' ||
+  //   (props.chat.lastMessage.type === 'incoming' &&
+  //    props.chat.lastMessage.state === 'read')
 </script>
 
 <template>
@@ -16,16 +17,15 @@
     <div class="info">
       <div class="up">
         <div class="texto">
-          <p class="name">{{ chat.name }}</p>
+          <p class="name">a{{ chat.name }}</p>
           <p class="status">{{ chat.status }}</p>
         </div>
         <div 
           class="unread-messages"
-          v-if="chat.unread > 0"
         >
-          {{ chat.unread }}
+          8 <!--{{ chat.unread_messages }}-->
         </div>
-      </div>
+      <!-- </div>
       <div class="down">
         <div class="last-message">
           <IconMessageState 
@@ -45,7 +45,7 @@
           :class="{muted: isMuted}"
         >
           {{ chat.lastMessage.time }}
-        </span>
+        </span>-->
       </div>
     </div>
   </div>
