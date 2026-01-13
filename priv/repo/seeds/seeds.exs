@@ -30,35 +30,30 @@ users = [
     "password_hash" => "12345678",  # Note: This should be hashed in your changeset
     "email" => "lucas@coutt.com",
     "name" => "Lucas Couttulenc",
-    "status" => "online"
   },
   %{
     "username" => "martin",
     "password_hash" => "12345678",
     "email" => "martin@maddalena.com",
     "name" => "Martin Maddalena",
-    "status" => "offline"
   },
   %{
     "username" => "juan",
     "password_hash" => "12345678",
     "email" => "juan@perez.com",
     "name" => "Juan Pérez",
-    "status" => "offline"
   },
   %{
     "username" => "maria",
     "password_hash" => "12345678",
     "email" => "maria@gomez.com",
     "name" => "María Gómez",
-    "status" => "online"
   },
   %{
     "username" => "pedro",
     "password_hash" => "12345678",
     "email" => "pedro@rodriguez.com",
     "name" => "Pedro Rodríguez",
-    "status" => "offline"
   }
 ]
 

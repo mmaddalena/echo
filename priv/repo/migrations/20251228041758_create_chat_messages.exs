@@ -7,6 +7,7 @@ defmodule Echo.Repo.Migrations.CreateChatMessages do
       add :chat_id, references(:chats, type: :binary_id, on_delete: :delete_all), null: false
       add :user_id, references(:users, type: :binary_id, on_delete: :nilify_all), null: false
       add :content, :string, null: false
+      add :state, :string, null: false, default: "sent"
       add :deleted_at, :utc_datetime
       timestamps(type: :utc_datetime)
     end
@@ -14,5 +15,6 @@ defmodule Echo.Repo.Migrations.CreateChatMessages do
     create index(:messages, [:user_id])
     create index(:messages, [:chat_id])
     create index(:messages, [:deleted_at])
+    create index(:messages, [:state])
   end
 end

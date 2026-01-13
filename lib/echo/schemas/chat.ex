@@ -7,6 +7,7 @@ defmodule Echo.Schemas.Chat do
 
   schema "chats" do
     field :name, :string
+    field :avatar_url, :string
     field :type, :string, default: "private"
     timestamps(type: :utc_datetime)
 
