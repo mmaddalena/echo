@@ -1,7 +1,6 @@
 # seeds.exs
 alias Echo.Repo
-alias Echo.Schemas.{User, Contact, Chat, ChatMember, Message, Notification, BlockedContact}
-import Ecto.Query
+alias Echo.Schemas.{User, Contact, Chat, ChatMember, Message, BlockedContact}
 
 # Helper function to truncate microseconds
 truncate_datetime = fn datetime ->
@@ -10,8 +9,6 @@ end
 
 # Clear existing data
 IO.puts("🗑️  Clearing existing data...")
-
-Repo.delete_all(Notification)
 Repo.delete_all(Message)
 Repo.delete_all(ChatMember)
 Repo.delete_all(Chat)
@@ -340,55 +337,6 @@ deleted_message =
 
 IO.puts("✅ Messages created (including 1 deleted message)")
 
-# Create notifications
-IO.puts("🔔 Creating notifications...")
-
-# Get some messages for notifications
-recent_message = Repo.one(from m in Message, order_by: [desc: m.inserted_at], limit: 1)
-older_message = Repo.one(from m in Message, where: m.chat_id == ^work_team_chat.id, order_by: [asc: m.inserted_at], limit: 1)
-
-notifications = [
-  # Unread notification for Martin
-  %{
-    user_id: martin.id,
-    chat_id: lucas_martin_chat.id,
-    message_id: recent_message.id,
-    read_at: nil
-  },
-  # Read notification for Lucas
-  %{
-    user_id: lucas.id,
-    chat_id: work_team_chat.id,
-    message_id: older_message.id,
-    read_at: truncate_datetime.(DateTime.add(DateTime.utc_now(), -1, :hour))
-  },
-  # Unread notification for Maria
-  %{
-    user_id: maria.id,
-    chat_id: project_alpha_chat.id,
-    message_id: recent_message.id,
-    read_at: nil
-  },
-  # Unread notification for Juan
-  %{
-    user_id: juan.id,
-    chat_id: juan_maria_chat.id,
-    message_id: recent_message.id,
-    read_at: nil
-  }
-]
-
-Enum.each(notifications, fn notification_attrs ->
-  inserted_at = truncate_datetime.(DateTime.add(DateTime.utc_now(), -2, :hour))
-
-  %Notification{}
-  |> Notification.changeset(notification_attrs)
-  |> Ecto.Changeset.change(inserted_at: inserted_at)
-  |> Repo.insert!()
-end)
-
-IO.puts("✅ #{length(notifications)} notifications created")
-
 IO.puts("\n🎉 Seed data created successfully!")
 IO.puts("📊 Summary:")
 IO.puts("  👤 Users: #{length(created_users)}")
@@ -397,7 +345,6 @@ IO.puts("  🚫 Blocked: #{length(blocked_contacts)}")
 IO.puts("  💬 Chats: #{length(created_chats)} (3 group, 4 private)")
 IO.puts("  👥 Chat Members: #{length(chat_members)}")
 IO.puts("  📝 Messages: #{Repo.aggregate(Message, :count, :id)}")
-IO.puts("  🔔 Notifications: #{length(notifications)}")
 
 IO.puts("\n🔑 Test credentials (all passwords: 12345678):")
 IO.puts("  • lucas (Lucas Couttulenc)")

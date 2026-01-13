@@ -16,6 +16,7 @@
   const { userInfo } = storeToRefs(socketStore);
   const chats = computed(() => userInfo.value?.last_chats ?? []);
 
+  
   onMounted(() => {
     const token = sessionStorage.getItem("token");
     if (token){
