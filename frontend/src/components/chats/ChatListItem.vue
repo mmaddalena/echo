@@ -3,6 +3,8 @@
     chat: Object
   });
   import IconMessageState from '../icons/IconMessageState.vue';
+  import { formatChatTime } from '@/utils/formatChatTime'
+
   const isMuted = 
     chat.last_message.type === 'outgoing' ||
     (chat.last_message.type === 'incoming' &&
@@ -15,7 +17,7 @@
     <div class="info">
       <div class="up">
         <div class="texto">
-          <p class="name">a{{ chat.name }}</p>
+          <p class="name">{{ chat.name }}</p>
           <p class="status">{{ chat.status }}</p>
         </div>
         <div 
@@ -42,7 +44,7 @@
           class="time"
           :class="{muted: isMuted}"
         >
-          {{ chat.last_message.time }}
+          {{ formatChatTime(chat.last_message.time)}}
         </span>
       </div>
     </div>
