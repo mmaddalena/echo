@@ -6,6 +6,7 @@ defmodule Echo.Repo.Migrations.CreateChats do
       add :id, :binary_id, primary_key: true
       add :name, :string
       add :type, :string, null: false, default: "private"
+      add :avatar_url, :string
       add :creator_id, references(:users, type: :binary_id, on_delete: :delete_all), null: false
       timestamps(type: :utc_datetime)
     end

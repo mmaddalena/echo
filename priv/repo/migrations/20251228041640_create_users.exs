@@ -9,14 +9,12 @@ defmodule Echo.Repo.Migrations.CreateUsers do
           add :name, :string, null: false
           add :email, :string, null: false
           add :avatar_url, :string
-          add :status, :string, default: "offline", null: false
           add :last_seen_at, :utc_datetime
           timestamps(type: :utc_datetime)
       end
 
     create unique_index(:users, [:username])
     create unique_index(:users, [:email])
-    create index(:users, [:status, :last_seen_at])
     create index(:users, [:inserted_at])
   end
 end

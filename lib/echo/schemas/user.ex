@@ -15,7 +15,6 @@ defmodule Echo.Schemas.User do
     field :name, :string
     field :email, :string
     field :avatar_url, :string
-    field :status, :string, default: "offline"
     field :last_seen_at, :utc_datetime
     timestamps(type: :utc_datetime)
 
@@ -39,8 +38,8 @@ defmodule Echo.Schemas.User do
   # Register
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :password_hash, :name, :status])
-    |> validate_required([:username, :email, :password_hash, :name, :status])
+    |> cast(attrs, [:username, :email, :password_hash, :name])
+    |> validate_required([:username, :email, :password_hash, :name])
     |> validate_length(:username, min: 3, max: 30)
     |> validate_format(:username, @username_regex, message: "can only contain letters, numbers, and underscores")
     |> validate_format(:email, @email_regex)
