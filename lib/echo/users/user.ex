@@ -10,6 +10,7 @@ defmodule Echo.Users.User do
   alias Echo.Schemas.Chat
   alias Echo.Schemas.ChatMember
   alias Echo.Schemas.Contact
+  alias Echo.Schemas.Message
 
 
   def get(id) do
@@ -167,7 +168,7 @@ defmodule Echo.Users.User do
   defp get_unread_messages(user_id, chat_id) do
     # Find the chat member to get last_read_at
     chat_member = Repo.get_by(ChatMember, chat_id: chat_id, user_id: user_id)
-    
+
     if is_nil(chat_member) do
       0
     else
@@ -177,13 +178,13 @@ defmodule Echo.Users.User do
       # 3. Not sent by the user themselves
       # 4. Created after the user joined the chat
       # 5. Created after last_read_at (or all messages if last_read_at is nil)
-      
+
       query = from m in Message,
         where: m.chat_id == ^chat_id,
         where: is_nil(m.deleted_at),
         where: m.user_id != ^user_id,
         where: m.inserted_at > ^chat_member.inserted_at
-      
+
       # Add condition for last_read_at if it exists
       query = if chat_member.last_read_at do
         from m in query,
@@ -191,32 +192,33 @@ defmodule Echo.Users.User do
       else
         query
       end
-      
+
       Repo.aggregate(query, :count, :id)
     end
   end
 
   defp get_last_message(user_id, chat_id) do
-    chat_member = Repo.get_by(ChatMember, chat_id: chat_id, user_id: user_id)
-      
-      if is_nil(chat_member) do
-        nil
-      else
-        query = from m in Message,
-          where: m.chat_id == ^chat_id,
-          where: is_nil(m.deleted_at),
-          order_by: [desc: m.inserted_at, desc: m.id],
-          limit: 1,
-          select: %{
-            id: m.id,
-            content: m.content,
-            type: fragment("CASE WHEN ? = ? THEN 'outgoing' ELSE 'incoming' END", m.user_id, ^user_id),
-            state: m.state,
-            time: m.inserted_at
-          },
-          preload: [:user]  # Preload user details if needed
-        Repo.one(query)
-      end
+    query =
+      from m in Message,
+        join: sender in User,
+        on: sender.id == m.user_id,
+        where: m.chat_id == type(^chat_id, :binary_id),
+        where: is_nil(m.deleted_at),
+        order_by: [desc: m.inserted_at],
+        limit: 1,
+        select: %{
+          # Usa type() dentro del fragment también
+          type: fragment("CASE WHEN ? = ? THEN 'outgoing' ELSE 'incoming' END",
+                        m.user_id,
+                        type(^user_id, :binary_id)),
+          content: m.content,
+          state: m.state,
+          time: m.inserted_at,
+          sender_name: sender.username
+        }
+
+    Repo.one(query)
   end
+
 
 end

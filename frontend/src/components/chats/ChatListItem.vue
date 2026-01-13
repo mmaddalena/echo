@@ -2,13 +2,11 @@
   const { chat } = defineProps({
     chat: Object
   });
-  console.log(chat)
   import IconMessageState from '../icons/IconMessageState.vue';
-
-  // const isMuted = 
-  //   props.chat.lastMessage.type === 'outgoing' ||
-  //   (props.chat.lastMessage.type === 'incoming' &&
-  //    props.chat.lastMessage.state === 'read')
+  const isMuted = 
+    chat.last_message.type === 'outgoing' ||
+    (chat.last_message.type === 'incoming' &&
+     chat.last_message.state === 'read')
 </script>
 
 <template>
@@ -23,29 +21,29 @@
         <div 
           class="unread-messages"
         >
-          8 <!--{{ chat.unread_messages }}-->
+          {{ chat.unread_messages }}
         </div>
-      <!-- </div>
+      </div>
       <div class="down">
         <div class="last-message">
           <IconMessageState 
-            v-if="chat.lastMessage.type === 'outgoing'"
+            v-if="chat.last_message.type === 'outgoing'"
             class="icon" 
-            :state="chat.lastMessage.state" 
+            :state="chat.last_message.state" 
           />
           <p 
             class="text"
             :class="{muted: isMuted}"
           >
-            {{ chat.lastMessage.text }}
+            {{ chat.last_message.content }}
           </p>
         </div>
         <span 
           class="time"
           :class="{muted: isMuted}"
         >
-          {{ chat.lastMessage.time }}
-        </span>-->
+          {{ chat.last_message.time }}
+        </span>
       </div>
     </div>
   </div>

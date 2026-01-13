@@ -37,6 +37,7 @@ export const useSocketStore = defineStore("socket", () => {
     }
     socket.value = null;
     userInfo.value = null;
+    chatInfo.value = null;
   }
 
   function send(data) {
