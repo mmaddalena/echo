@@ -30,8 +30,8 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:attach_socket, socket_pid})
   end
 
-  def send_user_info(us_pid, socket_pid) do
-    GenServer.cast(us_pid, {:send_user_info, socket_pid})
+  def send_user_info(us_pid) do
+    GenServer.cast(us_pid, {:send_user_info})
   end
 
   def open_chat(us_pid, chat_id) do
@@ -76,25 +76,27 @@ defmodule Echo.Users.UserSession do
   end
 
   @impl true
-  def handle_cast({:send_user_info, socket_pid}, state) do
+  def handle_cast({:send_user_info}, state) do
     last_chats = Echo.Users.User.last_chats(state.user_id)
+    IO.inspect(last_chats)
     user_info = %{
       type: "user_info",
-      user: state.user,
+      user: Echo.Users.User.user_payload(state.user),
       current_chat_id: state.current_chat_id,
       last_chats: last_chats
     }
 
-    send(socket_pid, {:send, user_info})
+    send(state.socket, {:send, user_info})
 
-    {:noreply, %{state | socket: socket_pid}}
+    {:noreply, state}
   end
+
 
   @impl true
   def handle_cast({:open_chat, chat_id}, state) do
     {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
     {:ok, chat} = Echo.Chats.ChatSession.get_chat_info(cs_pid)
-    # asumimos que chat_info es un map
+
     chat_info = %{
       type: "chat_info",
       chat: chat
@@ -127,4 +129,7 @@ defmodule Echo.Users.UserSession do
     # cleanup (habria que ver bien qué hay que limpiar)
     :ok
   end
+
+
+
 end
