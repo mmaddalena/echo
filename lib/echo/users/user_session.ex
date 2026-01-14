@@ -85,7 +85,6 @@ defmodule Echo.Users.UserSession do
     user_info = %{
       type: "user_info",
       user: Echo.Users.User.user_payload(state.user),
-      current_chat_id: state.current_chat_id,
       last_chats: last_chats
     }
 
@@ -106,12 +105,7 @@ defmodule Echo.Users.UserSession do
   @impl true
   def handle_cast({:send_chat_info, chat_info}, state) do
 
-    chat_info_posta = %{
-      type: "chat_info",
-      chat: chat_info
-    }
-
-    send(state.socket, {:send, chat_info_posta})
+    send(state.socket, {:send, chat_info})
 
     {:noreply, state}
   end

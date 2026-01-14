@@ -4,6 +4,7 @@ import { ref } from "vue";
 export const useSocketStore = defineStore("socket", () => {
   const socket = ref(null);
   const userInfo = ref(null);
+  const chats = ref([]);
   const chatInfo = ref(null);
 
   function connect(token) {
@@ -19,7 +20,8 @@ export const useSocketStore = defineStore("socket", () => {
       const payload = JSON.parse(event.data);
 
       if (payload.type === "user_info") {
-        userInfo.value = payload;
+        userInfo.value = payload.user;
+        chats.value = payload.last_chats ?? [];
       }
       else if (payload.type === "chat_info") {
         chatInfo.value = payload.chat;
@@ -60,6 +62,7 @@ export const useSocketStore = defineStore("socket", () => {
   return {
     socket,
     userInfo,
+    chats,
     chatInfo,
     connect,
     disconnect,

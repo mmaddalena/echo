@@ -14,10 +14,10 @@
   const router = useRouter();
   const socketStore = useSocketStore();
   const { userInfo } = storeToRefs(socketStore);
-  const chats = computed(() => userInfo.value?.last_chats ?? []);
+  const { chats } = storeToRefs(socketStore);
   const { chatInfo } = storeToRefs(socketStore);
   console.log(chatInfo);
-  const messages = computed(() => chatInfo.value?.chat?.messages ?? []);
+  const messages = computed(() => chatInfo.value?.messages ?? []);
 
   function handleOpenChat(chatId) {
     socketStore.openChat(chatId)

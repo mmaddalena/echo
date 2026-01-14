@@ -16,7 +16,7 @@
   }
 
   const orderedChats = computed(() => {
-    return [...props.chats].sort((a, b) => {
+    return [...(props.chats ?? [])].sort((a, b) => {
       const tA = new Date(a.last_message?.time ?? 0)
       const tB = new Date(b.last_message?.time ?? 0)
       return tB - tA
