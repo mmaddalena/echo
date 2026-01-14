@@ -36,7 +36,7 @@ defmodule Echo.Chats.Chat do
       select: %{
         id: m.id,
         content: m.content,
-        user_id: m.user_id,
+        sender_user_id: m.user_id,
         state: m.state,
         time: m.inserted_at,
         deleted_at: m.deleted_at
@@ -65,7 +65,10 @@ defmodule Echo.Chats.Chat do
   def get_other_user_id(chat_id, user_id) do
     from(cm in ChatMember,
       join: c in Chat, on: c.id == cm.chat_id,
-      where: cm.chat_id == ^chat_id and cm.user_id != ^user_id and c.type == "private",
+      where:
+        cm.chat_id == ^chat_id and
+        cm.user_id != ^user_id and
+        c.type == "private",
       select: cm.user_id,
       limit: 1
     )
