@@ -1,15 +1,20 @@
 <script setup>
   defineProps({
-    text: String,
-    type: String, // "incoming" | "outgoing"
-    time: String
+    message: Object
   });
+
+  function formatHM(isoString) {
+    return new Date(isoString).toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  }
 </script>
 
 <template>
-  <div class="message" :class="type">
-    <span class="message_body">{{ text }}</span>
-    <span class="time">{{ time }}</span>
+  <div class="message" :class="message.type">
+    <span class="message_body">{{ message.content }}</span>
+    <span class="time">{{ formatHM(message.time) }}</span>
   </div>
 </template>
 

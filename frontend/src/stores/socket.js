@@ -23,6 +23,8 @@ export const useSocketStore = defineStore("socket", () => {
       }
       else if (payload.type === "chat_info") {
         chatInfo.value = payload.chat;
+      } else if (payload.type === "new_message") {
+        
       }
     };
 
@@ -48,11 +50,20 @@ export const useSocketStore = defineStore("socket", () => {
     }
   }
 
+  function openChat(chatId) {
+    send({
+      type: "open_chat",
+      chat_id: chatId
+    })
+  }
+
   return {
     socket,
     userInfo,
+    chatInfo,
     connect,
     disconnect,
-    send
+    send,
+    openChat
   };
 });

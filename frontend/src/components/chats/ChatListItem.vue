@@ -1,4 +1,6 @@
 <script setup>
+  const emit = defineEmits(['open'])
+
   const { chat } = defineProps({
     chat: Object
   });
@@ -9,10 +11,14 @@
     chat.last_message.type === 'outgoing' ||
     (chat.last_message.type === 'incoming' &&
      chat.last_message.state === 'read')
+
+  function handleClick() {
+    emit('open', chat.id)
+  } 
 </script>
 
 <template>
-  <div class="chat-item">
+  <div class="chat-item" @click="handleClick">
     <img class="avatar" />
     <div class="info">
       <div class="up">

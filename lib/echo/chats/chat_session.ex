@@ -1,11 +1,14 @@
 defmodule Echo.Chats.ChatSession do
+  alias Echo.Users.UserSessionSup
   alias Echo.Chats.ChatSessionSup
   # Idem que el UserSession.
   # Es un Genserver que vive mientras la sesion del chat esté viva.
   # La sesión vive despues de x tiempo de inactividad.
-
-
   use GenServer
+  alias Echo.Chats.Chat
+  alias Echo.Users.User
+  alias Echo.Users.UserSession
+  alias Echo.Constants
 
   def start_link(chat_id) do
     GenServer.start_link(
@@ -15,11 +18,11 @@ defmodule Echo.Chats.ChatSession do
     )
   end
 
-  @impl true
-  def init(chat_id) do
-    {:ok, %{chat_id: chat_id}} # TODO: Mandarle un msj a si mismo para que levante la info necesaria para cargarse todo al estado.
-  end
+  ##### Funciones llamadas desde el dominio
 
+  def get_chat_info(cs_pid, user_id, us_pid) do
+    GenServer.cast(cs_pid, {:chat_info, user_id, us_pid})
+  end
 
   def send_message(chat_session_pid, user_id, client_msg_id, body) do
     # Itera en cada user_id de los miembros del chat...
@@ -31,7 +34,56 @@ defmodule Echo.Chats.ChatSession do
     # Si no: crea una notificacion para ese usuario y lo persiste.
   end
 
-  def get_chat_info(cs_pid) do
-    # GenServer.cast(...)
+
+  ##### Callbacks
+
+  @impl true
+  def init(chat_id) do
+    state = %{
+      chat_id: chat_id,
+      chat: Chat.get(chat_id),
+      last_messages: Chat.get_last_messages(chat_id),
+      members: Chat.get_members(chat_id)
+    }
+    {:ok, state}
   end
+
+  @impl true
+  def handle_cast({:chat_info, user_id, us_pid}, state) do
+    other_user_id = Chat.get_other_user_id(state.chat_id, user_id)
+    status =
+      case state.chat.type do
+        "private" -> if User.is_active?(other_user_id), do: Constants.online(), else: Constants.offline()
+        _group -> nil
+      end
+    messages =
+      Enum.map(state.last_messages, fn message ->
+        type =
+          if message.user_id == user_id,
+            do: Constants.outgoing(),
+            else: Constants.incoming()
+
+        Map.put(message, :type, type)
+      end)
+    name = User.get_usable_name(user_id, other_user_id)
+    avatar_url = Chat.get_avatar_url(state.chat, other_user_id)
+    chat_info = %{
+      type: "chat_info",
+      chat: %{
+        messages: messages,
+        name: name,
+        status: status,
+        avatar_url: avatar_url
+      }
+    }
+
+    UserSession.send_chat_info(us_pid, chat_info)
+
+    {:noreply, state}
+  end
+
+
+
+
+
 end

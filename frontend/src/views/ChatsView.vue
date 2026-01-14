@@ -15,8 +15,13 @@
   const socketStore = useSocketStore();
   const { userInfo } = storeToRefs(socketStore);
   const chats = computed(() => userInfo.value?.last_chats ?? []);
+  const { chatInfo } = storeToRefs(socketStore);
+  console.log(chatInfo);
+  const messages = computed(() => chatInfo.value?.chat?.messages ?? []);
 
-  
+  function handleOpenChat(chatId) {
+    socketStore.openChat(chatId)
+  }
   onMounted(() => {
     const token = sessionStorage.getItem("token");
     if (token){
@@ -31,12 +36,15 @@
       <img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
       <div class="main">
         <Sidebar /> <!-- TODO: Pasarle user.avatar_url del user_info --> 
-        <ChatList :chats="chats" />
+        <ChatList 
+          :chats="chats" 
+          @open-chat="handleOpenChat"
+        />
       </div>
     </div>
     <div class="right">
       <ChatHeader />
-      <ChatMessages />
+      <ChatMessages :messages="messages"/>
       <ChatInput />
     </div>
   </div>
