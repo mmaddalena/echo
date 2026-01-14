@@ -11,6 +11,7 @@ defmodule Echo.Users.User do
   alias Echo.Schemas.ChatMember
   alias Echo.Schemas.Contact
   alias Echo.Schemas.Message
+  alias Echo.Constants
 
 
   def get(id) do
@@ -73,78 +74,73 @@ defmodule Echo.Users.User do
   #    },
   #  }
   def last_chats(user_id) do
-    query =
-      from(chat in Chat,
-        join: cm in ChatMember,
-        on: cm.chat_id == chat.id,
-        where: cm.user_id == ^user_id,
+    private_chats(user_id) ++ group_chats(user_id)
+  end
 
-        # otro miembro del chat
-        join: other_cm in ChatMember,
-        on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
 
-        join: other_user in User,
-        on: other_user.id == other_cm.user_id,
+  defp private_chats(user_id) do
+    from(chat in Chat,
+      join: cm in ChatMember,
+      on: cm.chat_id == chat.id,
+      where: cm.user_id == ^user_id and chat.type == "private",
 
-        # contacto (puede no existir)
-        left_join: contact in Contact,
-        on: contact.user_id == ^user_id and contact.contact_id == other_user.id,
+      join: other_cm in ChatMember,
+      on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
 
-        order_by: [desc: chat.updated_at],
+      join: other_user in User,
+      on: other_user.id == other_cm.user_id,
 
-        select: %{
-          id: chat.id,
-          type: chat.type,
-          other_user_id: other_user.id,
+      left_join: contact in Contact,
+      on: contact.user_id == ^user_id and contact.contact_id == other_user.id,
 
-          name:
-            fragment(
-              """
-              CASE
-                WHEN ? = 'private'
-                THEN COALESCE(?, ?, ?)
-                ELSE ?
-              END
-              """,
-              chat.type,
-              contact.nickname,
-              other_user.name,
-              other_user.username,
-              chat.name
-            ),
-
-          avatar_url:
-            fragment(
-              """
-              CASE
-                WHEN ? = 'private'
-                THEN ?
-                ELSE ?
-              END
-              """,
-              chat.type,
-              other_user.avatar_url,
-              chat.avatar_url
-            )
-        }
-      )
-
-    Repo.all(query)
+      select: %{
+        id: chat.id,
+        type: chat.type,
+        name:
+          fragment(
+            "COALESCE(?, ?, ?)",
+            contact.nickname,
+            other_user.name,
+            other_user.username
+        ),
+        avatar_url: other_user.avatar_url,
+        other_user_id: other_user.id
+      }
+    )
+    |> Repo.all()
     |> Enum.map(fn chat ->
-      status =
-        if chat.type == "private" do
-          if is_active?(chat.other_user_id), do: "Online", else: "Offline"
-        else
-          nil
-        end
-
       chat
-      |> Map.put(:status, status)
+      |> Map.put(:status, if(is_active?(chat.other_user_id), do: Constants.online, else: Constants.offline))
       |> Map.delete(:other_user_id)
       |> Map.put(:unread_messages, get_unread_messages(user_id, chat.id))
       |> Map.put(:last_message, get_last_message(user_id, chat.id))
     end)
   end
+
+  defp group_chats(user_id) do
+    from(chat in Chat,
+      join: cm in ChatMember,
+      on: cm.chat_id == chat.id,
+      where: cm.user_id == ^user_id and chat.type == "group",
+
+      distinct: chat.id,
+
+      select: %{
+        id: chat.id,
+        type: chat.type,
+        name: chat.name,
+        avatar_url: chat.avatar_url
+      }
+    )
+    |> Repo.all()
+    |> Enum.map(fn chat ->
+      chat
+      |> Map.put(:status, nil)
+      |> Map.put(:unread_messages, get_unread_messages(user_id, chat.id))
+      |> Map.put(:last_message, get_last_message(user_id, chat.id))
+    end)
+  end
+
 
   def user_payload(user) do
     %{
@@ -158,7 +154,7 @@ defmodule Echo.Users.User do
   end
 
 
-  defp is_active?(user_id) do
+  def is_active?(user_id) do
     case ProcessRegistry.whereis_user_session(user_id) do
       nil -> false
       _ -> true
@@ -220,5 +216,20 @@ defmodule Echo.Users.User do
     Repo.one(query)
   end
 
+  def get_usable_name(user_id, other_user_id) do
+    from(c in Contact,
+      where: c.user_id == ^user_id and c.contact_id == ^other_user_id,
+      select: c.nickname
+    )
+    |> Repo.one()
+    |> case do
+      nil ->
+        other = Repo.get!(User, other_user_id)
+        other.name || other.username
+
+      nickname ->
+        nickname
+    end
+  end
 
 end

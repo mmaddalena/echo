@@ -38,4 +38,11 @@ defmodule Echo.Users.UserSessionSup do
         {:error, reason}
     end
   end
+
+  def is_session_alive?(user_id) do
+    case ProcessRegistry.whereis_user_session(user_id) do
+      nil -> false
+      _pid -> true
+    end
+  end
 end

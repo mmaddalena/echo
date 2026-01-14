@@ -1,44 +1,33 @@
 <script setup>
   import ChatMessage from "./ChatMessage.vue";
+  import { computed } from 'vue'
+
+  const props = defineProps({
+    messages: {
+      type: Array,
+      required: true
+    }
+  })
+  const orderedMessages = computed(() => {
+    return [...props.messages].sort((a, b) => {
+      const tA = new Date(a.time ?? 0)
+      const tB = new Date(b.time ?? 0)
+      return tB - tA
+    })
+  })
+  import { watch } from "vue"
+  watch(orderedMessages, (val) => {
+    console.log(val)
+  })
 </script>
 
 <template>
   <div class="chat-messages">
-    <ChatMessage text="Hola bro" type="incoming" time="9:25" />
-    <ChatMessage text="Todo bien?" type="incoming" time="9:25" />
-    <ChatMessage text="Sí, vos?" type="outgoing" time="9:26" />
-    <ChatMessage text="Sí todo tranqui" type="incoming" time="9:27" />
-    <ChatMessage text="Cuchá" type="incoming" time="9:27" />
-    <ChatMessage text="Acordate que tenemos que estar a las 10:00" type="incoming" time="9:27" />
-    <ChatMessage text="Dale amigo sisi" type="outgoing" time="9:28" />
-    <ChatMessage text="Igual ya había avisado en el grupo" type="outgoing" time="9:29" />
-    
-    <ChatMessage text="Hola bro" type="incoming" time="9:25" />
-    <ChatMessage text="Todo bien?" type="incoming" time="9:25" />
-    <ChatMessage text="Sí, vos?" type="outgoing" time="9:26" />
-    <ChatMessage text="Sí todo tranqui" type="incoming" time="9:27" />
-    <ChatMessage text="Cuchá" type="incoming" time="9:27" />
-    <ChatMessage text="Acordate que tenemos que estar a las 10:00" type="incoming" time="9:27" />
-    <ChatMessage text="Dale amigo sisi" type="outgoing" time="9:28" />
-    <ChatMessage text="Igual ya había avisado en el grupo" type="outgoing" time="9:29" />
-    
-    <ChatMessage text="Hola bro" type="incoming" time="9:25" />
-    <ChatMessage text="Todo bien?" type="incoming" time="9:25" />
-    <ChatMessage text="Sí, vos?" type="outgoing" time="9:26" />
-    <ChatMessage text="Sí todo tranqui" type="incoming" time="9:27" />
-    <ChatMessage text="Cuchá" type="incoming" time="9:27" />
-    <ChatMessage text="Acordate que tenemos que estar a las 10:00" type="incoming" time="9:27" />
-    <ChatMessage text="Dale amigo sisi" type="outgoing" time="9:28" />
-    <ChatMessage text="Igual ya había avisado en el grupo" type="outgoing" time="9:29" />
-
-    <ChatMessage text="Hola bro" type="incoming" time="9:25" />
-    <ChatMessage text="Todo bien?" type="incoming" time="9:25" />
-    <ChatMessage text="Sí, vos?" type="outgoing" time="9:26" />
-    <ChatMessage text="Sí todo tranqui" type="incoming" time="9:27" />
-    <ChatMessage text="Cuchá" type="incoming" time="9:27" />
-    <ChatMessage text="Acordate que tenemos que estar a las 10:00" type="incoming" time="9:27" />
-    <ChatMessage text="Dale amigo sisi" type="outgoing" time="9:28" />
-    <ChatMessage text="Igual ya había avisado en el grupo" type="outgoing" time="9:29" />
+    <ChatMessage 
+      v-for="message in orderedMessages"
+      :key="message.id"
+      :message="message"
+    />
   </div>
 </template>
 

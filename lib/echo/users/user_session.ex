@@ -45,6 +45,10 @@ defmodule Echo.Users.UserSession do
 
   ##### Funciones llamadas desde el dominio
 
+  def send_chat_info(us_pid, chat_info) do
+    GenServer.cast(us_pid, {:send_chat_info, chat_info})
+  end
+
   def message_sent(us_pid, msg) do
     GenServer.cast(us_pid, {:message_sent, msg})
   end
@@ -78,7 +82,6 @@ defmodule Echo.Users.UserSession do
   @impl true
   def handle_cast({:send_user_info}, state) do
     last_chats = Echo.Users.User.last_chats(state.user_id)
-    IO.inspect(last_chats)
     user_info = %{
       type: "user_info",
       user: Echo.Users.User.user_payload(state.user),
@@ -95,15 +98,24 @@ defmodule Echo.Users.UserSession do
   @impl true
   def handle_cast({:open_chat, chat_id}, state) do
     {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
-    {:ok, chat} = Echo.Chats.ChatSession.get_chat_info(cs_pid)
 
-    chat_info = %{
-      type: "chat_info",
-      chat: chat
-    }
-    send(state.socket, {:send, chat_info})
+    Echo.Chats.ChatSession.get_chat_info(cs_pid, state.user_id, self())
+
     {:noreply, state}
   end
+  @impl true
+  def handle_cast({:send_chat_info, chat_info}, state) do
+
+    chat_info_posta = %{
+      type: "chat_info",
+      chat: chat_info
+    }
+
+    send(state.socket, {:send, chat_info_posta})
+
+    {:noreply, state}
+  end
+
 
   @impl true
   def handle_cast(
