@@ -50,23 +50,42 @@ defmodule Echo.Chats.ChatSession do
 
   @impl true
   def handle_cast({:chat_info, user_id, us_pid}, state) do
+    is_private? = state.chat.type == Constants.private_chat()
     other_user_id = Chat.get_other_user_id(state.chat_id, user_id)
+
     status =
-      case state.chat.type do
-        "private" -> if User.is_active?(other_user_id), do: Constants.online(), else: Constants.offline()
-        _group -> nil
+      case is_private? do
+        true -> if User.is_active?(other_user_id), do: Constants.online(), else: Constants.offline()
+        false -> nil
       end
+
+    senders_ids =
+      state.last_messages
+      |> Enum.map(& &1.sender_user_id)
+      |> Enum.uniq()
+    senders = case is_private? do
+      true -> %{}
+      false -> User.get_usable_names(user_id, senders_ids)
+    end
+
     messages =
       Enum.map(state.last_messages, fn message ->
         type =
-          if message.user_id == user_id,
+          if message.sender_user_id == user_id,
             do: Constants.outgoing(),
             else: Constants.incoming()
 
-        Map.put(message, :type, type)
+        sender_name = Map.get(senders, message.sender_user_id)
+
+        message
+        |> Map.put(:type, type)
+        |> Map.put(:sender_name, sender_name)
       end)
-    name = User.get_usable_name(user_id, other_user_id)
+
+    name = User.get_usable_name(user_id, other_user_id, state.chat.name)
+
     avatar_url = Chat.get_avatar_url(state.chat, other_user_id)
+
     chat_info = %{
       type: "chat_info",
       chat: %{

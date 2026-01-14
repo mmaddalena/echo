@@ -216,7 +216,10 @@ defmodule Echo.Users.User do
     Repo.one(query)
   end
 
-  def get_usable_name(user_id, other_user_id) do
+  def get_usable_name(_user_id, nil, chat_name) do
+    chat_name
+  end
+  def get_usable_name(user_id, other_user_id, _chat_name) do
     from(c in Contact,
       where: c.user_id == ^user_id and c.contact_id == ^other_user_id,
       select: c.nickname
@@ -230,6 +233,30 @@ defmodule Echo.Users.User do
       nickname ->
         nickname
     end
+  end
+
+  def get_usable_names(user_id, other_users_ids) when is_list(other_users_ids) do
+    nicknames =
+      from(c in Contact,
+        where: c.user_id == ^user_id and c.contact_id in ^other_users_ids,
+        select: {c.contact_id, c.nickname}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    missing_ids =
+      other_users_ids
+      |> Enum.reject(&Map.has_key?(nicknames, &1))
+
+    users =
+      from(u in User,
+        where: u.id in ^missing_ids,
+        select: {u.id, coalesce(u.name, u.username)}
+      )
+      |> Repo.all()
+      |> Map.new()
+
+    Map.merge(users, nicknames)
   end
 
 end
