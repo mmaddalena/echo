@@ -11,13 +11,19 @@
   import ChatMessages from "@/components/chats/ChatMessages.vue";
   import ChatInput from "@/components/chats/ChatInput.vue";
 
-  const router = useRouter();
   const socketStore = useSocketStore();
-  const { userInfo } = storeToRefs(socketStore);
+
   const { chats } = storeToRefs(socketStore);
-  const { chatInfo } = storeToRefs(socketStore);
-  console.log(chatInfo);
-  const messages = computed(() => chatInfo.value?.messages ?? []);
+  const { chatsInfo } = storeToRefs(socketStore);
+  const { activeChatId } = storeToRefs(socketStore);
+  
+  const activeChat = computed(() =>
+    activeChatId.value
+      ? chatsInfo.value[activeChatId.value]
+      : null
+  );
+
+  const messages = computed(() => activeChat.value?.messages ?? []);
 
   function handleOpenChat(chatId) {
     socketStore.openChat(chatId)
