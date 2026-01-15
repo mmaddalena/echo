@@ -24,7 +24,7 @@ IO.puts("👥 Creating users...")
 users = [
   %{
     "username" => "lucas",
-    "password_hash" => "12345678",  # Note: This should be hashed in your changeset
+    "password_hash" => "12345678",
     "email" => "lucas@coutt.com",
     "name" => "Lucas Couttulenc",
   },
@@ -35,22 +35,22 @@ users = [
     "name" => "Martin Maddalena",
   },
   %{
-    "username" => "juan",
+    "username" => "rocio",
     "password_hash" => "12345678",
-    "email" => "juan@perez.com",
-    "name" => "Juan Pérez",
+    "email" => "rocio@gallo.com",
+    "name" => "Rocío Gallo",
   },
   %{
-    "username" => "maria",
+    "username" => "manuel",
     "password_hash" => "12345678",
-    "email" => "maria@gomez.com",
-    "name" => "María Gómez",
+    "email" => "manuel@camejo.com",
+    "name" => "Manuel Camejo",
   },
   %{
-    "username" => "pedro",
+    "username" => "matias",
     "password_hash" => "12345678",
-    "email" => "pedro@rodriguez.com",
-    "name" => "Pedro Rodríguez",
+    "email" => "matias@onorato.com",
+    "name" => "Matías Onorato",
   }
 ]
 
@@ -65,7 +65,7 @@ end)
 IO.puts("✅ #{length(created_users)} users created")
 
 # Map users for easy access
-[lucas, martin, juan, maria, pedro] = created_users
+[lucas, martin, rocio, manuel, matias] = created_users
 
 # Update last_seen_at for more realistic data (truncate microseconds)
 now = truncate_datetime.(DateTime.utc_now())
@@ -74,9 +74,9 @@ two_hours_ago = truncate_datetime.(DateTime.add(now, -7200, :second))
 
 Repo.get!(User, lucas.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
 Repo.get!(User, martin.id) |> Ecto.Changeset.change(last_seen_at: yesterday) |> Repo.update!()
-Repo.get!(User, juan.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
-Repo.get!(User, maria.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
-Repo.get!(User, pedro.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
+Repo.get!(User, rocio.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
+Repo.get!(User, manuel.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
+Repo.get!(User, matias.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
 
 # Create contacts (friendships)
 IO.puts("🤝 Creating contacts...")
@@ -84,23 +84,20 @@ IO.puts("🤝 Creating contacts...")
 contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
-  %{user_id: lucas.id, contact_id: juan.id, nickname: "Juancito"},
-  %{user_id: lucas.id, contact_id: maria.id, nickname: "Mari"},
+  %{user_id: lucas.id, contact_id: rocio.id, nickname: "Roci"},
+  %{user_id: lucas.id, contact_id: manuel.id, nickname: "Manu"},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
-  %{user_id: martin.id, contact_id: juan.id, nickname: "Juancito"},
-  %{user_id: martin.id, contact_id: pedro.id, nickname: "Pedrito"},
-  # Juan's contacts
-  %{user_id: juan.id, contact_id: lucas.id, nickname: "Lucasss"},
-  %{user_id: juan.id, contact_id: martin.id, nickname: "Marto"},
-  %{user_id: juan.id, contact_id: maria.id, nickname: "Mary"},
-  # Maria's contacts
-  %{user_id: maria.id, contact_id: lucas.id, nickname: "Luke"},
-  %{user_id: maria.id, contact_id: juan.id, nickname: "Juancito"},
-  %{user_id: maria.id, contact_id: pedro.id, nickname: "Pedrito"},
-  # Pedro's contacts
-  %{user_id: pedro.id, contact_id: martin.id, nickname: "Martín"},
-  %{user_id: pedro.id, contact_id: maria.id, nickname: "Maru"}
+  %{user_id: martin.id, contact_id: rocio.id, nickname: "Roci"},
+  %{user_id: martin.id, contact_id: manuel.id, nickname: "Manu"},
+  # Rocio's contacts
+  %{user_id: rocio.id, contact_id: lucas.id, nickname: "Lucasss"},
+  %{user_id: rocio.id, contact_id: martin.id, nickname: "Marto"},
+  %{user_id: rocio.id, contact_id: manuel.id, nickname: "Manu"},
+  # Manuel's contacts
+  %{user_id: manuel.id, contact_id: matias.id, nickname: "Mati"},
+  # Matias's contacts
+  %{user_id: matias.id, contact_id: manuel.id, nickname: "Manu"}
 ]
 
 Enum.each(contacts, fn contact_attrs ->
@@ -115,10 +112,8 @@ IO.puts("✅ #{length(contacts)} contacts created")
 IO.puts("🚫 Creating blocked contacts...")
 
 blocked_contacts = [
-  # Juan blocked Pedro
-  %{blocker_id: juan.id, blocked_id: pedro.id},
-  # Maria blocked Martin
-  %{blocker_id: maria.id, blocked_id: martin.id}
+  # Rocio blocked Manuel
+  %{blocker_id: rocio.id, blocked_id: manuel.id},
 ]
 
 Enum.each(blocked_contacts, fn blocked_attrs ->
@@ -135,16 +130,12 @@ IO.puts("💬 Creating chats...")
 # Direct chats (private)
 direct_chats = [
   %{name: nil, type: "private", creator_id: lucas.id}, # Lucas ↔ Martin
-  %{name: nil, type: "private", creator_id: lucas.id}, # Lucas ↔ Juan
-  %{name: nil, type: "private", creator_id: martin.id}, # Martin ↔ Pedro
-  %{name: nil, type: "private", creator_id: juan.id}, # Juan ↔ Maria
 ]
 
 # Group chats
 group_chats = [
-  %{name: "Work Team", type: "group", creator_id: lucas.id},
-  %{name: "Friends Group", type: "group", creator_id: martin.id},
-  %{name: "Project Alpha", type: "group", creator_id: maria.id}
+  %{name: "CS GO", type: "group", creator_id: lucas.id},
+  %{name: "TP FINAL Taller", type: "group", creator_id: martin.id}
 ]
 
 all_chats = direct_chats ++ group_chats
@@ -158,7 +149,7 @@ end)
 IO.puts("✅ #{length(created_chats)} chats created")
 
 # Map chats for reference
-[lucas_martin_chat, lucas_juan_chat, martin_pedro_chat, juan_maria_chat, work_team_chat, friends_group_chat, project_alpha_chat] = created_chats
+[lucas_martin_chat, cs_go_chat, tp_final_taller_chat] = created_chats
 
 # Create chat members
 IO.puts("👥 Adding members to chats...")
@@ -168,33 +159,10 @@ chat_members = [
   %{chat_id: lucas_martin_chat.id, user_id: lucas.id},
   %{chat_id: lucas_martin_chat.id, user_id: martin.id},
 
-  # Direct chat: Lucas ↔ Juan
-  %{chat_id: lucas_juan_chat.id, user_id: lucas.id},
-  %{chat_id: lucas_juan_chat.id, user_id: juan.id},
-
-  # Direct chat: Martin ↔ Pedro
-  %{chat_id: martin_pedro_chat.id, user_id: martin.id},
-  %{chat_id: martin_pedro_chat.id, user_id: pedro.id},
-
-  # Direct chat: Juan ↔ Maria
-  %{chat_id: juan_maria_chat.id, user_id: juan.id},
-  %{chat_id: juan_maria_chat.id, user_id: maria.id},
-
-  # Group chat: Work Team (Lucas, Martin, Maria)
-  %{chat_id: work_team_chat.id, user_id: lucas.id},
-  %{chat_id: work_team_chat.id, user_id: martin.id},
-  %{chat_id: work_team_chat.id, user_id: maria.id},
-
-  # Group chat: Friends Group (Lucas, Martin, Juan, Pedro)
-  %{chat_id: friends_group_chat.id, user_id: lucas.id},
-  %{chat_id: friends_group_chat.id, user_id: martin.id},
-  %{chat_id: friends_group_chat.id, user_id: juan.id},
-  %{chat_id: friends_group_chat.id, user_id: pedro.id},
-
-  # Group chat: Project Alpha (Juan, Maria, Pedro)
-  %{chat_id: project_alpha_chat.id, user_id: juan.id},
-  %{chat_id: project_alpha_chat.id, user_id: maria.id},
-  %{chat_id: project_alpha_chat.id, user_id: pedro.id}
+  # Group chat: TP FINAL Taller (Lucas, Martin, Rocio)
+  %{chat_id: tp_final_taller_chat.id, user_id: lucas.id},
+  %{chat_id: tp_final_taller_chat.id, user_id: martin.id},
+  %{chat_id: tp_final_taller_chat.id, user_id: rocio.id}
 ]
 
 Enum.each(chat_members, fn member_attrs ->
@@ -226,129 +194,58 @@ end
 
 # Messages in Lucas ↔ Martin chat
 create_messages.(lucas_martin_chat.id, lucas.id, [
-  {"Hey Martin! How are you?", 48},
-  {"Did you finish the project?", 46}
+  {"Que onda Martin?", 48},
+  {"Todo bien??", 48}
 ])
 
 create_messages.(lucas_martin_chat.id, martin.id, [
-  {"Hi Lucas! I'm good, thanks!", 47},
-  {"Almost done, just need to review it", 45},
-  {"Can we meet tomorrow?", 44}
+  {"Holaaa", 47},
+  {"Todo bien y vos?", 46}
 ])
-
 create_messages.(lucas_martin_chat.id, lucas.id, [
-  {"Sure, 2 PM works?", 43},
-  {"Bring the reports please", 42}
+  {"Bien bien, metiendole al TP", 45},
+  {"Hacemos call para seguir con las features que faltan?", 44}
+])
+create_messages.(lucas_martin_chat.id, martin.id, [
+  {"Dale, ahí me meto a Discord", 43}
 ])
 
-# Messages in Lucas ↔ Juan chat
-create_messages.(lucas_juan_chat.id, lucas.id, [
-  {"Juan, did you see the email?", 72}
+# Messages in CS GO group
+create_messages.(cs_go_chat.id, lucas.id, [
+  {"Que ondaa, sale una partida??", 36},
+  {"Ando re manija", 35}
 ])
 
-create_messages.(lucas_juan_chat.id, juan.id, [
-  {"Yes, I'll reply in a bit", 71},
-  {"The budget looks good", 70}
+create_messages.(cs_go_chat.id, martin.id, [
+  {"Esta ehhh, banca que ando mirando una serie", 34},
+  {"Termino este episodio y me meto", 34}
 ])
 
-# Messages in Martin ↔ Pedro chat
-create_messages.(martin_pedro_chat.id, martin.id, [
-  {"Pedro, are we still on for lunch?", 24}
+# Messages in TP FINAL Taller Group
+create_messages.(tp_final_taller_chat.id, lucas.id, [
+  {"Que les parece el logo que diseñamos?", 96}
 ])
 
-create_messages.(martin_pedro_chat.id, pedro.id, [
-  {"Yes! 1 PM at the usual place", 23},
-  {"I'll bring the documents", 22}
+create_messages.(tp_final_taller_chat.id, martin.id, [
+  {"quedo muy copado, me gusta me gusta:)", 95}
 ])
 
-# Messages in Juan ↔ Maria chat
-create_messages.(juan_maria_chat.id, juan.id, [
-  {"Maria, I need your feedback on the design", 12}
+create_messages.(tp_final_taller_chat.id, rocio.id, [
+  {"Si, está muy bueno! Combina bastante bien", 93}
 ])
-
-create_messages.(juan_maria_chat.id, maria.id, [
-  {"I'll review it this afternoon", 11},
-  {"Looks promising so far!", 10}
-])
-
-# Messages in Work Team group
-create_messages.(work_team_chat.id, lucas.id, [
-  {"Good morning team!", 36},
-  {"Let's have a quick sync at 10 AM", 35}
-])
-
-create_messages.(work_team_chat.id, martin.id, [
-  {"I can't make it at 10, how about 11?", 34}
-])
-
-create_messages.(work_team_chat.id, maria.id, [
-  {"11 works for me", 33},
-  {"I'll share the agenda", 32}
-])
-
-create_messages.(work_team_chat.id, lucas.id, [
-  {"Perfect, 11 AM it is", 31}
-])
-
-# Messages in Friends Group
-create_messages.(friends_group_chat.id, martin.id, [
-  {"Who's up for the game on Saturday?", 96}
-])
-
-create_messages.(friends_group_chat.id, juan.id, [
-  {"I'm in!", 95},
-  {"What time?", 94}
-])
-
-create_messages.(friends_group_chat.id, lucas.id, [
-  {"Count me in too", 93},
-  {"8 PM?", 92}
-])
-
-create_messages.(friends_group_chat.id, pedro.id, [
-  {"Can't make it this week, sorry guys", 91}
-])
-
-# Messages in Project Alpha group
-create_messages.(project_alpha_chat.id, maria.id, [
-  {"I've uploaded the initial wireframes", 60}
-])
-
-create_messages.(project_alpha_chat.id, juan.id, [
-  {"Great! I'll review them", 59},
-  {"Pedro, what's the status on the backend?", 58}
-])
-
-create_messages.(project_alpha_chat.id, pedro.id, [
-  {"Almost done with the API endpoints", 57},
-  {"Should be ready by tomorrow", 56}
-])
-
-# Create a deleted message (truncate microseconds)
-deleted_message =
-  %Message{}
-  |> Message.changeset(%{
-    chat_id: lucas_martin_chat.id,
-    user_id: lucas.id,
-    content: "This message will be deleted",
-    deleted_at: truncate_datetime.(DateTime.utc_now())
-  })
-  |> Repo.insert!()
-
-IO.puts("✅ Messages created (including 1 deleted message)")
 
 IO.puts("\n🎉 Seed data created successfully!")
 IO.puts("📊 Summary:")
 IO.puts("  👤 Users: #{length(created_users)}")
 IO.puts("  🤝 Contacts: #{length(contacts)}")
 IO.puts("  🚫 Blocked: #{length(blocked_contacts)}")
-IO.puts("  💬 Chats: #{length(created_chats)} (3 group, 4 private)")
+IO.puts("  💬 Chats: #{length(created_chats)} (2 group, 2 private)")
 IO.puts("  👥 Chat Members: #{length(chat_members)}")
 IO.puts("  📝 Messages: #{Repo.aggregate(Message, :count, :id)}")
 
 IO.puts("\n🔑 Test credentials (all passwords: 12345678):")
 IO.puts("  • lucas (Lucas Couttulenc)")
 IO.puts("  • martin (Martin Maddalena)")
-IO.puts("  • juan (Juan Pérez)")
-IO.puts("  • maria (María Gómez)")
-IO.puts("  • pedro (Pedro Rodríguez)")
+IO.puts("  • rocio (Rocío Gallo)")
+IO.puts("  • manuel (Manuel Camejo)")
+IO.puts("  • matias (Matías Onorato)")
