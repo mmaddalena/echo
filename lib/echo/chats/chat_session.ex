@@ -88,8 +88,8 @@ defmodule Echo.Chats.ChatSession do
 
     chat_info = %{
       type: "chat_info",
-      chat_id: state.chat_id,
       chat: %{
+        id: state.chat_id,
         messages: messages,
         name: name,
         status: status,

@@ -5,7 +5,9 @@ export const useSocketStore = defineStore("socket", () => {
   const socket = ref(null);
   const userInfo = ref(null);
   const chats = ref([]);
-  const chatInfo = ref(null);
+  const chatsInfo = ref({});
+  const activeChatId = ref(null);
+
 
   function connect(token) {
     if (socket.value) return; // ya conectado
@@ -24,7 +26,15 @@ export const useSocketStore = defineStore("socket", () => {
         chats.value = payload.last_chats ?? [];
       }
       else if (payload.type === "chat_info") {
-        chatInfo.value = payload.chat;
+        console.log("chat_info recibido:", payload.chat);
+        const chat = payload.chat;
+
+        chatsInfo.value = {
+          ...chatsInfo.value,
+          [chat.id]: chat
+        };
+        activeChatId.value = chat.id;
+
       } else if (payload.type === "new_message") {
         
       }
@@ -41,7 +51,9 @@ export const useSocketStore = defineStore("socket", () => {
     }
     socket.value = null;
     userInfo.value = null;
-    chatInfo.value = null;
+    chats.value = [];
+    chatsInfo.value = {};
+    activeChatId.value = null;
   }
 
   function send(data) {
@@ -53,17 +65,22 @@ export const useSocketStore = defineStore("socket", () => {
   }
 
   function openChat(chatId) {
-    send({
-      type: "open_chat",
-      chat_id: chatId
-    })
+    activeChatId.value = chatId;
+
+    if (!chatsInfo.value[chatId]) {
+      send({
+        type: "open_chat",
+        chat_id: chatId
+      });
+    }
   }
 
   return {
     socket,
     userInfo,
     chats,
-    chatInfo,
+    chatsInfo,
+    activeChatId,
     connect,
     disconnect,
     send,
