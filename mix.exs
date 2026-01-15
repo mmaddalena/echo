@@ -15,7 +15,7 @@ defmodule Echo.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :runtime_tools, :observer, :wx],
       mod: {Echo.Application, []}
     ]
   end
@@ -29,7 +29,7 @@ defmodule Echo.MixProject do
       {:jason, "~> 1.4"},
       {:joken, "~> 2.5"},
       {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"},
+      {:postgrex, ">= 0.0.0"}
       # {:bcrypt_elixir, "~> 3.0"}
     ]
   end
@@ -38,7 +38,7 @@ defmodule Echo.MixProject do
     [
       "ecto.setup": ["ecto.create", "ecto.migrate"],
       "ecto.reset": ["ecto.drop", "ecto.setup"]
-      #test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+      # test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
     ]
   end
 end
