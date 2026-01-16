@@ -10,6 +10,8 @@
       minute: "2-digit"
     })
   }
+
+  import IconMessageState from '../icons/IconMessageState.vue';
 </script>
 
 <template>
@@ -26,7 +28,15 @@
       </div>
       <div class="message-body">
         <span class="content">{{ message.content }}</span>
-        <span class="time">{{ formatHM(message.time) }}</span>
+        
+        <span class="meta">
+          <IconMessageState 
+            v-if="message.type == 'outgoing'"
+            class="state-icon"
+            :state="message.state"
+          />
+          <span class="time">{{ formatHM(message.time) }}</span>
+        </span>
       </div>
     </div>
   </div>
@@ -82,17 +92,27 @@
 .message-body {
   display: inline-flex;
   align-items: flex-end;
-  gap: 6px;
-
-
-  font-size: 1.4rem;
-  line-height: 1.3;
-  text-align: left;
+  gap: 0.8rem;
 }
 .content {
   white-space: pre-wrap;
   word-break: break-word;
   padding-bottom: 0.3rem;
+  text-align: left;
+  font-size: 1.4rem;
+  line-height: 1.3;
+}
+.meta {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+  white-space: nowrap;
+  margin-bottom: -0.2rem;
+}
+.state-icon {
+  height: 1.8rem;
+  color: var(--text-main);
+  opacity: 0.6;
 }
 .time {
   font-size: 1.1rem;

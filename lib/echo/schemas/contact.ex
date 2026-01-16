@@ -18,7 +18,7 @@ defmodule Echo.Schemas.Contact do
   def changeset(contact, attrs) do
     contact
     |> cast(attrs, [:nickname, :user_id, :contact_id])
-    |> validate_required([:nickname, :user_id, :contact_id])
+    |> validate_required([:user_id, :contact_id])
     |> unique_constraint([:user_id, :contact_id], name: :contacts_user_id_contact_id_index)
     |> check_constraint(:user_id,
       name: :contact_cannot_be_self,

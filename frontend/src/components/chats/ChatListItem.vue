@@ -1,5 +1,6 @@
 <script setup>
   const emit = defineEmits(['open'])
+    import { computed } from "vue";
 
   const { chat } = defineProps({
     chat: Object
@@ -7,10 +8,15 @@
   import IconMessageState from '../icons/IconMessageState.vue';
   import { formatChatTime } from '@/utils/formatChatTime'
 
-  const isMuted = 
-    chat.last_message.type === 'outgoing' ||
-    (chat.last_message.type === 'incoming' &&
-     chat.last_message.state === 'read')
+  const isMuted = computed(() => {
+    const last = chat.last_message
+    if (!last) return false
+
+    return (
+      last.type === 'outgoing' ||
+      (last.type === 'incoming' && last.state === 'read')
+    )
+  })
 
   function handleClick() {
     emit('open', chat.id)
@@ -35,7 +41,7 @@
       <div class="down">
         <div class="last-message">
           <IconMessageState 
-            v-if="chat.last_message.type === 'outgoing'"
+            v-if="chat.last_message?.type === 'outgoing'"
             class="icon" 
             :state="chat.last_message.state" 
           />
@@ -43,14 +49,14 @@
             class="text"
             :class="{muted: isMuted}"
           >
-            {{ chat.last_message.content }}
+            {{ chat.last_message?.content }}
           </p>
         </div>
         <span 
           class="time"
           :class="{muted: isMuted}"
         >
-          {{ formatChatTime(chat.last_message.time)}}
+          {{ formatChatTime(chat.last_message?.time)}}
         </span>
       </div>
     </div>
