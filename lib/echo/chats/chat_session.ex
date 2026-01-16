@@ -93,7 +93,9 @@ defmodule Echo.Chats.ChatSession do
         messages: messages,
         name: name,
         status: status,
-        avatar_url: avatar_url
+        type: state.chat.type,
+        avatar_url: avatar_url,
+        members: state.members
       }
     }
 

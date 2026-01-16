@@ -223,15 +223,26 @@ create_messages.(cs_go_chat.id, martin.id, [
 
 # Messages in TP FINAL Taller Group
 create_messages.(tp_final_taller_chat.id, lucas.id, [
-  {"Que les parece el logo que diseñamos?", 96}
+  {"Que les parece el logo que mandé?", 96},
+  {"No sé si cambiar un poco el color del violeta", 95}
 ])
 
 create_messages.(tp_final_taller_chat.id, martin.id, [
-  {"quedo muy copado, me gusta me gusta:)", 95}
+  {"quedo muy copado, me gusta me gusta:)", 94}
 ])
 
 create_messages.(tp_final_taller_chat.id, rocio.id, [
-  {"Si, está muy bueno! Combina bastante bien", 93}
+  {"Si, está muy bueno! Combina bastante bien", 93},
+  {"Capaz el azul podría ser un poquito más claro", 92}
+])
+
+create_messages.(tp_final_taller_chat.id, martin.id, [
+  {"Sí puede ser", 91},
+  {"Sino podrías hacer el violeta más oscuro para que contraste más", 90}
+])
+
+create_messages.(tp_final_taller_chat.id, rocio.id, [
+  {"Sí, me gusta, si querés probalo así a ver como queda y después nos decís.\nIgual yo diría de no complicarnos tanto con esto, porque tampoco le van a prestar tanta atención, yo diría de cerrar rápido así ya nos ponemos bien con el back y con todo el tema de los registros", 89}
 ])
 
 IO.puts("\n🎉 Seed data created successfully!")

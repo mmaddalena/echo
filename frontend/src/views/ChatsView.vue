@@ -24,6 +24,7 @@
   );
 
   const messages = computed(() => activeChat.value?.messages ?? []);
+  const chatType = computed(() => activeChat.value?.type ?? null);
 
   function handleOpenChat(chatId) {
     socketStore.openChat(chatId)
@@ -50,7 +51,10 @@
     </div>
     <div class="right">
       <ChatHeader />
-      <ChatMessages :messages="messages"/>
+      <ChatMessages 
+        :messages="messages"
+        :chatType="chatType"
+      />
       <ChatInput />
     </div>
   </div>
