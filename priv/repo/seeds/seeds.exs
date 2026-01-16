@@ -89,7 +89,7 @@ contacts = [
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
   %{user_id: martin.id, contact_id: rocio.id, nickname: "Roci"},
-  %{user_id: martin.id, contact_id: manuel.id, nickname: "Manu"},
+  %{user_id: martin.id, contact_id: manuel.id, nickname: nil},
   # Rocio's contacts
   %{user_id: rocio.id, contact_id: lucas.id, nickname: "Lucasss"},
   %{user_id: rocio.id, contact_id: martin.id, nickname: "Marto"},
@@ -130,11 +130,12 @@ IO.puts("💬 Creating chats...")
 # Direct chats (private)
 direct_chats = [
   %{name: nil, type: "private", creator_id: lucas.id}, # Lucas ↔ Martin
+  %{name: nil, type: "private", creator_id: lucas.id}, # Lucas ↔ Manu
 ]
 
 # Group chats
 group_chats = [
-  %{name: "CS GO", type: "group", creator_id: lucas.id},
+  %{name: "CS2", type: "group", creator_id: lucas.id},
   %{name: "TP FINAL Taller", type: "group", creator_id: martin.id}
 ]
 
@@ -149,7 +150,7 @@ end)
 IO.puts("✅ #{length(created_chats)} chats created")
 
 # Map chats for reference
-[lucas_martin_chat, cs_go_chat, tp_final_taller_chat] = created_chats
+[lucas_martin_chat, lucas_manuel_chat, cs2_chat, tp_final_taller_chat] = created_chats
 
 # Create chat members
 IO.puts("👥 Adding members to chats...")
@@ -159,10 +160,20 @@ chat_members = [
   %{chat_id: lucas_martin_chat.id, user_id: lucas.id},
   %{chat_id: lucas_martin_chat.id, user_id: martin.id},
 
+  # Direct chat: Lucas ↔ manu
+  %{chat_id: lucas_manuel_chat.id, user_id: lucas.id},
+  %{chat_id: lucas_manuel_chat.id, user_id: manuel.id},
+
   # Group chat: TP FINAL Taller (Lucas, Martin, Rocio)
   %{chat_id: tp_final_taller_chat.id, user_id: lucas.id},
   %{chat_id: tp_final_taller_chat.id, user_id: martin.id},
-  %{chat_id: tp_final_taller_chat.id, user_id: rocio.id}
+  %{chat_id: tp_final_taller_chat.id, user_id: rocio.id},
+
+  # Group chat: CS (Lucas, Martin, Manu, Mati)
+  %{chat_id: cs2_chat.id, user_id: lucas.id},
+  %{chat_id: cs2_chat.id, user_id: martin.id},
+  %{chat_id: cs2_chat.id, user_id: manuel.id},
+  %{chat_id: cs2_chat.id, user_id: matias.id}
 ]
 
 Enum.each(chat_members, fn member_attrs ->
@@ -178,14 +189,15 @@ IO.puts("📝 Creating messages...")
 
 # Helper function to create messages with timestamps (truncate microseconds)
 create_messages = fn chat_id, sender_id, message_data ->
-  Enum.map(message_data, fn {content, hours_ago} ->
+  Enum.map(message_data, fn {content, state, hours_ago} ->
     inserted_at = truncate_datetime.(DateTime.add(DateTime.utc_now(), -hours_ago * 3600, :second))
 
     %Message{}
     |> Message.changeset(%{
       chat_id: chat_id,
       user_id: sender_id,
-      content: content
+      content: content,
+      state: state
     })
     |> Ecto.Changeset.change(inserted_at: inserted_at, updated_at: inserted_at)
     |> Repo.insert!()
@@ -194,56 +206,107 @@ end
 
 # Messages in Lucas ↔ Martin chat
 create_messages.(lucas_martin_chat.id, lucas.id, [
-  {"Que onda Martin?", 48},
-  {"Todo bien??", 48}
+  {"Que onda Martin?", "sent", 49},
+  {"Todo bien??", "sent", 48}
 ])
 
 create_messages.(lucas_martin_chat.id, martin.id, [
-  {"Holaaa", 47},
-  {"Todo bien y vos?", 46}
+  {"Holaaa", "sent", 47},
+  {"Todo bien y vos?", "sent", 46}
 ])
 create_messages.(lucas_martin_chat.id, lucas.id, [
-  {"Bien bien, metiendole al TP", 45},
-  {"Hacemos call para seguir con las features que faltan?", 44}
+  {"Bien bien, metiendole al TP", "sent", 45},
+  {"Hacemos call para seguir con las features que faltan?", "sent", 44}
 ])
 create_messages.(lucas_martin_chat.id, martin.id, [
-  {"Dale, ahí me meto a Discord", 43}
+  {"Dale, ahí me meto a Discord", "sent", 43}
+])
+create_messages.(lucas_martin_chat.id, lucas.id, [
+  {"De una", "sent", 42}
 ])
 
-# Messages in CS GO group
-create_messages.(cs_go_chat.id, lucas.id, [
-  {"Que ondaa, sale una partida??", 36},
-  {"Ando re manija", 35}
+# Messages in Lucas ↔ manuel chat
+create_messages.(lucas_manuel_chat.id, lucas.id, [
+  {"Hola profe, todo bien?", "sent", 49},
+  {"Tenía una duda sobre el TP", "sent", 48}
+])
+create_messages.(lucas_manuel_chat.id, manuel.id, [
+  {"Hola Lucas, sí decime", "sent", 47},
+])
+create_messages.(lucas_manuel_chat.id, lucas.id, [
+  {"Nosotros estamos haciendo un front para la app, pero el tema es que en la consigna dice que tiene que haber un cliente consola.", "sent", 46},
+  {"Ya que hacemos el front como cliente, hace falta también hacer el cliente consola? O eso es solo para los que no hacen front?", "sent", 44}
+])
+create_messages.(lucas_manuel_chat.id, manuel.id, [
+  {"No no hace falta que hagan dos clientes, manden el front y listo", "sent", 43}
+])
+create_messages.(lucas_manuel_chat.id, lucas.id, [
+  {"Perfecto, gracias profe.\nBuen finde", "sent", 42},
+])
+create_messages.(lucas_manuel_chat.id, manuel.id, [
+  {"Igualmente.", "sent", 41},
 ])
 
-create_messages.(cs_go_chat.id, martin.id, [
-  {"Esta ehhh, banca que ando mirando una serie", 34},
-  {"Termino este episodio y me meto", 34}
+# Messages in CS2 group
+create_messages.(cs2_chat.id, lucas.id, [
+  {"Que ondaa, sale una partida??", "sent", 36},
+  {"Ando re manija", "sent", 35}
+])
+
+create_messages.(cs2_chat.id, martin.id, [
+  {"Banca que estoy mirando una serie", "sent", 34},
+  {"Termino este episodio y entro", "sent", 33}
+])
+
+create_messages.(cs2_chat.id, lucas.id, [
+  {"Dale que ayer bajé de rango, quiero volver", "sent", 32}
+])
+
+create_messages.(cs2_chat.id, martin.id, [
+  {"Hoy se sube de nuevo chill", "sent", 31},
+])
+create_messages.(cs2_chat.id, manuel.id, [
+  {"Yo en 20 entro aprox", "sent", 30},
+  {"Si no subís de rango hoy, te desapruebo el TP", "sent", 29},
+])
+create_messages.(cs2_chat.id, matias.id, [
+  {"Banco 👆", "sent", 28}
+])
+create_messages.(cs2_chat.id, lucas.id, [
+  {"jasjajsjasj no dale", "sent", 27},
+  {"no voy a pegar un tiro ahora", "delivered", 26},
+  {"Bueno avisen, me voy jugando otra de mientras", "read", 25}
+])
+create_messages.(cs2_chat.id, martin.id, [
+  {"Si lucas o yo nos taseamos a uno en la primer partida que juguemos los 4 nos aprueban con un 10 de una", "sent", 24},
+])
+create_messages.(cs2_chat.id, manuel.id, [
+  {"jasjasj dale, pero si alguno termina negativo va un 4", "sent", 23},
 ])
 
 # Messages in TP FINAL Taller Group
 create_messages.(tp_final_taller_chat.id, lucas.id, [
-  {"Mensaje viejísimo de prueba", 1000},
-  {"Que les parece el logo que mandé?", 96},
-  {"No sé si cambiar un poco el color del violeta", 95}
+  {"Mensaje viejísimo de prueba", "sent", 1000},
+  {"Que les parece el logo que mandé?", "sent", 96},
+  {"No sé si cambiar un poco el color del violeta", "sent", 95}
 ])
 
 create_messages.(tp_final_taller_chat.id, martin.id, [
-  {"quedo muy copado, me gusta me gusta:)", 94}
+  {"quedo muy copado, me gusta me gusta:)", "sent", 94}
 ])
 
 create_messages.(tp_final_taller_chat.id, rocio.id, [
-  {"Si, está muy bueno! Combina bastante bien", 93},
-  {"Capaz el azul podría ser un poquito más claro", 92}
+  {"Si, está muy bueno! Combina bastante bien", "sent", 93},
+  {"Capaz el azul podría ser un poquito más claro", "sent", 92}
 ])
 
 create_messages.(tp_final_taller_chat.id, martin.id, [
-  {"Sí puede ser", 91},
-  {"Sino podrías hacer el violeta más oscuro para que contraste más", 90}
+  {"Sí puede ser", "sent", 91},
+  {"Sino podrías hacer el violeta más oscuro para que contraste más", "sent", 90}
 ])
 
 create_messages.(tp_final_taller_chat.id, rocio.id, [
-  {"Sí, me gusta, si querés probalo así a ver como queda y después nos decís.\nIgual yo diría de no complicarnos tanto con esto, porque tampoco le van a prestar tanta atención, yo diría de cerrar rápido así ya nos ponemos bien con el back y con todo el tema de los registros", 89}
+  {"Sí, me gusta, si querés probalo así a ver como queda y después nos decís.\nIgual yo diría de no complicarnos tanto con esto, porque tampoco le van a prestar tanta atención, yo diría de cerrar rápido así ya nos ponemos bien con el back y con todo el tema de los registros", "sent", 89}
 ])
 
 IO.puts("\n🎉 Seed data created successfully!")

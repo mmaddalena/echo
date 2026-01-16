@@ -51,7 +51,9 @@
       </div>
     </div>
     <div class="right">
-      <ChatHeader />
+      <ChatHeader 
+        :chatInfo="activeChat"
+      />
       <ChatMessages 
         :messages="messages"
         :chatType="chatType"

@@ -1,16 +1,32 @@
 <script setup>
-import IconSearch from '../icons/IconSearch.vue';
-import IconOptsMenu from '../icons/IconOptsMenu.vue';
+  import IconSearch from '../icons/IconSearch.vue';
+  import IconOptsMenu from '../icons/IconOptsMenu.vue';
+import { computed } from 'vue';
 
+  const props = defineProps({
+    chatInfo: {
+      type: Object,
+      default: null
+    }
+  })
+
+  const membersStr = computed(() => {
+    return props.chatInfo?.members
+      ?.map(m => m.username)
+      .join(', ') ?? ''
+  })
 </script>
 
 <template>
-  <header class="chat-header">
+  <header v-if="chatInfo" class="chat-header">
     <div class="user_info">
       <img class="avatar" />
-      <div>
-        <p class="name">Manu</p>
-        <span class="status">Activo</span>
+      <div class="texts">
+        <p class="name">{{ chatInfo.name }}</p>
+        <span class="status">
+          <p v-if="chatInfo.type == 'private'">{{ chatInfo.status }}</p>
+          <p v-else>{{ membersStr }}</p>
+        </span>
       </div>
     </div>
     <div class="opts_icons">
@@ -24,16 +40,17 @@ import IconOptsMenu from '../icons/IconOptsMenu.vue';
 .chat-header {
   background-color: var(--bg-chat-header);
   height: 7rem;
-  padding: 1.6rem;
+  padding: 1.5rem 1.6rem;
   display: flex;
   box-sizing: content-box;
   align-items: center;
   justify-content: space-between;
-  /*border-bottom: 1px solid rgba(255,255,255,0.05);*/
+  border-bottom: 0.3rem solid rgba(255,255,255,0.05);
 }
 .user_info {
   display: flex;
   gap: 2rem;
+  align-items: center;
 }
 .avatar {
   background-color: aqua;
@@ -47,7 +64,7 @@ import IconOptsMenu from '../icons/IconOptsMenu.vue';
   font-weight: bold;
 }
 .status {
-  font-size: 12px;
+  font-size: 1.5REM;
   color: var(--text-muted);
 }
 .opts_icons {
@@ -55,7 +72,7 @@ import IconOptsMenu from '../icons/IconOptsMenu.vue';
   gap: 2rem;
 }
 .icon {
-  height: 3.5rem;
+  height: 2.5rem;
   color: var(--text-main);
   fill: var(--text-main);
 }

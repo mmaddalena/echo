@@ -4,8 +4,8 @@
 	import { useSocketStore } from "@/stores/socket";
 
 
-	const username = ref("");
-	const password = ref("");
+	const username = ref("lucas");      //TODO CAMBIAR A VACIO ("")
+	const password = ref("12345678");   //TODO CAMBIAR A VACIO ("")
 	const router = useRouter();
 	const socketStore = useSocketStore();
 
@@ -29,9 +29,9 @@
 			const token = data.token;
 
 			
-			sessionStorage.setItem("token", token);
-
 			socketStore.disconnect();
+			
+			sessionStorage.setItem("token", token);
 			socketStore.connect(token);
 			router.push("/chats");
 			
@@ -40,6 +40,7 @@
 			alert("Login fallido");
 		}
 	}
+
 </script>
 
 <template>
