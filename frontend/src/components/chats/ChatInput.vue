@@ -1,7 +1,9 @@
 <script setup>
-    import { ref } from "vue";
+  import { ref } from "vue";
 
-    const text = ref("");
+  const text = ref("");
+
+  import IconSend from '../icons/IconSend.vue';
 </script>
 
 <template>
@@ -11,7 +13,9 @@
         v-model="text"
         placeholder="Escribe un mensaje..."
       />
-      <button>➤</button>
+      <button>
+        <IconSend />
+      </button>
     </div>
   </div>
 </template>
@@ -24,11 +28,12 @@
 }
 .main {
   height: fit-content;
-  padding: 0.5rem 1rem 0.5rem 2rem;
+  padding: 0rem 1rem 0rem 2rem;
   display: flex;
   justify-content: space-between;
   background: var(--bg-input);
   border-radius: 3rem;
+  align-items: center;
 }
 input {
   flex: 1;
@@ -36,13 +41,15 @@ input {
   border: none;
   background: none;
   color: var(--text-main);
+  outline: none;
+  font-size: 1.5rem;
 }
 button {
   background-color: var(--msg-out);
   border: none;
   border-radius: 50%;
-  width: 5rem;
-  height: 5rem;
+  width: 4rem;
+  height: 4rem;
   color: white;
 }
 </style>

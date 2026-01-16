@@ -13,6 +13,7 @@
 
   const socketStore = useSocketStore();
 
+  const { userInfo } = storeToRefs(socketStore);
   const { chats } = storeToRefs(socketStore);
   const { chatsInfo } = storeToRefs(socketStore);
   const { activeChatId } = storeToRefs(socketStore);
@@ -42,7 +43,7 @@
     <div class="left">
       <img src="@/assets/logo/Echo_Logo_Completo_Negativo.svg" class="logo" alt="Echo logo" />
       <div class="main">
-        <Sidebar /> <!-- TODO: Pasarle user.avatar_url del user_info --> 
+        <Sidebar :avatarURL="userInfo?.avatar_url"/>
         <ChatList 
           :chats="chats" 
           @open-chat="handleOpenChat"

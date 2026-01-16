@@ -32,3 +32,24 @@ export function formatChatTime(isoString) {
   // 7 días o más → fecha completa
   return date.toLocaleDateString('es-AR');
 }
+
+export function formatDayLabel(isoString) {
+  const date = new Date(isoString)
+  const now = new Date()
+
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  const diffDays = Math.floor(
+    (startOfNow - startOfDate) / 86400000
+  )
+
+  if (diffDays === 0) return 'Hoy'
+  if (diffDays === 1) return 'Ayer'
+  if (diffDays < 7) {
+    return date.toLocaleDateString('es-AR', { weekday: 'long' })
+      .replace(/^./, c => c.toUpperCase())
+  }
+
+  return date.toLocaleDateString('es-AR')
+}
