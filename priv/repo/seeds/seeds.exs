@@ -223,6 +223,7 @@ create_messages.(cs_go_chat.id, martin.id, [
 
 # Messages in TP FINAL Taller Group
 create_messages.(tp_final_taller_chat.id, lucas.id, [
+  {"Mensaje viejísimo de prueba", 1000},
   {"Que les parece el logo que mandé?", 96},
   {"No sé si cambiar un poco el color del violeta", 95}
 ])

@@ -21,12 +21,16 @@
       socketStore.connect(token);
     }
   });
+
+  const props = defineProps({
+    avatarURL: String
+  })
 </script>
 
 <template>
   <aside class="sidebar">
-    <div class="perfil-opts">
-      <button class="perfil"></button>
+    <div class="profile-opts">
+      <img class="profile" :src="avatarURL"></img>
       <button>
         <IconContacts class="icon outline"/>
       </button>
@@ -74,12 +78,12 @@ button {
   cursor: pointer;
   padding: 0;
 }
-.perfil-opts {
+.profile-opts {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
-.perfil {
+.profile {
   height: 5rem;
   width: 5rem;
   border-radius: 50%;

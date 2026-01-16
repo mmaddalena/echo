@@ -17,7 +17,17 @@ export const useSocketStore = defineStore("socket", () => {
 
 		socket.value.onopen = () => {
 			console.log("WS conectado");
+
+      const savedChatId = sessionStorage.getItem("activeChatId");
+        if (savedChatId) {
+          activeChatId.value = savedChatId;
+          send({
+            type: "open_chat",
+            chat_id: savedChatId
+          });
+        }
 		};
+    
 
 		socket.value.onmessage = (event) => {
 			const payload = JSON.parse(event.data);
@@ -55,6 +65,7 @@ export const useSocketStore = defineStore("socket", () => {
     chats.value = [];
     chatsInfo.value = {};
     activeChatId.value = null;
+    sessionStorage.clear()
   }
 
 	function send(data) {
@@ -67,6 +78,7 @@ export const useSocketStore = defineStore("socket", () => {
 
   function openChat(chatId) {
     activeChatId.value = chatId;
+    sessionStorage.setItem("activeChatId", chatId)
 
     if (!chatsInfo.value[chatId]) {
       send({

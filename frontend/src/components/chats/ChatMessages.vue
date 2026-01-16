@@ -1,6 +1,7 @@
 <script setup>
   import ChatMessage from "./ChatMessage.vue";
   import { computed } from 'vue'
+    import { formatDayLabel } from '@/utils/formatChatTime'
 
   const props = defineProps({
     messages: {
@@ -21,7 +22,6 @@
     console.log(val)
   })
 
-
   const enhancedMessages = computed(() => {
     let lastUserId = null
 
@@ -36,20 +36,51 @@
         ...message,
         isFirst
       }
+    })
   })
-})
 
+  const messagesWithDays = computed(() => {
+    let lastDay = null
+    const result = []
+
+    enhancedMessages.value.forEach((message) => {
+      const dayKey = new Date(message.time).toDateString()
+
+      if (dayKey !== lastDay) {
+        result.push({
+          id: `day-${dayKey}`,
+          kind: 'day',
+          label: formatDayLabel(message.time)
+        })
+        lastDay = dayKey
+      }
+
+      result.push({
+        ...message,
+        kind: 'message'
+      })
+    })
+
+    return result
+  })
+  
 </script>
 
 <template>
   <div class="chat-messages">
-    <ChatMessage 
-      v-for="message in enhancedMessages"
-      :key="message.id"
-      :message="message"
-      :chatType="chatType"
-    />
+    <template v-for="item in messagesWithDays" :key="item.id">
+      <div v-if="item.kind === 'day'" class="day-separator">
+        {{ item.label }}
+      </div>
+
+      <ChatMessage
+        v-else
+        :message="item"
+        :chatType="chatType"
+      />
+    </template>
   </div>
+
 </template>
 
 <style scoped>
@@ -62,4 +93,16 @@
   overflow-y: auto;
   background-color: var(--bg-chat);
 }
+.day-separator {
+  align-self: center;
+  margin: 1rem 0;
+
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+
+  font-size: 1.2rem;
+  opacity: 0.7;
+  background: rgba(0,0,0,0.15);
+}
+
 </style>

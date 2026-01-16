@@ -41,5 +41,6 @@
   flex: 1;
   background: var(--bg-chatlist-panel);
   overflow-y: auto;
+  padding: 1rem;
 }
 </style>
