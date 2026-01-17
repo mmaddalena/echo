@@ -53,3 +53,7 @@ export function formatDayLabel(isoString) {
 
   return date.toLocaleDateString('es-AR')
 }
+
+export function getCurrentISOTimeString() {
+  return new Date().toISOString();
+}

@@ -69,8 +69,8 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "send_message", "chat_id" => chat, "text" => text}, state) do
-    Echo.Users.UserSession.send_message(state.user_session, chat, text)
+  defp dispatch(%{"type" => "send_message", "msg" => front_msg}, state) do
+    Echo.Users.UserSession.send_message(state.user_session, front_msg)
     {:ok, state}
   end
 

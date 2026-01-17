@@ -35,7 +35,9 @@
             class="state-icon"
             :state="message.state"
           />
-          <span class="time">{{ formatHM(message.time) }}</span>
+          <span class="time">
+            {{ message.time ? formatHM(message.time) : message.time_zoned }}
+          </span>
         </span>
       </div>
     </div>

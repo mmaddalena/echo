@@ -38,8 +38,8 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:open_chat, chat_id})
   end
 
-  def send_message(us_pid, chat_id, text) do
-    GenServer.cast(us_pid, {:send_message, %{chat_id: chat_id, text: text}})
+  def send_message(us_pid, front_msg) do
+    GenServer.cast(us_pid, {:send_message, front_msg})
   end
 
 
@@ -49,12 +49,8 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:send_chat_info, chat_info})
   end
 
-  def message_sent(us_pid, msg) do
-    GenServer.cast(us_pid, {:message_sent, msg})
-  end
-
-  def receive_message(us_pid, msg) do
-    GenServer.cast(us_pid, {:receive_message, msg})
+  def new_message(us_pid, msg) do
+    GenServer.cast(us_pid, {:new_message, msg})
   end
 
   ##### Callbacks
@@ -67,7 +63,8 @@ defmodule Echo.Users.UserSession do
       user_id: user_id,
       user: user,
       socket: nil,
-      current_chat_id: nil
+      current_chat_id: nil,
+      last_activity: DateTime.utc_now()
     }
 
     {:ok, state}
@@ -90,7 +87,7 @@ defmodule Echo.Users.UserSession do
 
     send(state.socket, {:send, user_info})
 
-    {:noreply, state}
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
 
@@ -100,34 +97,31 @@ defmodule Echo.Users.UserSession do
 
     Echo.Chats.ChatSession.get_chat_info(cs_pid, state.user_id, self())
 
-    {:noreply, state}
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
   @impl true
   def handle_cast({:send_chat_info, chat_info}, state) do
 
     send(state.socket, {:send, chat_info})
 
-    {:noreply, state}
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
 
   @impl true
-  def handle_cast(
-        {:send_message, %{chat_id: chat_id, client_msg_id: client_msg_id, text: text}},
-        state
-      ) do
-    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
-    Echo.Chats.ChatSession.send_message(cs_pid, state.user_id, client_msg_id, text)
-    # TODO: ACTUALIZAR LAST ACTIVITY
-    {:noreply, state}
+  def handle_cast({:send_message, front_msg}, state) do
+    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(front_msg["chat_id"])
+
+    Echo.Chats.ChatSession.send_message(cs_pid, front_msg, self())
+
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
   @impl true
-  def handle_cast({:message_sent, msg}, state) do
-    # msg contiene el client_msg_id
-    send(state.socket, {:send, {:message_sent, msg}})
-    # TODO: ACTUALIZAR LAST ACTIVITY
-    {:noreply, state}
+  def handle_cast({:new_message, msg}, state) do
+    send(state.socket, {:send, msg})
+
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
   @impl true
