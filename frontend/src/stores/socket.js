@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { generateId } from '@/utils/idGenerator'
 
 export const useSocketStore = defineStore("socket", () => {
 
@@ -37,7 +38,6 @@ export const useSocketStore = defineStore("socket", () => {
         chats.value = payload.last_chats ?? [];
       }
       else if (payload.type === "chat_info") {
-        console.log("chat_info recibido:", payload.chat);
         const chat = payload.chat;
 
         chatsInfo.value = {
@@ -47,7 +47,40 @@ export const useSocketStore = defineStore("socket", () => {
         activeChatId.value = chat.id;
 
       } else if (payload.type === "new_message") {
-        
+        const msg = payload.message;
+        const chatId = msg.chat_id;
+        console.log("Sender id y UserInfo.id", msg.user_id, userInfo.value.id)
+        console.log("Mensaje a pelo:", msg)
+        if (msg.user_id == userInfo.value.id) {
+          // El mensaje es outgoing...
+          console.log("Mensaje recibido outgoing del back:", msg)
+          const index = chatsInfo.value[chatId].messages.findIndex(m => m.front_msg_id === msg.front_msg_id)
+          if(index !== -1){// Por safety, debería entrar
+            Object.assign(chatsInfo.value[chatId].messages[index], msg);
+          }
+        }else{
+          // El mensaje es incoming...
+          const normalizedMsg = {
+            ...msg,
+            front_msg_id: msg.front_msg_id ?? generateId(),
+            time: msg.time ?? msg.inserted_at
+          }
+          console.log("Mensaje recibido incoming del back:", normalizedMsg)
+          
+          const chat = chatsInfo.value[chatId]
+          chatsInfo.value = {
+            ...chatsInfo.value,
+            [chatId]: {
+              ...chat,
+              messages: [...chat.messages, normalizedMsg]
+            }
+          }
+          
+          //chatsInfo.value[chatId].messages.push(normalizedMsg)
+          // Esta actualización hace que lo detecte Vue para la reactividad (qué trucazo no?)
+          // const index = chatsInfo.value[chatId].messages.findIndex(m => m.front_msg_id === normalizedMsg.front_msg_id)
+          // Object.assign(chatsInfo.value[chatId].messages[index], normalizedMsg);
+        }
       }
     };
 
@@ -88,6 +121,38 @@ export const useSocketStore = defineStore("socket", () => {
     }
   }
 
+  function sendMessage(front_msg) {
+    const chat_id = front_msg.chat_id
+    const chat = chatsInfo.value[chat_id]
+
+    if (chat) {
+      chatsInfo.value = {
+        ...chatsInfo.value,
+        [chat_id]: {
+          ...chat,
+          messages: [...chat.messages, front_msg]
+        }
+      }
+    }
+
+    send({
+      type: "send_message",
+      msg: front_msg
+    })
+
+
+    // const chat_id = front_msg.chat_id
+    // // Meto el mensaje de front a los mensajes del chatInfo actual
+    // if(chatsInfo.value[chat_id]){
+    //   chatsInfo.value[chat_id].messages.push(front_msg)
+    // }
+    // // Mando el mensaje al back
+    // send({
+    //   type: "send_message",
+    //   msg: front_msg
+    // });
+  }
+
   return {
     socket,
     userInfo,
@@ -97,6 +162,7 @@ export const useSocketStore = defineStore("socket", () => {
     connect,
     disconnect,
     send,
-    openChat
+    openChat,
+    sendMessage
   };
 });

@@ -1,4 +1,5 @@
 defmodule Echo.Chats.ChatSession do
+  alias Echo.ProcessRegistry
   alias Echo.Users.UserSessionSup
   alias Echo.Chats.ChatSessionSup
   # Idem que el UserSession.
@@ -6,8 +7,10 @@ defmodule Echo.Chats.ChatSession do
   # La sesión vive despues de x tiempo de inactividad.
   use GenServer
   alias Echo.Chats.Chat
+  alias Echo.Repo
   alias Echo.Users.User
   alias Echo.Users.UserSession
+  alias Echo.Messages.Messages
   alias Echo.Constants
 
   def start_link(chat_id) do
@@ -24,14 +27,8 @@ defmodule Echo.Chats.ChatSession do
     GenServer.cast(cs_pid, {:chat_info, user_id, us_pid})
   end
 
-  def send_message(chat_session_pid, user_id, client_msg_id, body) do
-    # Itera en cada user_id de los miembros del chat...
-    # Creeria que crea un struct message del tipo del schema Message
-    # Esta funcion la llama el userSession del emisor, viniendo del socket, desde el cliente.
-    # Le llama al userSession.message.sent(message) del emisor. (message es un map con la info del msg (que también contiene el client_msg_id)))
-    # Se fija si esta la usersession viva:
-    # Si sí: le llama a userSession.recieve_message (ACA NO MANDA EL client_msg_id, porque los receptores no lo necesitan)
-    # Si no: crea una notificacion para ese usuario y lo persiste.
+  def send_message(cs_pid, front_msg, us_pid) do
+    GenServer.cast(cs_pid, {:send_message, front_msg, us_pid})
   end
 
 
@@ -43,9 +40,10 @@ defmodule Echo.Chats.ChatSession do
       chat_id: chat_id,
       chat: Chat.get(chat_id),
       last_messages: Chat.get_last_messages(chat_id),
-      members: Chat.get_members(chat_id)
+      members: Chat.get_members(chat_id),
+      last_activity: DateTime.utc_now()
     }
-    {:ok, state}
+    {:ok, %{state | last_activity: DateTime.utc_now()}}
   end
 
   @impl true
@@ -101,9 +99,83 @@ defmodule Echo.Chats.ChatSession do
 
     UserSession.send_chat_info(us_pid, chat_info)
 
-    {:noreply, state}
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
+
+  @impl true
+  def handle_cast({:send_message, msg_front, sender_us_pid}, state) do
+    front_msg_id = msg_front["front_msg_id"]
+    chat_id = msg_front["chat_id"]
+    content = msg_front["content"]
+    sender_user_id = msg_front["sender_user_id"]
+
+    attrs = %{
+      chat_id: chat_id,
+      content: content,
+      user_id: sender_user_id
+    }
+
+    case Messages.create_message(attrs) do
+      {:ok, message} ->
+        base_message =
+          message
+          |> Map.from_struct()
+          |> Map.drop([:__meta__, :user, :chat])
+          |> Map.put(:state, Constants.state_sent())
+          |> Map.put(:time, message.inserted_at)
+          |> Map.delete(:inserted_at)
+
+        {alive_sessions, dead_users} =
+          Enum.reduce(state.members, {[], []}, fn member, {alive, dead} ->
+            user_id = member.id
+            case ProcessRegistry.whereis_user_session(user_id) do
+              nil ->
+                {alive, [user_id | dead]}
+              us_pid ->
+                {[{user_id, us_pid} | alive], dead}
+            end
+          end)
+
+        Enum.each(alive_sessions, fn {user_id, us_pid} ->
+          username = Repo.get(Echo.Schemas.User, user_id).username
+
+          IO.puts("=|=|=|=|=|=|=|=|=|=|=|=|  Usuario VIVO: #{username} |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|")
+          case user_id == sender_user_id do
+            true ->
+              UserSession.new_message(us_pid,
+                %{
+                  type: "new_message",
+                  message: Map.put(base_message, :front_msg_id, front_msg_id)
+                }
+              )
+            false ->
+              UserSession.new_message(us_pid,
+                %{
+                  type: "new_message",
+                  message: Map.put(base_message, :type, Constants.incoming())
+                }
+              )
+          end
+        end)
+
+        Enum.each(dead_users, fn us_pid ->
+          # Agregar una notificacion o como lo hagamos
+        end)
+
+        {:noreply,
+          %{
+            state |
+              last_activity: DateTime.utc_now(),
+              last_messages: [base_message | state.last_messages]
+          }
+        }
+
+      {:error, changeset} ->
+        #UserSession.send_message_error(sender_us_pid, front_msg_id, changeset)
+        {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    end
+  end
 
 
 

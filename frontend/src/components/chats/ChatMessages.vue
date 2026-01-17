@@ -1,6 +1,6 @@
 <script setup>
   import ChatMessage from "./ChatMessage.vue";
-  import { computed } from 'vue'
+  import { computed, watch, ref, nextTick, onMounted } from 'vue'
     import { formatDayLabel } from '@/utils/formatChatTime'
 
   const props = defineProps({
@@ -17,7 +17,7 @@
       return tA - tB
     })
   })
-  import { watch } from "vue"
+
   watch(orderedMessages, (val) => {
     console.log(val)
   })
@@ -48,7 +48,7 @@
 
       if (dayKey !== lastDay) {
         result.push({
-          id: `day-${dayKey}`,
+          front_msg_id: `day-${dayKey}`,
           kind: 'day',
           label: formatDayLabel(message.time)
         })
@@ -63,12 +63,39 @@
 
     return result
   })
+
+  
+
+  const messagesContainer = ref(null)
+
+  function scrollToBottom() {
+    nextTick(() => {
+      if (messagesContainer.value) {
+        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+      }
+    })
+  }
+
+  // Scroll al final al montar
+  onMounted(() => {
+    scrollToBottom()
+  });
+
+  // Scroll automático al agregar mensajes
+  watch(
+    () => messagesWithDays.value,
+    async () => {
+      await nextTick() // espera que Vue actualice el DOM
+      scrollToBottom()
+    },
+    { deep: true }
+  )
   
 </script>
 
 <template>
-  <div class="chat-messages">
-    <template v-for="item in messagesWithDays" :key="item.id">
+  <div class="chat-messages" ref="messagesContainer">
+    <template v-for="item in messagesWithDays" :key="item.front_msg_id">
       <div v-if="item.kind === 'day'" class="day-separator">
         {{ item.label }}
       </div>

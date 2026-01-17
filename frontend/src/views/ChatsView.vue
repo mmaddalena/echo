@@ -10,6 +10,8 @@
   import ChatHeader from "@/components/chats/ChatHeader.vue";
   import ChatMessages from "@/components/chats/ChatMessages.vue";
   import ChatInput from "@/components/chats/ChatInput.vue";
+   import { getCurrentISOTimeString } from '@/utils/formatChatTime'
+   import { generateId } from '@/utils/idGenerator'
 
   const socketStore = useSocketStore();
 
@@ -18,6 +20,13 @@
   const { chatsInfo } = storeToRefs(socketStore);
   const { activeChatId } = storeToRefs(socketStore);
   
+  onMounted(() => {
+    const token = sessionStorage.getItem("token");
+    if (token){
+      socketStore.connect(token);
+    }
+  });
+
   const activeChat = computed(() =>
     activeChatId.value
       ? chatsInfo.value[activeChatId.value]
@@ -30,12 +39,20 @@
   function handleOpenChat(chatId) {
     socketStore.openChat(chatId)
   }
-  onMounted(() => {
-    const token = sessionStorage.getItem("token");
-    if (token){
-      socketStore.connect(token);
-    }
-  });
+
+  function handleSendMessage(text) {
+    if (!activeChatId.value) return;
+    socketStore.sendMessage({
+      id: null,
+      front_msg_id: generateId(),
+      chat_id: activeChatId.value,
+      content: text,
+      state: "sending", // Cuando se guarde en el back se pisa por sent
+      sender_user_id: userInfo.value.id,
+      type: "outgoing",
+      time: getCurrentISOTimeString() // Despues se pisa con el inserted_at del back
+    })
+  }
 </script>
 
 <template>
@@ -58,7 +75,7 @@
         :messages="messages"
         :chatType="chatType"
       />
-      <ChatInput />
+      <ChatInput @send-message="handleSendMessage"/>
     </div>
   </div>
 </template>

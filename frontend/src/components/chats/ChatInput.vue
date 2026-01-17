@@ -1,9 +1,17 @@
 <script setup>
   import { ref } from "vue";
 
+  import IconSend from '../icons/IconSend.vue';
+
+  const emit = defineEmits(["send-message"]);
   const text = ref("");
 
-  import IconSend from '../icons/IconSend.vue';
+  function send() {
+    if (!text.value.trim()) return;
+
+    emit("send-message", text.value);
+      text.value = "";  
+  }
 </script>
 
 <template>
@@ -12,8 +20,9 @@
       <input
         v-model="text"
         placeholder="Escribe un mensaje..."
+        @keydown.enter="send"
       />
-      <button>
+      <button @click="send">
         <IconSend />
       </button>
     </div>
@@ -51,5 +60,6 @@ button {
   width: 4rem;
   height: 4rem;
   color: white;
+  cursor: pointer;
 }
 </style>

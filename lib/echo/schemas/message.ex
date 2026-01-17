@@ -20,7 +20,7 @@ defmodule Echo.Schemas.Message do
 
   def changeset(message, attrs) do
     message
-    |> cast(attrs, [:content, :chat_id, :user_id])
+    |> cast(attrs, [:content, :chat_id, :user_id, :state])
     |> validate_required([:content, :chat_id, :user_id])
     |> foreign_key_constraint(:chat_id)
     |> foreign_key_constraint(:user_id)
