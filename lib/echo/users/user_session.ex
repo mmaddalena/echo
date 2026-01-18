@@ -42,6 +42,10 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:send_message, front_msg})
   end
 
+  def chat_messages_read(us_pid, chat_id) do
+    GenServer.cast(us_pid, {:chat_messages_read, chat_id})
+  end
+
 
   ##### Funciones llamadas desde el dominio
 
@@ -51,6 +55,10 @@ defmodule Echo.Users.UserSession do
 
   def new_message(us_pid, msg) do
     GenServer.cast(us_pid, {:new_message, msg})
+  end
+
+  def chat_read(us_pid, chat_id, reader_user_id) do
+    GenServer.cast(us_pid, {:chat_read, chat_id, reader_user_id})
   end
 
   ##### Callbacks
@@ -118,6 +126,28 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast({:new_message, msg}, state) do
+    send(state.socket, {:send, msg})
+
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+  end
+
+
+  @impl true
+  def handle_cast({:chat_messages_read, chat_id}, state) do
+    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
+
+    Echo.Chats.ChatSession.chat_messages_read(cs_pid, chat_id, state.user_id)
+
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+  end
+
+  @impl true
+  def handle_cast({:chat_read, chat_id, reader_user_id}, state) do
+    msg = %{
+      type: "chat_read",
+      chat_id: chat_id,
+      reader_user_id: reader_user_id
+    }
     send(state.socket, {:send, msg})
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}

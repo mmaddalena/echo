@@ -54,7 +54,8 @@ export const useSocketStore = defineStore("socket", () => {
         };
         activeChatId.value = chat.id;
 
-      } else if (payload.type === "new_message") {
+      } 
+      else if (payload.type === "new_message") {
         const msg = payload.message;
         const chatId = msg.chat_id;
         
@@ -106,6 +107,29 @@ export const useSocketStore = defineStore("socket", () => {
           }
         }
       }
+      else if (payload.type === "chat_read") {
+        const chat_id = payload.chat_id;
+        const chat = chatsInfo.value[chat_id];
+
+        if (!chat || chat.type != "private") return;
+
+        const hasUnreadOutgoing = chat.messages.some(
+          m => m.type === "outgoing" && m.state !== "read"
+        );
+        if (!hasUnreadOutgoing) return;
+
+        chatsInfo.value = {
+          ...chatsInfo.value,
+          [chat_id]: {
+            ...chat,
+            messages: chat.messages.map(m =>
+              m.type === "outgoing" && m.state !== "read"
+              ? { ...m, state: "read" }
+              : m
+            )
+          }
+        };
+      }
     };
 
 		socket.value.onerror = () => {
@@ -137,12 +161,44 @@ export const useSocketStore = defineStore("socket", () => {
     activeChatId.value = chatId;
     sessionStorage.setItem("activeChatId", chatId)
 
-    if (!chatsInfo.value[chatId]) {
+    const hasCache = !!chatsInfo.value[chatId];
+
+    console.log("[read] openChat", {
+      chatId,
+      hasCache,
+      chat: chatsInfo.value[chatId],
+    });
+
+
+    if (!hasCache) {
       send({
         type: "open_chat",
         chat_id: chatId
       });
     }
+
+    send({
+      type: "chat_messages_read",
+      chat_id: chatId
+    });
+    
+    // No sirve de mucho la verdad, pero para que quede igual que en el back
+    if (hasCache) {
+      const chat = chatsInfo.value[chatId];
+      
+      chatsInfo.value = {
+        ...chatsInfo.value,
+        [chatId]: {
+          ...chat,
+          messages: chat.messages.map(m =>
+            m.type === "incoming" && m.state !== "read"
+            ? { ...m, state: "read" }
+            : m
+          )
+        }
+      };
+    }
+
   }
 
   function sendMessage(front_msg) {

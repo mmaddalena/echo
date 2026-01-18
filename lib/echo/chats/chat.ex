@@ -52,7 +52,7 @@ defmodule Echo.Chats.Chat do
       on: u.id == cm.user_id,
       where: cm.chat_id == ^chat_id,
       select: %{
-        id: u.id,
+        user_id: u.id,
         username: u.username,
         name: u.name,
         avatar_url: u.avatar_url,
@@ -84,6 +84,19 @@ defmodule Echo.Chats.Chat do
       _group ->
         chat.avatar_url
     end
+  end
+
+  def set_messages_read(chat_id, reader_user_id) do
+    if Repo.get(Chat, chat_id).type == Constants.private_chat do
+      from(m in Message,
+          where:
+            m.chat_id == ^chat_id and
+            m.user_id != ^reader_user_id and
+            m.state != ^Constants.state_read()
+        )
+        |> Repo.update_all(set: [state: Constants.state_read()])
+    end
+    # Si implementamos el state en grupales ponemos un else aca y lo hacemos
   end
 
 end

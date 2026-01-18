@@ -1,7 +1,5 @@
 defmodule Echo.Chats.ChatSession do
   alias Echo.ProcessRegistry
-  alias Echo.Users.UserSessionSup
-  alias Echo.Chats.ChatSessionSup
   # Idem que el UserSession.
   # Es un Genserver que vive mientras la sesion del chat esté viva.
   # La sesión vive despues de x tiempo de inactividad.
@@ -29,6 +27,10 @@ defmodule Echo.Chats.ChatSession do
 
   def send_message(cs_pid, front_msg, us_pid) do
     GenServer.cast(cs_pid, {:send_message, front_msg, us_pid})
+  end
+
+  def chat_messages_read(cs_pid, chat_id, user_id) do
+    GenServer.cast(cs_pid, {:chat_messages_read, chat_id, user_id})
   end
 
 
@@ -134,7 +136,7 @@ defmodule Echo.Chats.ChatSession do
 
         {alive_sessions, dead_users} =
           Enum.reduce(state.members, {[], []}, fn member, {alive, dead} ->
-            user_id = member.id
+            user_id = member.user_id
             case ProcessRegistry.whereis_user_session(user_id) do
               nil ->
                 {alive, [user_id | dead]}
@@ -194,6 +196,33 @@ defmodule Echo.Chats.ChatSession do
   end
 
 
+  @impl true
+  def handle_cast({:chat_messages_read, chat_id, reader_user_id}, state) do
+    Chat.set_messages_read(chat_id, reader_user_id)
 
+    new_last_messages =
+      Enum.map(state.last_messages, fn msg ->
+        if msg.user_id != reader_user_id and msg.state != Constants.state_read() do
+          %{msg | state: Constants.state_read()}
+        else
+          msg
+        end
+      end)
+
+    state.members
+    |> Enum.map(& &1.user_id)
+    |> Enum.reject(&(&1 == reader_user_id))
+    |> Enum.each(fn user_id ->
+      if us_pid = ProcessRegistry.whereis_user_session(user_id) do
+        UserSession.chat_read(us_pid, chat_id, reader_user_id)
+      end
+    end)
+
+    {:noreply,
+      %{state |
+        last_messages: new_last_messages,
+        last_activity: DateTime.utc_now()
+      }}
+  end
 
 end

@@ -74,6 +74,11 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(%{"type" => "chat_messages_read", "chat_id" => chat_id}, state) do
+    Echo.Users.UserSession.chat_messages_read(state.user_session, chat_id)
+    {:ok, state}
+  end
+
   defp dispatch(_unknown, state) do
     {:ok, state}
   end
