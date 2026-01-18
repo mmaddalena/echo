@@ -26,7 +26,7 @@
     let lastUserId = null
 
     return orderedMessages.value.map((message) => {
-      const currentUserId = message.sender_user_id
+      const currentUserId = message.user_id
 
       const isFirst = currentUserId !== lastUserId
 

@@ -57,23 +57,16 @@ defmodule Echo.Chats.ChatSession do
         false -> nil
       end
 
-    senders_ids =
-      state.last_messages
-      |> Enum.map(& &1.sender_user_id)
-      |> Enum.uniq()
-    senders = case is_private? do
-      true -> %{}
-      false -> User.get_usable_names(user_id, senders_ids)
-    end
+    senders = get_senders(user_id, state)
 
     messages =
       Enum.map(state.last_messages, fn message ->
         type =
-          if message.sender_user_id == user_id,
+          if message.user_id == user_id,
             do: Constants.outgoing(),
             else: Constants.incoming()
 
-        sender_name = Map.get(senders, message.sender_user_id)
+        sender_name = Map.get(senders, message.user_id)
 
         message
         |> Map.put(:type, type)
@@ -100,6 +93,19 @@ defmodule Echo.Chats.ChatSession do
     UserSession.send_chat_info(us_pid, chat_info)
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
+  end
+
+  defp get_senders(user_id, state) do
+    is_private? = state.chat.type == Constants.private_chat()
+    senders_ids =
+      state.last_messages
+      |> Enum.map(& &1.user_id)
+      |> Enum.uniq()
+
+    case is_private? do
+      true -> %{}
+      false -> User.get_usable_names(user_id, senders_ids)
+    end
   end
 
 
@@ -137,23 +143,33 @@ defmodule Echo.Chats.ChatSession do
             end
           end)
 
-        Enum.each(alive_sessions, fn {user_id, us_pid} ->
-          username = Repo.get(Echo.Schemas.User, user_id).username
+        Enum.each(alive_sessions, fn {sess_user_id, us_pid} ->
+          username = Repo.get(Echo.Schemas.User, sess_user_id).username
 
           IO.puts("=|=|=|=|=|=|=|=|=|=|=|=|  Usuario VIVO: #{username} |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|")
-          case user_id == sender_user_id do
-            true ->
+          case sess_user_id == sender_user_id do
+            true -> # Es ougoing
+              sender_name = User.get_usable_name(sender_user_id, sender_user_id, nil)
               UserSession.new_message(us_pid,
                 %{
                   type: "new_message",
-                  message: Map.put(base_message, :front_msg_id, front_msg_id)
+                  message:
+                    base_message
+                      |> Map.put(:front_msg_id, front_msg_id)
+                      |> Map.put(:type, Constants.outgoing())
+                      |> Map.put(:sender_name, sender_name)
                 }
               )
-            false ->
+            false -> # Es incoming
+            sender_name = User.get_usable_name(sess_user_id, sender_user_id, nil)
               UserSession.new_message(us_pid,
                 %{
                   type: "new_message",
-                  message: Map.put(base_message, :type, Constants.incoming())
+                  message:
+                    base_message
+                      |> Map.put(:front_msg_id, nil)
+                      |> Map.put(:type, Constants.incoming())
+                      |> Map.put(:sender_name, sender_name)
                 }
               )
           end

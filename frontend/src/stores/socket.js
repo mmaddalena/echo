@@ -40,20 +40,48 @@ export const useSocketStore = defineStore("socket", () => {
       else if (payload.type === "chat_info") {
         const chat = payload.chat;
 
+        const normalizedMessages = chat.messages.map(m => ({
+          ...m,
+          front_msg_id: generateId(),
+        }))
+
         chatsInfo.value = {
           ...chatsInfo.value,
-          [chat.id]: chat
+          [chat.id]: {
+            ...chat,
+            messages: normalizedMessages
+          }
         };
         activeChatId.value = chat.id;
 
       } else if (payload.type === "new_message") {
         const msg = payload.message;
         const chatId = msg.chat_id;
-        console.log("Sender id y UserInfo.id", msg.user_id, userInfo.value.id)
-        console.log("Mensaje a pelo:", msg)
+        
+        // Actualizo la lista de chats
+        chats.value = chats.value.map(chat => {
+          if (chat.id !== chatId) return chat
+
+          const isIncoming = msg.user_id !== userInfo.value.id
+
+          return {
+            ...chat,
+            last_message: {
+              type: isIncoming ? "incoming" : "outgoing",
+              content: msg.content,
+              state: msg.state,
+              time: msg.time
+            },
+            unread_messages: isIncoming
+              ? chat.unread_messages + 1
+              : chat.unread_messages
+          }
+        })
+
+
+        // Ahora sí, actualizo la caché de chatsInfo
         if (msg.user_id == userInfo.value.id) {
           // El mensaje es outgoing...
-          console.log("Mensaje recibido outgoing del back:", msg)
           const index = chatsInfo.value[chatId].messages.findIndex(m => m.front_msg_id === msg.front_msg_id)
           if(index !== -1){// Por safety, debería entrar
             Object.assign(chatsInfo.value[chatId].messages[index], msg);
@@ -63,23 +91,19 @@ export const useSocketStore = defineStore("socket", () => {
           const normalizedMsg = {
             ...msg,
             front_msg_id: msg.front_msg_id ?? generateId(),
-            time: msg.time ?? msg.inserted_at
           }
-          console.log("Mensaje recibido incoming del back:", normalizedMsg)
           
           const chat = chatsInfo.value[chatId]
-          chatsInfo.value = {
-            ...chatsInfo.value,
-            [chatId]: {
-              ...chat,
-              messages: [...chat.messages, normalizedMsg]
+          
+          if (chat) {
+            chatsInfo.value = {
+              ...chatsInfo.value,
+              [chatId]: {
+                ...chat,
+                messages: [...chat.messages, normalizedMsg]
+              }
             }
           }
-          
-          //chatsInfo.value[chatId].messages.push(normalizedMsg)
-          // Esta actualización hace que lo detecte Vue para la reactividad (qué trucazo no?)
-          // const index = chatsInfo.value[chatId].messages.findIndex(m => m.front_msg_id === normalizedMsg.front_msg_id)
-          // Object.assign(chatsInfo.value[chatId].messages[index], normalizedMsg);
         }
       }
     };

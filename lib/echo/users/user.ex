@@ -216,9 +216,16 @@ defmodule Echo.Users.User do
     Repo.one(query)
   end
 
+  # Chat grupal
   def get_usable_name(_user_id, nil, chat_name) do
     chat_name
   end
+  # Mismo usuario
+  def get_usable_name(user_id, user_id, _chat_name) do
+    user = Repo.get!(User, user_id)
+    user.name || user.username
+  end
+  # Chat privado
   def get_usable_name(user_id, other_user_id, _chat_name) do
     from(c in Contact,
       where: c.user_id == ^user_id and c.contact_id == ^other_user_id,
