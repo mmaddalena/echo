@@ -25,14 +25,18 @@
 </script>
 
 <template>
-  <div class="chat-list">
+  <TransitionGroup
+    name="chat"
+    tag="div"
+    class="chat-list"
+  >
     <ChatListItem 
       v-for="chat in orderedChats"
       :key="chat.id"
       :chat="chat"
       @open="openChat"
     />
-  </div>
+  </TransitionGroup>
 </template>
 
 <style scoped>
@@ -43,4 +47,8 @@
   overflow-y: auto;
   padding: 1rem;
 }
+.chat-move {
+  transition: transform 0.25s ease;
+}
+
 </style>

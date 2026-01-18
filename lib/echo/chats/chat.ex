@@ -36,7 +36,7 @@ defmodule Echo.Chats.Chat do
       select: %{
         id: m.id,
         content: m.content,
-        sender_user_id: m.user_id,
+        user_id: m.user_id,
         state: m.state,
         time: m.inserted_at,
         deleted_at: m.deleted_at
