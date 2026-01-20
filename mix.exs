@@ -29,7 +29,9 @@ defmodule Echo.MixProject do
       {:jason, "~> 1.4"},
       {:joken, "~> 2.5"},
       {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"}
+      {:postgrex, ">= 0.0.0"},
+      {:goth, "~> 1.4"},
+      {:google_api_storage, "~> 0.34"}
       # {:bcrypt_elixir, "~> 3.0"}
     ]
   end

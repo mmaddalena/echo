@@ -20,8 +20,6 @@ defmodule Echo.Http.Router do
     end
   end
 
-
-
   defp cors_opts do
     CORSPlug.init(
       origin: ["http://localhost:5173"],
@@ -29,7 +27,6 @@ defmodule Echo.Http.Router do
       headers: ["Content-Type", "Authorization"]
     )
   end
-
 
   # Route for GET /
   defp route(conn, "GET", "/") do
@@ -49,7 +46,7 @@ defmodule Echo.Http.Router do
     with {:ok, body, conn} <- read_body(conn),
          {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
          {:ok, token} <- Echo.Auth.Accounts.login(u, p) do
-          #IO.puts("body: #{body}\n User: #{u}\n pass: #{p}\n token: #{token}")
+      # IO.puts("body: #{body}\n User: #{u}\n pass: #{p}\n token: #{token}")
       send_resp(conn, 200, Jason.encode!(%{token: token}))
     else
       {:error, :user_not_found} ->
@@ -64,39 +61,62 @@ defmodule Echo.Http.Router do
   end
 
   defp route(conn, "POST", "/api/register") do
-    with {:ok, body, conn} <- read_body(conn),
-        {:ok, params} <- Jason.decode(body),
-        %{
-          "username" => username,
-          "password" => pw
-        } <- params do
+    opts =
+      Plug.Parsers.init(
+        parsers: [:multipart],
+        pass: ["*/*"],
+        length: 10_000_000
+      )
 
-      name  = Map.get(params, "name")
-      email = Map.get(params, "email")
+    conn = Plug.Parsers.call(conn, opts)
 
-      case Echo.Auth.Accounts.register(username, pw, name, email) do
-        {:ok, token} ->
-          send_resp(conn, 201, Jason.encode!(%{token: token}))
+    case Echo.Auth.Accounts.register(conn.params) do
+      {:ok, token} ->
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(201, Jason.encode!(%{token: token}))
 
-        {:error, :username_taken} ->
-          send_resp(conn, 409, Jason.encode!(%{error: "Username already taken"}))
+      {:error, :username_taken} ->
+        send_resp(conn, 409, Jason.encode!(%{error: "Username already taken"}))
 
-        {:error, changeset} ->
-          errors =
-            Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
-
-          send_resp(conn, 400, Jason.encode!(%{
-            error: "Validation failed",
-            details: errors
-          }))
-      end
-    else
-      _ ->
-        send_resp(conn, 400, Jason.encode!(%{error: "Invalid payload"}))
+      {:error, reason} ->
+        send_resp(conn, 400, Jason.encode!(%{error: inspect(reason)}))
     end
   end
 
+  defp route(conn, "POST", "/api/users/me/avatar") do
+    auth_header = List.first(get_req_header(conn, "authorization")) || ""
+    token = String.replace(auth_header, "Bearer ", "")
 
+    with {:ok, user_id} <- Echo.Auth.JWT.extract_user_id(token),
+         {:ok, upload, conn} <- parse_multipart(conn),
+         {:ok, user} <- Echo.Media.upload_user_avatar(user_id, upload) do
+      send_resp(conn, 200, Jason.encode!(%{avatar_url: user.avatar_url}))
+    else
+      _ ->
+        send_resp(conn, 400, Jason.encode!(%{error: "Avatar upload failed"}))
+    end
+  end
+
+  defp parse_multipart(conn) do
+    opts =
+      Plug.Parsers.init(
+        parsers: [:multipart],
+        pass: ["image/*"],
+        length: 5_000_000
+      )
+
+    conn = Plug.Parsers.call(conn, opts)
+
+    case conn.params["avatar"] do
+      %Plug.Upload{content_type: ct} = upload
+      when ct in ["image/png", "image/jpeg", "image/webp"] ->
+        {:ok, upload, conn}
+
+      _ ->
+        {:error, :invalid_file}
+    end
+  end
 
   # Helper para errores de Ecto (si usas base de datos)
   defp translate_error({msg, opts}) do
@@ -105,9 +125,6 @@ defmodule Echo.Http.Router do
       String.replace(acc, "%{#{key}}", to_string(value))
     end)
   end
-
-
-
 
   # Fallback for unmapped routes
   defp route(conn, _method, _path) do
@@ -167,7 +184,4 @@ defmodule Echo.Http.Router do
     </html>
     """
   end
-
-
-
 end

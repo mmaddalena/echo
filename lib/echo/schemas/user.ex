@@ -29,8 +29,8 @@ defmodule Echo.Schemas.User do
   # Login
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :password_hash])
-    |> validate_required([:username, :password_hash])
+    |> cast(attrs, [:username, :password])
+    |> validate_required([:username, :password])
     |> unique_constraint(:username, name: :users_username_index)
     |> validate_length(:username, min: 3, max: 50)
   end
@@ -38,22 +38,25 @@ defmodule Echo.Schemas.User do
   # Register
   def registration_changeset(user, attrs) do
     user
-    |> cast(attrs, [:username, :email, :password_hash, :name])
-    |> validate_required([:username, :email, :password_hash, :name])
+    |> cast(attrs, [:username, :email, :password, :name, :avatar_url])
+    |> validate_required([:username, :email, :password, :name])
     |> validate_length(:username, min: 3, max: 30)
-    |> validate_format(:username, @username_regex, message: "can only contain letters, numbers, and underscores")
+    |> validate_format(:username, @username_regex,
+      message: "can only contain letters, numbers, and underscores"
+    )
     |> validate_format(:email, @email_regex)
-    |> validate_length(:password_hash, min: 8)
+    |> validate_length(:password, min: 8)
     |> unique_constraint(:username)
     |> unique_constraint(:email)
     |> put_password_hash()
   end
 
-
-  defp put_password_hash(%Ecto.Changeset{
-        valid?: true,
-        changes: %{password: password}
-      } = changeset) do
+  defp put_password_hash(
+         %Ecto.Changeset{
+           valid?: true,
+           changes: %{password: password}
+         } = changeset
+       ) do
     hash = Echo.Auth.Auth.hash_password(password)
     put_change(changeset, :password_hash, hash)
   end

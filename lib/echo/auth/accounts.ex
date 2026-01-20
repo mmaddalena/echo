@@ -33,22 +33,23 @@ defmodule Echo.Auth.Accounts do
     - {:error, changeset} si hay errores de validación
     - {:error, :username_taken} si el username ya existe
   """
-  def register(username, password, name, email) do
-    case User.create(%{
-           username: username,
-           password: password,
-           name: name,
-           email: email
-         }) do
-      {:ok, _user} ->
-        # Iniciar sesión automáticamente después del registro
-        login(username, password)
+  def register(params) do
+    with {:ok, avatar_url} <- User.handle_avatar(params["avatar"]),
+         clean_params <-
+           params
+           |> Map.drop(["avatar"])
+           |> Map.put("avatar_url", avatar_url),
+         {:ok, _user} <- User.create(clean_params),
+         {:ok, token} <- login(clean_params["username"], clean_params["password"]) do
+      {:ok, token}
+    else
+      {:error, %Ecto.Changeset{} = cs} ->
+        IO.inspect(cs.errors, label: "REGISTER ERRORS")
+        {:error, cs}
 
-      {:error, :username_taken} ->
-        {:error, :username_taken}
-
-      {:error, changeset} ->
-        {:error, changeset}
+      {:error, reason} ->
+        IO.inspect(reason, label: "REGISTER ERROR")
+        {:error, reason}
     end
   end
 

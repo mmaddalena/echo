@@ -16,6 +16,7 @@ defmodule Echo.Application do
     ])
 
     children = [
+      {Goth, name: Echo.Goth},
       Echo.Repo,
       Echo.ProcessRegistry,
       Echo.Users.UserSessionSup,
