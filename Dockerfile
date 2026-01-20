@@ -5,6 +5,8 @@ RUN apk add --no-cache build-base git nodejs npm
 
 WORKDIR /app
 
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/priv/gcp/service-account.json
+
 # Copiamos mix files primero (cache)
 COPY mix.exs mix.lock ./
 RUN mix local.hex --force && mix local.rebar --force

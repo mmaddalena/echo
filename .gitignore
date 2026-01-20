@@ -37,3 +37,8 @@ node_modules
 # Windows
 Thumbs.db
 Desktop.ini
+
+# gcp service account file
+priv/gcp/service-account.json
+
+priv/static

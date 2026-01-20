@@ -12,7 +12,8 @@ defmodule Echo.Users.User do
   alias Echo.Schemas.Contact
   alias Echo.Schemas.Message
   alias Echo.Constants
-
+  alias Plug.Upload
+  alias Echo.Media
 
   def get(id) do
     Repo.get(User, id)
@@ -33,10 +34,10 @@ defmodule Echo.Users.User do
         user
         |> User.changeset(%{username: new_username})
         |> Repo.update()
+
         # Devuelve {:ok, %User{}} o {:error, %Ecto.Changeset{}}
     end
   end
-
 
   def change_password(user_id, new_pw) do
     user = Repo.get(User, user_id)
@@ -49,6 +50,7 @@ defmodule Echo.Users.User do
         user
         |> User.registration_changeset(%{password: new_pw})
         |> Repo.update()
+
         # Devuelve {:ok, %User{}} o {:error, %Ecto.Changeset{}}
     end
   end
@@ -77,22 +79,17 @@ defmodule Echo.Users.User do
     private_chats(user_id) ++ group_chats(user_id)
   end
 
-
   defp private_chats(user_id) do
     from(chat in Chat,
       join: cm in ChatMember,
       on: cm.chat_id == chat.id,
       where: cm.user_id == ^user_id and chat.type == "private",
-
       join: other_cm in ChatMember,
       on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
-
       join: other_user in User,
       on: other_user.id == other_cm.user_id,
-
       left_join: contact in Contact,
       on: contact.user_id == ^user_id and contact.contact_id == other_user.id,
-
       select: %{
         id: chat.id,
         type: chat.type,
@@ -102,7 +99,7 @@ defmodule Echo.Users.User do
             contact.nickname,
             other_user.name,
             other_user.username
-        ),
+          ),
         avatar_url: other_user.avatar_url,
         other_user_id: other_user.id
       }
@@ -110,7 +107,10 @@ defmodule Echo.Users.User do
     |> Repo.all()
     |> Enum.map(fn chat ->
       chat
-      |> Map.put(:status, if(is_active?(chat.other_user_id), do: Constants.online, else: Constants.offline))
+      |> Map.put(
+        :status,
+        if(is_active?(chat.other_user_id), do: Constants.online(), else: Constants.offline())
+      )
       |> Map.delete(:other_user_id)
       |> Map.put(:unread_messages, get_unread_messages(user_id, chat.id))
       |> Map.put(:last_message, get_last_message(user_id, chat.id))
@@ -122,9 +122,7 @@ defmodule Echo.Users.User do
       join: cm in ChatMember,
       on: cm.chat_id == chat.id,
       where: cm.user_id == ^user_id and chat.type == "group",
-
       distinct: chat.id,
-
       select: %{
         id: chat.id,
         type: chat.type,
@@ -141,7 +139,6 @@ defmodule Echo.Users.User do
     end)
   end
 
-
   def user_payload(user) do
     %{
       id: user.id,
@@ -152,7 +149,6 @@ defmodule Echo.Users.User do
       last_seen_at: user.last_seen_at
     }
   end
-
 
   def is_active?(user_id) do
     case ProcessRegistry.whereis_user_session(user_id) do
@@ -175,19 +171,21 @@ defmodule Echo.Users.User do
       # 4. Created after the user joined the chat
       # 5. Created after last_read_at (or all messages if last_read_at is nil)
 
-      query = from m in Message,
-        where: m.chat_id == ^chat_id,
-        where: is_nil(m.deleted_at),
-        where: m.user_id != ^user_id,
-        where: m.inserted_at > ^chat_member.inserted_at
+      query =
+        from m in Message,
+          where: m.chat_id == ^chat_id,
+          where: is_nil(m.deleted_at),
+          where: m.user_id != ^user_id,
+          where: m.inserted_at > ^chat_member.inserted_at
 
       # Add condition for last_read_at if it exists
-      query = if chat_member.last_read_at do
-        from m in query,
-          where: m.inserted_at > ^chat_member.last_read_at
-      else
-        query
-      end
+      query =
+        if chat_member.last_read_at do
+          from m in query,
+            where: m.inserted_at > ^chat_member.last_read_at
+        else
+          query
+        end
 
       Repo.aggregate(query, :count, :id)
     end
@@ -204,9 +202,12 @@ defmodule Echo.Users.User do
         limit: 1,
         select: %{
           # Usa type() dentro del fragment también
-          type: fragment("CASE WHEN ? = ? THEN 'outgoing' ELSE 'incoming' END",
-                        m.user_id,
-                        type(^user_id, :binary_id)),
+          type:
+            fragment(
+              "CASE WHEN ? = ? THEN 'outgoing' ELSE 'incoming' END",
+              m.user_id,
+              type(^user_id, :binary_id)
+            ),
           content: m.content,
           state: m.state,
           time: m.inserted_at,
@@ -220,11 +221,13 @@ defmodule Echo.Users.User do
   def get_usable_name(_user_id, nil, chat_name) do
     chat_name
   end
+
   # Mismo usuario
   def get_usable_name(user_id, user_id, _chat_name) do
     user = Repo.get!(User, user_id)
     user.name || user.username
   end
+
   # Chat privado
   def get_usable_name(user_id, other_user_id, _chat_name) do
     from(c in Contact,
@@ -266,4 +269,63 @@ defmodule Echo.Users.User do
     Map.merge(users, nicknames)
   end
 
+  def update_avatar(user_id, avatar_url) do
+    case Repo.get(User, user_id) do
+      nil ->
+        {:error, :not_found}
+
+      user ->
+        user
+        |> Ecto.Changeset.change(%{avatar_url: avatar_url})
+        |> Repo.update()
+    end
+  end
+
+  @avatar_dir "priv/static/uploads/avatars"
+  @allowed_types ~w(image/jpeg image/png image/webp)
+  # 2MB
+  @max_avatar_size 2_000_000
+
+  def handle_avatar(nil), do: {:ok, nil}
+
+  def handle_avatar(%Upload{} = upload) do
+    with :ok <- validate_avatar(upload),
+         {:ok, url} <- store_avatar(upload) do
+      {:ok, url}
+    end
+  end
+
+  def handle_avatar(_), do: {:error, :invalid_avatar}
+
+  defp validate_avatar(%Upload{content_type: type, path: path})
+       when type in @allowed_types do
+    if File.stat!(path).size <= @max_avatar_size do
+      :ok
+    else
+      {:error, :avatar_too_large}
+    end
+  end
+
+  defp validate_avatar(_), do: {:error, :invalid_avatar_type}
+
+  defp store_avatar(%Upload{} = upload) do
+    File.mkdir_p!(@avatar_dir)
+
+    ext = Path.extname(upload.filename)
+    uuid = Ecto.UUID.generate()
+    local_name = "#{uuid}#{ext}"
+    # local_path = Path.join(@avatar_dir, local_name)
+
+    # 1️⃣ Store locally
+    # File.cp!(upload.path, local_path)
+
+    # 2️⃣ Upload to GCP using existing Media module
+    case Echo.Media.upload_to_gcs(local_name, upload) do
+      {:ok, gcp_url} ->
+        {:ok, gcp_url}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
 end
