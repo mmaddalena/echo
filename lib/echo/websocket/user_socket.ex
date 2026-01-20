@@ -2,6 +2,7 @@ defmodule Echo.WS.UserSocket do
   @behaviour :cowboy_websocket
 
   require Logger
+  alias Echo.Users.UserSession
 
   # Handshake inicial. Decide si este proceso en HTTP se convierte a WS
   @impl true
@@ -40,9 +41,11 @@ defmodule Echo.WS.UserSocket do
   def websocket_init(state) do
     {:ok, us_pid} = Echo.Users.UserSessionSup.get_or_start(state.user_id)
 
-    Echo.Users.UserSession.attach_socket(us_pid, self())
+    UserSession.attach_socket(us_pid, self())
 
-    Echo.Users.UserSession.send_user_info(us_pid)
+    UserSession.send_user_info(us_pid)
+
+    UserSession.mark_pending_messages_delivered(us_pid)
 
     {:ok, %{state | user_session: us_pid}}
   end
@@ -65,17 +68,23 @@ defmodule Echo.WS.UserSocket do
 
   # Dispatch de mensajes del cliente
   defp dispatch(%{"type" => "open_chat", "chat_id" => chat_id}, state) do
-    Echo.Users.UserSession.open_chat(state.user_session, chat_id)
+    UserSession.open_chat(state.user_session, chat_id)
     {:ok, state}
   end
 
   defp dispatch(%{"type" => "send_message", "msg" => front_msg}, state) do
-    Echo.Users.UserSession.send_message(state.user_session, front_msg)
+    UserSession.send_message(state.user_session, front_msg)
     {:ok, state}
   end
 
   defp dispatch(%{"type" => "chat_messages_read", "chat_id" => chat_id}, state) do
-    Echo.Users.UserSession.chat_messages_read(state.user_session, chat_id)
+    UserSession.chat_messages_read(state.user_session, chat_id)
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "logout"}, state) do
+    UserSession.logout(state.user_session)
+    #Process.exit(state.user_session, :normal)
     {:ok, state}
   end
 

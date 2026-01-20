@@ -54,6 +54,14 @@ export const useSocketStore = defineStore("socket", () => {
         };
         activeChatId.value = chat.id;
 
+        // Seteamos como read los incoming
+        setReadIncomingMessages(chat.id);
+
+        // Actualizamos el ChatListItem
+        const lastMsg = getLastMessage(chat);
+
+        updateChatListItem(lastMsg)
+
       } 
       else if (payload.type === "new_message") {
         const msg = payload.message;
@@ -84,9 +92,11 @@ export const useSocketStore = defineStore("socket", () => {
         if (msg.user_id == userInfo.value.id) {
           // El mensaje es outgoing...
           const index = chatsInfo.value[chatId].messages.findIndex(m => m.front_msg_id === msg.front_msg_id)
-          if(index !== -1){// Por safety, debería entrar
+
+          if(index !== -1){// Por safety nomás, debería entrar sí o sí
             Object.assign(chatsInfo.value[chatId].messages[index], msg);
           }
+          console.log(`Mensaje outgoing recibido: `, msg)
         }else{
           // El mensaje es incoming...
           const normalizedMsg = {
@@ -105,18 +115,28 @@ export const useSocketStore = defineStore("socket", () => {
               }
             }
           }
+
+          // Si tengo este chat abierto
+          if(normalizedMsg.chat_id == activeChatId.value) {
+            // Notifico al back que leí el mensaje 
+            send({
+              type: "chat_messages_read",
+              chat_id: chatId
+            });
+
+            // Seteamos como read los incoming
+            setReadIncomingMessages(chatId)
+
+            // Actualizamos el ChatListItem también
+            updateChatListItem(normalizedMsg)
+          }
         }
       }
       else if (payload.type === "chat_read") {
         const chat_id = payload.chat_id;
         const chat = chatsInfo.value[chat_id];
 
-        if (!chat || chat.type != "private") return;
-
-        const hasUnreadOutgoing = chat.messages.some(
-          m => m.type === "outgoing" && m.state !== "read"
-        );
-        if (!hasUnreadOutgoing) return;
+        if (!chat || chat.type != "private") return;        
 
         chatsInfo.value = {
           ...chatsInfo.value,
@@ -129,6 +149,15 @@ export const useSocketStore = defineStore("socket", () => {
             )
           }
         };
+
+        const lastMsg = getLastMessage(chatsInfo.value[chat_id]);
+        if (lastMsg) {
+          updateChatListItem({ ...lastMsg, state: "read" });
+        }
+
+      }
+      else if (payload.type === "messages_delivered") {
+        markMessagesDelivered(payload.message_ids)
       }
     };
 
@@ -139,6 +168,7 @@ export const useSocketStore = defineStore("socket", () => {
 
   function disconnect() {
     if (socket.value) {
+      send({type: "logout"})
       socket.value.close();
     }
     socket.value = null;
@@ -163,13 +193,7 @@ export const useSocketStore = defineStore("socket", () => {
 
     const hasCache = !!chatsInfo.value[chatId];
 
-    console.log("[read] openChat", {
-      chatId,
-      hasCache,
-      chat: chatsInfo.value[chatId],
-    });
-
-
+    // Si no tenemos la info del chat se la pedimos al back
     if (!hasCache) {
       send({
         type: "open_chat",
@@ -177,28 +201,18 @@ export const useSocketStore = defineStore("socket", () => {
       });
     }
 
+    // Si no le pedimos al back, tenemos que actualizar el ChatListItem
+    if (hasCache) {
+      const lastMsg = getLastMessage(chatsInfo.value[chatId]);
+
+      if (lastMsg) updateChatListItem(lastMsg);
+    }
+
+    // Le decimos al back que leímos los mensajes del chat
     send({
       type: "chat_messages_read",
       chat_id: chatId
     });
-    
-    // No sirve de mucho la verdad, pero para que quede igual que en el back
-    if (hasCache) {
-      const chat = chatsInfo.value[chatId];
-      
-      chatsInfo.value = {
-        ...chatsInfo.value,
-        [chatId]: {
-          ...chat,
-          messages: chat.messages.map(m =>
-            m.type === "incoming" && m.state !== "read"
-            ? { ...m, state: "read" }
-            : m
-          )
-        }
-      };
-    }
-
   }
 
   function sendMessage(front_msg) {
@@ -232,6 +246,74 @@ export const useSocketStore = defineStore("socket", () => {
     //   msg: front_msg
     // });
   }
+
+  function getLastMessage(chat) {
+    return chat.messages.reduce((latest, m) => {
+      if (!latest) return m;
+      return new Date(m.time) > new Date(latest.time) ? m : latest;
+    }, null);
+  }
+  
+  function updateChatListItem(msg) {
+    chats.value = chats.value.map(chat =>
+      chat.id === msg.chat_id? { 
+        ...chat, 
+        unread_messages: 0,
+        last_message: msg,
+      }
+        : chat
+    );
+  }
+
+  function setReadIncomingMessages(chatId) {
+    const hasCache = !!chatsInfo.value[chatId];
+    if (hasCache) {
+      const chat = chatsInfo.value[chatId];
+      
+      chatsInfo.value = {
+        ...chatsInfo.value,
+        [chatId]: {
+          ...chat,
+          messages: chat.messages.map(m =>
+            m.type === "incoming" && m.state !== "read"
+            ? { ...m, state: "read" }
+            : m
+          )
+        }
+      };
+    }
+  }
+
+  function markMessagesDelivered(messageIds) {
+    Object.keys(chatsInfo.value).forEach(chatId => {
+      const chat = chatsInfo.value[chatId];
+      if (!chat) return;
+
+      // Actualizamos los mensajes
+      const messages = chat.messages.map(m => {
+        const msgId = m.id ?? m.front_msg_id;
+        return messageIds.includes(msgId) && m.state === "sent"
+          ? { ...m, state: "delivered" }
+          : m;
+      });
+
+      // Reemplazamos en chatsInfo
+      chatsInfo.value = {
+        ...chatsInfo.value,
+        [chatId]: { ...chat, messages }
+      };
+
+      // Actualizamos last_message si es uno de los que cambió
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg && messageIds.includes(lastMsg.id ?? lastMsg.front_msg_id)) {
+        updateChatListItem(lastMsg);
+      }
+    });
+  }
+
+
+
+
 
   return {
     socket,

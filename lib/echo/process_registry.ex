@@ -73,4 +73,8 @@ defmodule Echo.ProcessRegistry do
     ])
     |> Enum.map(fn {{:chat, chat_id}, pid} -> {chat_id, pid} end)
   end
+
+  def unregister_user_session(user_id) do
+    Registry.unregister(__MODULE__, {:user, user_id})
+  end
 end

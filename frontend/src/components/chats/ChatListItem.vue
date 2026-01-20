@@ -33,6 +33,7 @@
           <p class="status">{{ chat.status }}</p>
         </div>
         <div 
+          v-if="chat.unread_messages != 0"
           class="unread-messages"
         >
           {{ chat.unread_messages }}
@@ -40,11 +41,14 @@
       </div>
       <div class="down">
         <div class="last-message">
+          <Transition name="msg-state" mode="out-in">
           <IconMessageState 
             v-if="chat.last_message?.type === 'outgoing'"
+            :key="chat.last_message?.state"
             class="icon" 
             :state="chat.last_message.state" 
-          />
+            />
+          </Transition>
           <p 
             class="text"
             :class="{muted: isMuted}"
@@ -148,4 +152,16 @@
 .muted{
   color: var(--text-muted);
 }
+
+.msg-state-enter-active,
+.msg-state-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.msg-state-enter-from,
+.msg-state-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
 </style>

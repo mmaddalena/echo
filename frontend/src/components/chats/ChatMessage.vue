@@ -30,11 +30,14 @@
         <span class="content">{{ message.content }}</span>
         
         <span class="meta">
-          <IconMessageState 
-            v-if="message.type == 'outgoing'"
-            class="state-icon"
-            :state="message.state"
-          />
+          <Transition name="msg-state" mode="out-in">
+            <IconMessageState 
+              v-if="message.type == 'outgoing'"
+              :key="message.state"
+              class="state-icon"
+              :state="message.state"
+            />
+          </Transition>
           <span class="time">
             {{ message.time ? formatHM(message.time) : message.time_zoned }}
           </span>
@@ -121,4 +124,16 @@
   opacity: 0.6;
   flex-shrink: 0;
 }
+
+.msg-state-enter-active,
+.msg-state-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.msg-state-enter-from,
+.msg-state-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
 </style>
