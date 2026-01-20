@@ -19,9 +19,14 @@ defmodule Echo.Users.UserSessionSup do
         start_session(user_id)
 
       pid ->
-        {:ok, pid}
+        if Process.alive?(pid) do
+          {:ok, pid}
+        else
+          start_session(user_id)
+        end
     end
   end
+
 
   defp start_session(user_id) do
     spec = {Echo.Users.UserSession, user_id}

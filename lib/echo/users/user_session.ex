@@ -15,12 +15,14 @@ defmodule Echo.Users.UserSession do
   """
 
   use GenServer
+  alias Echo.ProcessRegistry
+  alias Echo.Messages.Messages
 
   def start_link(user_id) do
     GenServer.start_link(
       __MODULE__,
       user_id,
-      name: {:via, Registry, {Echo.ProcessRegistry, {:user, user_id}}}
+      name: {:via, Registry, {ProcessRegistry, {:user, user_id}}}
     )
   end
 
@@ -46,6 +48,15 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:chat_messages_read, chat_id})
   end
 
+  def mark_pending_messages_delivered(us_pid) do
+    GenServer.cast(us_pid, :mark_pending_delivered)
+  end
+
+  def logout(us_pid) do
+    GenServer.call(us_pid, :logout)
+  end
+
+
 
   ##### Funciones llamadas desde el dominio
 
@@ -61,6 +72,14 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:chat_read, chat_id, reader_user_id})
   end
 
+  def socket_alive?(pid) do
+    GenServer.call(pid, :socket_alive?)
+  end
+
+  def messages_delivered(us_pid, message_ids) do
+    GenServer.cast(us_pid, {:messages_delivered, message_ids})
+  end
+
   ##### Callbacks
 
   @impl true
@@ -74,6 +93,18 @@ defmodule Echo.Users.UserSession do
       current_chat_id: nil,
       last_activity: DateTime.utc_now()
     }
+
+    messages = Messages.get_sent_messages_for_user(user.id)
+
+    Messages.mark_delivered_for_user(user.id)
+
+    messages
+    |> Enum.group_by(& &1.user_id) # sender_id
+    |> Enum.each(fn {sender_id, msgs} ->
+      if us_pid = ProcessRegistry.whereis_user_session(sender_id) do
+        messages_delivered(us_pid, Enum.map(msgs, & &1.id))
+      end
+    end)
 
     {:ok, state}
   end
@@ -125,6 +156,10 @@ defmodule Echo.Users.UserSession do
   end
 
   @impl true
+  def handle_cast({:new_message, _msg}, %{socket: nil} = state) do
+    {:noreply, state}
+  end
+  @impl true
   def handle_cast({:new_message, msg}, state) do
     send(state.socket, {:send, msg})
 
@@ -154,10 +189,49 @@ defmodule Echo.Users.UserSession do
   end
 
   @impl true
-  def terminate(_reason, state) do
-    # cleanup (habria que ver bien qué hay que limpiar)
+  def handle_cast({:messages_delivered, message_ids}, %{socket: nil} = state) do
+    {:noreply, state}
+  end
+  @impl true
+  def handle_cast({:messages_delivered, message_ids}, state) do
+    send(state.socket, {:send, %{type: "messages_delivered", message_ids: message_ids}})
+    {:noreply, state}
+  end
+
+
+
+  @impl true
+  def handle_cast(:mark_pending_delivered, state) do
+    # traemos todos los mensajes donde user_id != state.user_id y state == sent
+    messages = Messages.get_sent_messages_for_user(state.user_id)
+
+    Enum.each(messages, fn msg ->
+      if us_pid = ProcessRegistry.whereis_user_session(msg.user_id) do
+        messages_delivered(us_pid, [msg.id])
+      end
+    end)
+
+    {:noreply, state}
+  end
+
+
+  @impl true
+  def handle_call(:socket_alive?, _from, %{socket: socket} = state) do
+    {:reply, socket != nil, state}
+  end
+
+  @impl true
+  def handle_call(:logout, _from, state) do
+    ProcessRegistry.unregister_user_session(state.user_id)
+    {:stop, :normal, :ok, %{state | socket: nil}}
+  end
+
+
+  @impl true
+  def terminate(_reason, _state) do
     :ok
   end
+
 
 
 

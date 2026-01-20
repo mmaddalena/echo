@@ -118,10 +118,33 @@ defmodule Echo.Chats.ChatSession do
     content = msg_front["content"]
     sender_user_id = msg_front["sender_user_id"]
 
+    msg_state =
+      if state.chat.type == "private" do
+        other_user_id =
+          state.members
+          |> Enum.map(& &1.user_id)
+          |> Enum.find(&(&1 != sender_user_id))
+
+        case ProcessRegistry.whereis_user_session(other_user_id) do
+          nil ->
+            Constants.state_sent()
+          pid ->
+            if UserSession.socket_alive?(pid) do
+              Constants.state_delivered()
+            else
+              Constants.state_sent()
+            end
+        end
+      else
+        Constants.state_sent()
+      end
+
+
     attrs = %{
       chat_id: chat_id,
       content: content,
-      user_id: sender_user_id
+      user_id: sender_user_id,
+      state: msg_state
     }
 
     case Messages.create_message(attrs) do
@@ -130,7 +153,6 @@ defmodule Echo.Chats.ChatSession do
           message
           |> Map.from_struct()
           |> Map.drop([:__meta__, :user, :chat])
-          |> Map.put(:state, Constants.state_sent())
           |> Map.put(:time, message.inserted_at)
           |> Map.delete(:inserted_at)
 

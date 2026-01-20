@@ -37,6 +37,7 @@ defmodule Echo.Chats.Chat do
         id: m.id,
         content: m.content,
         user_id: m.user_id,
+        chat_id: m.chat_id,
         state: m.state,
         time: m.inserted_at,
         deleted_at: m.deleted_at

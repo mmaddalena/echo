@@ -12,6 +12,9 @@ export function formatChatTime(isoString) {
   // Hoy
   if (diffDays === 0) {
     if (diffMinutes < 60) {
+      if (diffMinutes < 1) {
+        return `Ahora`;  
+      }
       return `Hace ${diffMinutes} min`;
     }
     return `Hace ${diffHours} hs`;
