@@ -23,6 +23,13 @@ defmodule Echo.Users.User do
     Repo.get_by(User, username: username)
   end
 
+  def get_avatar_url(user_id) do
+    case Repo.get(User, user_id) do
+      nil -> nil
+      user -> user.avatar_url
+    end
+  end
+
   def update_username(user_id, new_username) do
     user = Repo.get(User, user_id)
 

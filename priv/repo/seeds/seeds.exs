@@ -24,33 +24,38 @@ IO.puts("👥 Creating users...")
 users = [
   %{
     "username" => "lucas",
-    "password_hash" => "12345678",
+    "password" => "12345678",
     "email" => "lucas@coutt.com",
     "name" => "Lucas Couttulenc",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-50a691c0-7032-4877-84c5-93ef4276ea8a.jpg"
   },
   %{
     "username" => "martin",
-    "password_hash" => "12345678",
+    "password" => "12345678",
     "email" => "martin@maddalena.com",
     "name" => "Martin Maddalena",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-d9f4a4a0-c943-451a-b05b-2f3e58df54ab.jpeg"
   },
   %{
     "username" => "rocio",
-    "password_hash" => "12345678",
+    "password" => "12345678",
     "email" => "rocio@gallo.com",
     "name" => "Rocío Gallo",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-0924ea9b-9d73-42b8-a117-4397d91d8167.png"
   },
   %{
     "username" => "manuel",
-    "password_hash" => "12345678",
+    "password" => "12345678",
     "email" => "manuel@camejo.com",
     "name" => "Manuel Camejo",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-05c34105-41c9-4212-987d-6313d377d8e0.jpeg"
   },
   %{
     "username" => "matias",
-    "password_hash" => "12345678",
+    "password" => "12345678",
     "email" => "matias@onorato.com",
     "name" => "Matías Onorato",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-42effcee-d371-459b-a25f-83ef881b3c28.jpeg"
   }
 ]
 
