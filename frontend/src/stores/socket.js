@@ -66,7 +66,7 @@ export const useSocketStore = defineStore("socket", () => {
 					if (chat.id !== chatId) return chat;
 
 					const isIncoming = msg.user_id !== userInfo.value.id;
-
+					console.log(msg.avatar_url);
 					return {
 						...chat,
 						last_message: {
@@ -74,6 +74,7 @@ export const useSocketStore = defineStore("socket", () => {
 							content: msg.content,
 							state: msg.state,
 							time: msg.time,
+							avatar_url: msg.avatar_url,
 						},
 						unread_messages: isIncoming
 							? chat.unread_messages + 1

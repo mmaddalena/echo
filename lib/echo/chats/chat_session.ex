@@ -33,7 +33,6 @@ defmodule Echo.Chats.ChatSession do
     GenServer.cast(cs_pid, {:chat_messages_read, chat_id, user_id})
   end
 
-
   ##### Callbacks
 
   @impl true
@@ -45,6 +44,7 @@ defmodule Echo.Chats.ChatSession do
       members: Chat.get_members(chat_id),
       last_activity: DateTime.utc_now()
     }
+
     {:ok, %{state | last_activity: DateTime.utc_now()}}
   end
 
@@ -55,8 +55,11 @@ defmodule Echo.Chats.ChatSession do
 
     status =
       case is_private? do
-        true -> if User.is_active?(other_user_id), do: Constants.online(), else: Constants.offline()
-        false -> nil
+        true ->
+          if User.is_active?(other_user_id), do: Constants.online(), else: Constants.offline()
+
+        false ->
+          nil
       end
 
     senders = get_senders(user_id, state)
@@ -99,6 +102,7 @@ defmodule Echo.Chats.ChatSession do
 
   defp get_senders(user_id, state) do
     is_private? = state.chat.type == Constants.private_chat()
+
     senders_ids =
       state.last_messages
       |> Enum.map(& &1.user_id)
@@ -109,7 +113,6 @@ defmodule Echo.Chats.ChatSession do
       false -> User.get_usable_names(user_id, senders_ids)
     end
   end
-
 
   @impl true
   def handle_cast({:send_message, msg_front, sender_us_pid}, state) do
@@ -128,6 +131,7 @@ defmodule Echo.Chats.ChatSession do
         case ProcessRegistry.whereis_user_session(other_user_id) do
           nil ->
             Constants.state_sent()
+
           pid ->
             if UserSession.socket_alive?(pid) do
               Constants.state_delivered()
@@ -138,7 +142,6 @@ defmodule Echo.Chats.ChatSession do
       else
         Constants.state_sent()
       end
-
 
     attrs = %{
       chat_id: chat_id,
@@ -154,14 +157,19 @@ defmodule Echo.Chats.ChatSession do
           |> Map.from_struct()
           |> Map.drop([:__meta__, :user, :chat])
           |> Map.put(:time, message.inserted_at)
+          |> Map.put(:avatar_url, User.get_avatar_url(sender_user_id))
           |> Map.delete(:inserted_at)
+
+        IO.inspect(base_message, label: "Base message para incoming")
 
         {alive_sessions, dead_users} =
           Enum.reduce(state.members, {[], []}, fn member, {alive, dead} ->
             user_id = member.user_id
+
             case ProcessRegistry.whereis_user_session(user_id) do
               nil ->
                 {alive, [user_id | dead]}
+
               us_pid ->
                 {[{user_id, us_pid} | alive], dead}
             end
@@ -170,53 +178,62 @@ defmodule Echo.Chats.ChatSession do
         Enum.each(alive_sessions, fn {sess_user_id, us_pid} ->
           username = Repo.get(Echo.Schemas.User, sess_user_id).username
 
-          IO.puts("=|=|=|=|=|=|=|=|=|=|=|=|  Usuario VIVO: #{username} |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|")
+          IO.puts(
+            "=|=|=|=|=|=|=|=|=|=|=|=|  Usuario VIVO: #{username} |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|"
+          )
+
           case sess_user_id == sender_user_id do
-            true -> # Es ougoing
+            # Es ougoing
+            true ->
               sender_name = User.get_usable_name(sender_user_id, sender_user_id, nil)
-              UserSession.new_message(us_pid,
+
+              UserSession.new_message(
+                us_pid,
                 %{
                   type: "new_message",
                   message:
                     base_message
-                      |> Map.put(:front_msg_id, front_msg_id)
-                      |> Map.put(:type, Constants.outgoing())
-                      |> Map.put(:sender_name, sender_name)
+                    |> Map.put(:front_msg_id, front_msg_id)
+                    |> Map.put(:type, Constants.outgoing())
+                    |> Map.put(:sender_name, sender_name)
                 }
               )
-            false -> # Es incoming
-            sender_name = User.get_usable_name(sess_user_id, sender_user_id, nil)
-              UserSession.new_message(us_pid,
+
+            # Es incoming
+            false ->
+              sender_name = User.get_usable_name(sess_user_id, sender_user_id, nil)
+
+              UserSession.new_message(
+                us_pid,
                 %{
                   type: "new_message",
                   message:
                     base_message
-                      |> Map.put(:front_msg_id, nil)
-                      |> Map.put(:type, Constants.incoming())
-                      |> Map.put(:sender_name, sender_name)
+                    |> Map.put(:front_msg_id, nil)
+                    |> Map.put(:type, Constants.incoming())
+                    |> Map.put(:sender_name, sender_name)
                 }
               )
           end
         end)
 
         Enum.each(dead_users, fn us_pid ->
+          nil
           # Agregar una notificacion o como lo hagamos
         end)
 
         {:noreply,
-          %{
-            state |
-              last_activity: DateTime.utc_now(),
-              last_messages: [base_message | state.last_messages]
-          }
-        }
+         %{
+           state
+           | last_activity: DateTime.utc_now(),
+             last_messages: [base_message | state.last_messages]
+         }}
 
       {:error, changeset} ->
-        #UserSession.send_message_error(sender_us_pid, front_msg_id, changeset)
+        # UserSession.send_message_error(sender_us_pid, front_msg_id, changeset)
         {:noreply, %{state | last_activity: DateTime.utc_now()}}
     end
   end
-
 
   @impl true
   def handle_cast({:chat_messages_read, chat_id, reader_user_id}, state) do
@@ -240,11 +257,6 @@ defmodule Echo.Chats.ChatSession do
       end
     end)
 
-    {:noreply,
-      %{state |
-        last_messages: new_last_messages,
-        last_activity: DateTime.utc_now()
-      }}
+    {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
   end
-
 end
