@@ -8,6 +8,7 @@ const password = ref("");
 const name = ref("");
 const email = ref("");
 const avatarFile = ref(null);
+const avatarPreview = ref(null);
 
 const router = useRouter();
 const socketStore = useSocketStore();
@@ -48,7 +49,14 @@ async function handleRegister() {
 }
 
 function onFileChange(e) {
-	avatarFile.value = e.target.files[0] || null;
+	const file = e.target.files[0] || null;
+	avatarFile.value = file;
+
+	if (file) {
+		avatarPreview.value = URL.createObjectURL(file);
+	} else {
+		avatarPreview.value = null;
+	}
 }
 </script>
 
@@ -71,9 +79,17 @@ function onFileChange(e) {
 
 				<input type="password" placeholder="Contraseña" v-model="password" />
 
-				<input type="file" accept="image/*" @change="onFileChange" />
+				<div v-if="avatarPreview" class="avatar-preview">
+					<img :src="avatarPreview" alt="Avatar preview" />
+				</div>
+				<label class="file-upload">
+					<input type="file" accept="image/*" @change="onFileChange" />
+					<span>
+						{{ avatarFile ? "Cambiar avatar" : "Elegir avatar" }}
+					</span>
+				</label>
 
-				<button type="submit">Entrar</button>
+				<button type="submit">Registrar</button>
 			</form>
 		</div>
 		<p>¿Ya tenés cuenta?</p>
@@ -138,5 +154,54 @@ button {
 }
 .login-link:hover {
 	color: #6b8fb8;
+}
+
+.avatar-preview {
+	width: 120px;
+	height: 120px;
+	border-radius: 50%;
+	overflow: hidden;
+	margin: 0 auto 12px auto;
+	border: 2px solid #93c5fd;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #1e293b;
+}
+
+.avatar-preview img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.file-upload {
+	display: flex;
+	justify-content: center;
+}
+
+.file-upload input {
+	display: none;
+}
+
+.file-upload span {
+	padding: 8px 16px;
+	border-radius: 6px;
+	background: #2563eb; /* same as register button */
+	color: white;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background-color 0.2s ease,
+		transform 0.1s ease;
+}
+
+.file-upload span:hover {
+	background: #1d4ed8;
+}
+
+.file-upload span:active {
+	transform: scale(0.97);
 }
 </style>
