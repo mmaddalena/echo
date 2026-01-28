@@ -27,7 +27,7 @@ users = [
     "password" => "12345678",
     "email" => "lucas@coutt.com",
     "name" => "Lucas Couttulenc",
-    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-50a691c0-7032-4877-84c5-93ef4276ea8a.jpg"
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/e1e26110-e81f-4e61-8cce-ba181a34577c-3518a9fc-74c1-4e04-afde-1e33a14d6abb.jpg"
   },
   %{
     "username" => "martin",
@@ -140,8 +140,8 @@ direct_chats = [
 
 # Group chats
 group_chats = [
-  %{name: "CS2", type: "group", creator_id: lucas.id},
-  %{name: "TP FINAL Taller", type: "group", creator_id: martin.id}
+  %{name: "CS2", type: "group", creator_id: lucas.id, avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/e1e26110-e81f-4e61-8cce-ba181a34577c-47ccfd5a-80a3-4ebf-834a-6084776fc1d0.jpg"},
+  %{name: "TP FINAL Taller", type: "group", creator_id: martin.id, avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/e1e26110-e81f-4e61-8cce-ba181a34577c-33e3aba1-c8bf-4991-ac25-3013bb7e3502.png"}
 ]
 
 all_chats = direct_chats ++ group_chats

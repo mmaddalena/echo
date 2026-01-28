@@ -18,7 +18,7 @@ defmodule Echo.Schemas.Chat do
 
   def changeset(chat, attrs) do
     chat
-    |> cast(attrs, [:name, :type, :creator_id])
+    |> cast(attrs, [:name, :type, :creator_id, :avatar_url])
     |> validate_required([:type, :creator_id])
     |> validate_inclusion(:type, ["private", "group"])
     |> validate_name_based_on_type()

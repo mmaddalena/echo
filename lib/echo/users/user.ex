@@ -159,8 +159,12 @@ defmodule Echo.Users.User do
 
   def is_active?(user_id) do
     case ProcessRegistry.whereis_user_session(user_id) do
-      nil -> false
-      _ -> true
+      nil ->
+        false
+
+      _ ->
+        IO.inspect("User #{user_id} is active")
+        true
     end
   end
 
