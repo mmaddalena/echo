@@ -7,14 +7,6 @@ database_url =
     For example: ecto://postgres:postgres@db:5432/echo_dev
     """
 
-ssl =
-  case(System.get_env("DATABASE_SSL")) do
-    "true" -> true
-    "false" -> false
-    nil -> false
-  end
-
 config :echo, Echo.Repo,
   url: database_url,
-  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-  ssl: ssl
+  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
