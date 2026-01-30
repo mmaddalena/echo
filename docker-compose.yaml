@@ -21,8 +21,6 @@ services:
       DATABASE_URL: ecto://postgres:postgres@db:5432/echo_dev
     ports:
       - "4000:4000"
-    volumes:
-      - .:/app
     command: mix run --no-halt
     networks:
       - echo_net

@@ -1,19 +1,22 @@
 defmodule Echo.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
 
   @impl true
   def start(_type, _args) do
+    port =
+      System.get_env("PORT", "4000")
+      |> String.to_integer()
+
     dispatch =
       :cowboy_router.compile([
-        {:_, [
-          {"/ws", Echo.WS.UserSocket, []},
-          {:_, Plug.Cowboy.Handler, {Echo.Http.Router, []}}
-        ]}
-    ])
+        {:_,
+         [
+           {"/ws", Echo.WS.UserSocket, []},
+           {:_, Plug.Cowboy.Handler, {Echo.Http.Router, []}}
+         ]}
+      ])
 
     children = [
       {Goth, name: Echo.Goth},
@@ -21,7 +24,6 @@ defmodule Echo.Application do
       Echo.ProcessRegistry,
       Echo.Users.UserSessionSup,
       Echo.Chats.ChatSessionSup,
-
       %{
         id: :http_listener,
         start: {
@@ -29,15 +31,13 @@ defmodule Echo.Application do
           :start_clear,
           [
             :http_listener,
-            [port: 4000],
+            [port: port],
             %{env: %{dispatch: dispatch}}
           ]
         }
       }
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Echo.Supervisor]
     Supervisor.start_link(children, opts)
   end
