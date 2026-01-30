@@ -27,7 +27,7 @@ async function handleRegister() {
 			formData.append("avatar", avatarFile.value);
 		}
 
-		const res = await fetch("http://localhost:4000/api/register", {
+		const res = await fetch("/api/register", {
 			method: "POST",
 			body: formData, // multipart/form-data
 		});

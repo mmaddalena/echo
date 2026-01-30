@@ -12,7 +12,10 @@ export const useSocketStore = defineStore("socket", () => {
 	function connect(token) {
 		if (socket.value) return; // ya conectado
 
-		socket.value = new WebSocket(`ws://localhost:4000/ws?token=${token}`);
+		const protocol = location.protocol === "https:" ? "wss" : "ws";
+		socket.value = new WebSocket(
+			`${protocol}://${location.host}/ws?token=${token}`,
+		);
 
 		socket.value.onopen = () => {
 			console.log("WS conectado");
