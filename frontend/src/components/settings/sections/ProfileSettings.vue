@@ -31,7 +31,7 @@ async function onAvatarSelected(e) {
 	uploading.value = true;
 
 	try {
-		const res = await fetch("http://localhost:4000/api/users/me/avatar", {
+		const res = await fetch("/api/users/me/avatar", {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${sessionStorage.getItem("token")}`,
