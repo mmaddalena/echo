@@ -1,14 +1,14 @@
 defmodule Echo.Http.Router do
   @moduledoc """
   HTTP router for the Echo chat application.
-  Handles incoming HTTP requests and returns responses.
+  Serves API routes and the Vue SPA frontend.
   """
 
   import Plug.Conn
 
-  def init(opts) do
-    opts
-  end
+  ## -------- Plug entrypoint --------
+
+  def init(opts), do: opts
 
   def call(conn, _opts) do
     conn = CORSPlug.call(conn, cors_opts())
@@ -16,37 +16,51 @@ defmodule Echo.Http.Router do
     if conn.halted do
       conn
     else
-      route(conn, conn.method, conn.request_path)
+      conn
+      |> serve_static()
+      |> route(conn.method, conn.request_path)
     end
   end
 
+  ## -------- Static frontend (Vue) --------
+
+  defp serve_static(conn) do
+    Plug.Static.call(
+      conn,
+      Plug.Static.init(
+        at: "/",
+        from: {:echo, "priv/static"},
+        gzip: false,
+        only: ~w(index.html assets favicon.ico)
+      )
+    )
+  end
+
+  ## -------- CORS --------
+
   defp cors_opts do
     CORSPlug.init(
-      origin: ["http://localhost:5173"],
+      origin: [
+        "http://localhost:5173",
+        "https://*.onrender.com"
+      ],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       headers: ["Content-Type", "Authorization"]
     )
   end
 
-  # Route for GET /
-  defp route(conn, "GET", "/") do
-    conn
-    |> put_resp_content_type("text/html")
-    |> send_resp(200, html_response())
-  end
+  ## -------- API routes --------
 
-  # Route for GET /api/health
   defp route(conn, "GET", "/api/health") do
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(200, ~s({"status": "ok"}))
+    |> send_resp(200, ~s({"status":"ok"}))
   end
 
   defp route(conn, "POST", "/api/login") do
     with {:ok, body, conn} <- read_body(conn),
          {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
          {:ok, token} <- Echo.Auth.Accounts.login(u, p) do
-      # IO.puts("body: #{body}\n User: #{u}\n pass: #{p}\n token: #{token}")
       send_resp(conn, 200, Jason.encode!(%{token: token}))
     else
       {:error, :user_not_found} ->
@@ -118,70 +132,17 @@ defmodule Echo.Http.Router do
     end
   end
 
-  # Helper para errores de Ecto (si usas base de datos)
-  defp translate_error({msg, opts}) do
-    # Implementación básica - puedes expandir esto
-    Enum.reduce(opts, msg, fn {key, value}, acc ->
-      String.replace(acc, "%{#{key}}", to_string(value))
-    end)
+  ## -------- SPA fallback (Vue Router support) --------
+
+  defp route(conn, "GET", _path) do
+    send_file(conn, 200, "priv/static/index.html")
   end
 
-  # Fallback for unmapped routes
+  ## -------- Final fallback --------
+
   defp route(conn, _method, _path) do
     conn
     |> put_resp_content_type("application/json")
-    |> send_resp(404, ~s({"error": "Not found"}))
-  end
-
-  defp html_response do
-    """
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Echo Chat App</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          margin: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .container {
-          background: white;
-          padding: 40px;
-          border-radius: 10px;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-          text-align: center;
-        }
-        h1 {
-          color: #667eea;
-          margin: 0;
-        }
-        p {
-          color: #666;
-          margin-top: 10px;
-        }
-        .status {
-          margin-top: 20px;
-          padding: 10px;
-          background: #f0f0f0;
-          border-radius: 5px;
-          font-family: monospace;
-          color: #27ae60;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h1>🎵 Echo Chat App</h1>
-        <p>Welcome to Echo - Your Real-time Chat Application</p>
-        <div class="status">✓ Server is running</div>
-      </div>
-    </body>
-    </html>
-    """
+    |> send_resp(404, ~s({"error":"Not found"}))
   end
 end
