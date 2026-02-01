@@ -1,7 +1,7 @@
 <script setup>
 import IconSearch from "../icons/IconSearch.vue";
 import IconOptsMenu from "../icons/IconOptsMenu.vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 const props = defineProps({
 	chatInfo: {
@@ -9,6 +9,16 @@ const props = defineProps({
 		default: null,
 	},
 });
+
+const zoomedImage = ref(null);
+
+function openImage(src) {
+	zoomedImage.value = src;
+}
+
+function closeImage() {
+	zoomedImage.value = null;
+}
 
 const membersStr = computed(() => {
 	return props.chatInfo?.members?.map((m) => m.username).join(", ") ?? "";
@@ -18,7 +28,12 @@ const membersStr = computed(() => {
 <template>
 	<header v-if="chatInfo" class="chat-header">
 		<div class="user_info">
-			<img class="avatar" :src="chatInfo.avatar_url" />
+			<img
+				:src="chatInfo.avatar_url"
+				class="avatar content image clickable"
+				loading="lazy"
+				@click="openImage(chatInfo.avatar_url)"
+			/>
 			<div class="texts">
 				<p class="name">{{ chatInfo.name }}</p>
 				<span class="status">
@@ -32,6 +47,14 @@ const membersStr = computed(() => {
 			<IconOptsMenu class="icon" />
 		</div>
 	</header>
+
+	<Teleport to="body">
+		<Transition name="zoom">
+			<div v-if="zoomedImage" class="image-overlay" @click.self="closeImage">
+				<img :src="zoomedImage" class="zoomed-image" />
+			</div>
+		</Transition>
+	</Teleport>
 </template>
 
 <style scoped>
@@ -73,5 +96,40 @@ const membersStr = computed(() => {
 	height: 2.5rem;
 	color: var(--text-main);
 	fill: var(--text-main);
+}
+
+.clickable {
+	cursor: zoom-in;
+}
+
+/* Overlay */
+.image-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+	backdrop-filter: blur(4px);
+}
+
+/* Zoomed image */
+.zoomed-image {
+	max-width: 90vw;
+	max-height: 90vh;
+	border-radius: 1rem;
+	object-fit: contain;
+	cursor: zoom-out;
+}
+
+/* Animation */
+.zoom-enter-active,
+.zoom-leave-active {
+	transition: opacity 0.25s ease;
+}
+.zoom-enter-from,
+.zoom-leave-to {
+	opacity: 0;
 }
 </style>

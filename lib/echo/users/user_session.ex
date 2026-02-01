@@ -134,7 +134,6 @@ defmodule Echo.Users.UserSession do
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
-
   @impl true
   def handle_cast({:open_chat, chat_id}, state) do
     {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
@@ -175,7 +174,6 @@ defmodule Echo.Users.UserSession do
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
-
   @impl true
   def handle_cast({:chat_messages_read, chat_id}, state) do
     {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
@@ -207,8 +205,6 @@ defmodule Echo.Users.UserSession do
     {:noreply, state}
   end
 
-
-
   @impl true
   def handle_cast(:mark_pending_delivered, state) do
     # traemos todos los mensajes donde user_id != state.user_id y state == sent
@@ -222,12 +218,6 @@ defmodule Echo.Users.UserSession do
     end)
 
     {:noreply, state}
-  end
-
-
-  @impl true
-  def handle_call(:socket_alive?, _from, %{socket: socket} = state) do
-    {:reply, socket != nil, state}
   end
 
   @impl true
@@ -251,6 +241,18 @@ defmodule Echo.Users.UserSession do
         {:noreply, state}
     end
   end
+
+  @impl true
+  def handle_call(:socket_alive?, _from, %{socket: socket} = state) do
+    {:reply, socket != nil, state}
+  end
+
+  @impl true
+  def handle_call(:logout, _from, state) do
+    ProcessRegistry.unregister_user_session(state.user_id)
+    {:stop, :normal, :ok, %{state | socket: nil}}
+  end
+
   defp serialize_contacts_for_front(contacts) do
     Enum.map(contacts, fn c ->
       %{
@@ -268,19 +270,9 @@ defmodule Echo.Users.UserSession do
     end)
   end
 
-  @impl true
-  def handle_call(:logout, _from, state) do
-    ProcessRegistry.unregister_user_session(state.user_id)
-    {:stop, :normal, :ok, %{state | socket: nil}}
-  end
-
 
   @impl true
   def terminate(_reason, _state) do
     :ok
   end
-
-
-
-
 end

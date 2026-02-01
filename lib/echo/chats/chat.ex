@@ -6,7 +6,6 @@ defmodule Echo.Chats.Chat do
 
   import Ecto.Query
   alias Echo.Repo
-  alias Echo.ProcessRegistry
   alias Echo.Schemas.User
   alias Echo.Schemas.Chat
   alias Echo.Schemas.ChatMember
@@ -15,12 +14,6 @@ defmodule Echo.Chats.Chat do
 
   def get(chat_id) do
     Repo.get(Chat, chat_id)
-  end
-
-  def get_by_algo(username) do
-  end
-
-  def update_smth(smth) do
   end
 
   def get_last_messages(chat_id) do
@@ -39,7 +32,9 @@ defmodule Echo.Chats.Chat do
         state: m.state,
         time: m.inserted_at,
         deleted_at: m.deleted_at,
-        avatar_url: u.avatar_url
+        avatar_url: u.avatar_url,
+        format: m.format,
+        filename: m.filename
       }
     )
     |> Repo.all()

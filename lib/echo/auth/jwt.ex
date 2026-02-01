@@ -23,7 +23,7 @@ defmodule Echo.Auth.JWT do
 
     case Joken.generate_and_sign(Config.default_claims(), claims, signer) do
       {:ok, token, _claims} -> {:ok, token}
-      error -> {:error, :token_generation_failed}
+      _ -> {:error, :token_generation_failed}
     end
   end
 

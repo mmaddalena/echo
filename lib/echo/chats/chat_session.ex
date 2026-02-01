@@ -100,26 +100,14 @@ defmodule Echo.Chats.ChatSession do
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
-  defp get_senders(user_id, state) do
-    is_private? = state.chat.type == Constants.private_chat()
-
-    senders_ids =
-      state.last_messages
-      |> Enum.map(& &1.user_id)
-      |> Enum.uniq()
-
-    case is_private? do
-      true -> %{}
-      false -> User.get_usable_names(user_id, senders_ids)
-    end
-  end
-
   @impl true
-  def handle_cast({:send_message, msg_front, sender_us_pid}, state) do
+  def handle_cast({:send_message, msg_front, _sender_us_pid}, state) do
     front_msg_id = msg_front["front_msg_id"]
     chat_id = msg_front["chat_id"]
     content = msg_front["content"]
     sender_user_id = msg_front["sender_user_id"]
+    format = msg_front["format"]
+    filename = msg_front["filename"]
 
     msg_state =
       if state.chat.type == "private" do
@@ -147,7 +135,9 @@ defmodule Echo.Chats.ChatSession do
       chat_id: chat_id,
       content: content,
       user_id: sender_user_id,
-      state: msg_state
+      state: msg_state,
+      format: format,
+      filename: filename
     }
 
     case Messages.create_message(attrs) do
@@ -162,7 +152,7 @@ defmodule Echo.Chats.ChatSession do
 
         IO.inspect(base_message, label: "Base message para incoming")
 
-        {alive_sessions, dead_users} =
+        {alive_sessions, _dead_users} =
           Enum.reduce(state.members, {[], []}, fn member, {alive, dead} ->
             user_id = member.user_id
 
@@ -217,10 +207,10 @@ defmodule Echo.Chats.ChatSession do
           end
         end)
 
-        Enum.each(dead_users, fn us_pid ->
-          nil
-          # Agregar una notificacion o como lo hagamos
-        end)
+        # Enum.each(dead_users, fn us_pid ->
+        #   nil
+        #   # Agregar una notificacion o como lo hagamos
+        # end)
 
         {:noreply,
          %{
@@ -229,7 +219,7 @@ defmodule Echo.Chats.ChatSession do
              last_messages: [base_message | state.last_messages]
          }}
 
-      {:error, changeset} ->
+      {:error, _changeset} ->
         # UserSession.send_message_error(sender_us_pid, front_msg_id, changeset)
         {:noreply, %{state | last_activity: DateTime.utc_now()}}
     end
@@ -258,5 +248,19 @@ defmodule Echo.Chats.ChatSession do
     end)
 
     {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
+  end
+
+  defp get_senders(user_id, state) do
+    is_private? = state.chat.type == Constants.private_chat()
+
+    senders_ids =
+      state.last_messages
+      |> Enum.map(& &1.user_id)
+      |> Enum.uniq()
+
+    case is_private? do
+      true -> %{}
+      false -> User.get_usable_names(user_id, senders_ids)
+    end
   end
 end

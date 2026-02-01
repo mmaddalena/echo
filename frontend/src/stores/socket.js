@@ -16,7 +16,7 @@ export const useSocketStore = defineStore("socket", () => {
 		const protocol = location.protocol === "https:" ? "wss" : "ws";
 		socket.value = new WebSocket(
 			// `${protocol}://${location.host}/ws?token=${token}`,
-			`http://localhost:4000/ws?token=${token}`
+			`http://localhost:4000/ws?token=${token}`,
 		);
 
 		socket.value.onopen = () => {
@@ -36,23 +36,18 @@ export const useSocketStore = defineStore("socket", () => {
 			const payload = JSON.parse(event.data);
 
 			if (payload.type === "user_info") {
-				dispatch_user_info(payload)
-			} 
-			else if (payload.type === "chat_info") {
-				dispatch_chat_info(payload)
-			} 
-			else if (payload.type === "new_message") {
-				dispatch_new_message(payload)
-			} 
-			else if (payload.type === "chat_read") {
-				dispatch_chat_read(payload)
-			} 
-			else if (payload.type === "messages_delivered") {
+				dispatch_user_info(payload);
+			} else if (payload.type === "chat_info") {
+				dispatch_chat_info(payload);
+			} else if (payload.type === "new_message") {
+				dispatch_new_message(payload);
+			} else if (payload.type === "chat_read") {
+				dispatch_chat_read(payload);
+			} else if (payload.type === "messages_delivered") {
 				markMessagesDelivered(payload.message_ids);
-			}
-			else if (payload.type === "contacts") {
-				console.log("CONTACTS RECIBIDOS:", payload.contacts)
-				contacts.value = payload.contacts
+			} else if (payload.type === "contacts") {
+				console.log("CONTACTS RECIBIDOS:", payload.contacts);
+				contacts.value = payload.contacts;
 				// const peopleStore = usePeopleStore()
 				// peopleStore.setContacts(payload.contacts ?? [])
 			}
@@ -110,6 +105,8 @@ export const useSocketStore = defineStore("socket", () => {
 					state: msg.state,
 					time: msg.time,
 					avatar_url: msg.avatar_url,
+					format: msg.format,
+					filename: msg.filename,
 				},
 				unread_messages: isIncoming
 					? chat.unread_messages + 1
@@ -188,7 +185,6 @@ export const useSocketStore = defineStore("socket", () => {
 		}
 	}
 
-
 	function disconnect() {
 		if (socket.value) {
 			send({ type: "logout" });
@@ -217,7 +213,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 		const hasCache = !!chatsInfo.value[chatId];
 
-		console.log(`HasCache: ${hasCache}`)
+		console.log(`HasCache: ${hasCache}`);
 		// Si no tenemos la info del chat se la pedimos al back
 		if (!hasCache) {
 			send({
@@ -347,11 +343,15 @@ export const useSocketStore = defineStore("socket", () => {
 
 	function requestContactsIfNeeded() {
 		if (contacts.value !== null) {
-			console.log("El ref de contacts del request no es null, por lo que no le pedimos nada al back")
-			return
+			console.log(
+				"El ref de contacts del request no es null, por lo que no le pedimos nada al back",
+			);
+			return;
 		}
-		console.log("El ref de contacts del request es null, por lo que le pedimos los contactos al back")
-		send({ type: "get_contacts" })
+		console.log(
+			"El ref de contacts del request es null, por lo que le pedimos los contactos al back",
+		);
+		send({ type: "get_contacts" });
 	}
 
 	return {
@@ -367,6 +367,6 @@ export const useSocketStore = defineStore("socket", () => {
 		openChat,
 		sendMessage,
 		updateAvatar,
-		requestContactsIfNeeded
+		requestContactsIfNeeded,
 	};
 });

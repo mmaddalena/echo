@@ -9,6 +9,8 @@ defmodule Echo.Repo.Migrations.CreateChatMessages do
       add :content, :text, null: false
       add :state, :string, null: false, default: "sent"
       add :deleted_at, :utc_datetime
+      add :format, :string, null: false, default: "text"
+      add :filename, :string, null: true
       timestamps(type: :utc_datetime)
     end
 
@@ -16,5 +18,6 @@ defmodule Echo.Repo.Migrations.CreateChatMessages do
     create index(:messages, [:chat_id])
     create index(:messages, [:deleted_at])
     create index(:messages, [:state])
+    create index(:messages, [:format])
   end
 end

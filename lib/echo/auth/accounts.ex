@@ -4,7 +4,6 @@ defmodule Echo.Auth.Accounts do
   """
 
   alias Echo.Auth.Auth
-  alias Echo.Users.UserSessionSup
   alias Echo.Users.User
 
   @doc """
@@ -53,13 +52,13 @@ defmodule Echo.Auth.Accounts do
     end
   end
 
-  @doc """
-  Cierra sesión de un usuario.
-  """
-  def logout(token) do
-    # Con JWT stateless, el logout se maneja en el cliente
-    # eliminando el token. Pero podríamos invalidar el token
-    # si implementamos una blacklist.
-    :ok
-  end
+  # @doc """
+  # Cierra sesión de un usuario.
+  # """
+  # def logout(token) do
+  #   # Con JWT stateless, el logout se maneja en el cliente
+  #   # eliminando el token. Pero podríamos invalidar el token
+  #   # si implementamos una blacklist.
+  #   :ok
+  # end
 end

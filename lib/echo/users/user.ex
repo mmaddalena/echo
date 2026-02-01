@@ -13,7 +13,6 @@ defmodule Echo.Users.User do
   alias Echo.Schemas.Message
   alias Echo.Constants
   alias Plug.Upload
-  alias Echo.Media
 
   def get(id) do
     Repo.get(User, id)
@@ -226,7 +225,9 @@ defmodule Echo.Users.User do
           content: m.content,
           state: m.state,
           time: m.inserted_at,
-          sender_name: sender.username
+          sender_name: sender.username,
+          format: m.format,
+          filename: m.filename
         }
 
     Repo.one(query)

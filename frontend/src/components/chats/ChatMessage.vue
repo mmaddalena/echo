@@ -1,4 +1,6 @@
 <script setup>
+import { ref } from "vue";
+
 defineProps({
 	message: Object,
 	chatType: String,
@@ -12,6 +14,16 @@ function formatHM(isoString) {
 }
 
 import IconMessageState from "../icons/IconMessageState.vue";
+
+const zoomedImage = ref(null);
+
+function openImage(src) {
+	zoomedImage.value = src;
+}
+
+function closeImage() {
+	zoomedImage.value = null;
+}
 </script>
 
 <template>
@@ -21,7 +33,9 @@ import IconMessageState from "../icons/IconMessageState.vue";
 				chatType == 'group' && message.type == 'incoming' && message?.isFirst
 			"
 			:src="message.avatar_url"
-			class="avatar"
+			class="avatar content image clickable"
+			loading="lazy"
+			@click="openImage(message.avatar_url)"
 			alt="User Avatar"
 		/>
 		<div
@@ -43,7 +57,29 @@ import IconMessageState from "../icons/IconMessageState.vue";
 				<span class="user-name">{{ message.sender_name }}</span>
 			</div>
 			<div class="message-body">
-				<span class="content">{{ message.content }}</span>
+				<!-- TEXT -->
+				<span v-if="message.format === 'text'" class="content">
+					{{ message.content }}
+				</span>
+
+				<!-- IMAGE -->
+				<img
+					v-else-if="message.format === 'image'"
+					:src="message.content"
+					class="content image clickable"
+					loading="lazy"
+					@click="openImage(message.content)"
+				/>
+
+				<!-- FILE -->
+				<a
+					v-else-if="message.format === 'file'"
+					:href="message.content"
+					target="_blank"
+					class="content file"
+				>
+					📎 {{ message.filename }}
+				</a>
 
 				<span class="meta">
 					<Transition name="msg-state" mode="out-in">
@@ -61,6 +97,14 @@ import IconMessageState from "../icons/IconMessageState.vue";
 			</div>
 		</div>
 	</div>
+
+	<Teleport to="body">
+		<Transition name="zoom">
+			<div v-if="zoomedImage" class="image-overlay" @click.self="closeImage">
+				<img :src="zoomedImage" class="zoomed-image" />
+			</div>
+		</Transition>
+	</Teleport>
 </template>
 
 <style scoped>
@@ -152,5 +196,56 @@ import IconMessageState from "../icons/IconMessageState.vue";
 .msg-state-leave-to {
 	opacity: 0;
 	transform: scale(0.85);
+}
+
+.image {
+	max-width: 100%;
+	max-height: 32rem;
+	border-radius: 0.8rem;
+	object-fit: cover;
+}
+
+.file {
+	color: inherit;
+	text-decoration: none;
+	font-weight: 500;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.clickable {
+	cursor: zoom-in;
+}
+
+/* Overlay */
+.image-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+	backdrop-filter: blur(4px);
+}
+
+/* Zoomed image */
+.zoomed-image {
+	max-width: 90vw;
+	max-height: 90vh;
+	border-radius: 1rem;
+	object-fit: contain;
+	cursor: zoom-out;
+}
+
+/* Animation */
+.zoom-enter-active,
+.zoom-leave-active {
+	transition: opacity 0.25s ease;
+}
+.zoom-enter-from,
+.zoom-leave-to {
+	opacity: 0;
 }
 </style>
