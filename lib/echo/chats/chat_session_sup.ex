@@ -2,7 +2,6 @@ defmodule Echo.Chats.ChatSessionSup do
   use DynamicSupervisor
   # Idem que el ChatSessionSup.
   # Es un supervisor dinámico que maneja los ChatSession.
-  use DynamicSupervisor
 
   def start_link(_arg) do
     DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)

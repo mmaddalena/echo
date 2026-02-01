@@ -2,6 +2,7 @@
   import { computed } from "vue";
   import { onMounted } from "vue";
   import { watch } from "vue"
+  import { ref } from "vue";
   import { useRouter } from "vue-router";
   import { useRoute } from 'vue-router';
   import { useSocketStore } from "@/stores/socket";
@@ -19,6 +20,16 @@
   const socketStore = useSocketStore();
   const user = computed(() => socketStore.userInfo);
 
+
+  const zoomedImage = ref(null);
+
+  function openImage(src) {
+    zoomedImage.value = src;
+  }
+
+  function closeImage() {
+    zoomedImage.value = null;
+  }
 
   const props = defineProps({
     avatarURL: String
@@ -52,7 +63,7 @@
 <template>
   <aside class="sidebar">
     <div class="profile-opts">
-      <img class="profile" :src="avatarURL"></img>
+      <img class="profile content image clickable" :src="avatarURL" loading="lazy" @click="openImage(avatarURL)"></img>
       <button
         v-if="isChatsView && !showingPeople"  
         @click="openPeople"
@@ -88,6 +99,14 @@
       </button>
     </div>
   </aside>
+
+  <Teleport to="body">
+		<Transition name="zoom">
+			<div v-if="zoomedImage" class="image-overlay" @click.self="closeImage">
+				<img :src="zoomedImage" class="zoomed-image" />
+			</div>
+		</Transition>
+	</Teleport>
 </template>
 
 <style scoped>
@@ -138,5 +157,40 @@ button {
 .outline {
   stroke: var(--text-main);
   fill: none;
+}
+
+.clickable {
+	cursor: zoom-in;
+}
+
+/* Overlay */
+.image-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.85);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
+	backdrop-filter: blur(4px);
+}
+
+/* Zoomed image */
+.zoomed-image {
+	max-width: 90vw;
+	max-height: 90vh;
+	border-radius: 1rem;
+	object-fit: contain;
+	cursor: zoom-out;
+}
+
+/* Animation */
+.zoom-enter-active,
+.zoom-leave-active {
+	transition: opacity 0.25s ease;
+}
+.zoom-enter-from,
+.zoom-leave-to {
+	opacity: 0;
 }
 </style>

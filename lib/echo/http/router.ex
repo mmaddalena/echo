@@ -17,24 +17,24 @@ defmodule Echo.Http.Router do
       conn
     else
       conn
-      |> serve_static()
+      # |> serve_static()
       |> route(conn.method, conn.request_path)
     end
   end
 
   ## -------- Static frontend (Vue) --------
 
-  defp serve_static(conn) do
-    Plug.Static.call(
-      conn,
-      Plug.Static.init(
-        at: "/",
-        from: {:echo, "priv/static"},
-        gzip: false,
-        only: ~w(index.html assets favicon.ico)
-      )
-    )
-  end
+  # defp serve_static(conn) do
+  #   Plug.Static.call(
+  #     conn,
+  #     Plug.Static.init(
+  #       at: "/",
+  #       from: {:echo, "priv/static"},
+  #       gzip: false,
+  #       only: ~w(index.html assets favicon.ico)
+  #     )
+  #   )
+  # end
 
   ## -------- CORS --------
 
@@ -112,23 +112,24 @@ defmodule Echo.Http.Router do
     end
   end
 
-  defp parse_multipart(conn) do
-    opts =
-      Plug.Parsers.init(
-        parsers: [:multipart],
-        pass: ["image/*"],
-        length: 5_000_000
+  defp route(conn, "POST", "/api/chat/upload") do
+    auth_header = List.first(get_req_header(conn, "authorization")) || ""
+    token = String.replace(auth_header, "Bearer ", "")
+
+    with {:ok, user_id} <- Echo.Auth.JWT.extract_user_id(token),
+         {:ok, upload, conn} <- parse_multipart(conn),
+         {:ok, file_url} <- Echo.Media.upload_chat_file(user_id, upload) do
+      send_resp(
+        conn,
+        200,
+        Jason.encode!(%{
+          url: file_url,
+          mime: upload.content_type
+        })
       )
-
-    conn = Plug.Parsers.call(conn, opts)
-
-    case conn.params["avatar"] do
-      %Plug.Upload{content_type: ct} = upload
-      when ct in ["image/png", "image/jpeg", "image/webp"] ->
-        {:ok, upload, conn}
-
+    else
       _ ->
-        {:error, :invalid_file}
+        send_resp(conn, 400, Jason.encode!(%{error: "Upload failed"}))
     end
   end
 
@@ -144,5 +145,40 @@ defmodule Echo.Http.Router do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(404, ~s({"error":"Not found"}))
+  end
+
+  defp parse_multipart(conn) do
+    opts =
+      Plug.Parsers.init(
+        parsers: [:multipart],
+        pass: ["image/*", "application/*"],
+        length: 20_000_000
+      )
+
+    conn = Plug.Parsers.call(conn, opts)
+
+    cond do
+      upload = conn.params["avatar"] ->
+        case upload do
+          %Plug.Upload{content_type: ct}
+          when ct in ["image/png", "image/jpeg", "image/webp"] ->
+            {:ok, upload, conn}
+
+          _ ->
+            {:error, :invalid_avatar}
+        end
+
+      upload = conn.params["file"] ->
+        case upload do
+          %Plug.Upload{} ->
+            {:ok, upload, conn}
+
+          _ ->
+            {:error, :invalid_file}
+        end
+
+      true ->
+        {:error, :no_file}
+    end
   end
 end

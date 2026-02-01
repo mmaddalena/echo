@@ -64,8 +64,6 @@
     return result
   })
 
-  
-
   const messagesContainer = ref(null)
 
   function scrollToBottom() {
@@ -90,7 +88,6 @@
     },
     { deep: true }
   )
-  
 </script>
 
 <template>

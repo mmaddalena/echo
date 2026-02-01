@@ -1,32 +1,24 @@
 defmodule Echo.Media do
-  alias GoogleApi.Storage.V1.Api.Objects
   alias Echo.Users.User
-  alias Plug.Upload
 
   @bucket "echo-fiuba"
   @scope "https://www.googleapis.com/auth/devstorage.full_control"
 
   def upload_user_avatar(user_id, %Plug.Upload{} = upload) do
     # upload to gcs
-    with {:ok, url} <- upload_to_gcs(user_id, upload),
+    with {:ok, url} <- upload_avatar(user_id, upload),
          # update avatar_url in db
          {:ok, user} <- User.update_avatar(user_id, url) do
       {:ok, user}
     end
   end
 
-  def upload_to_gcs(user_id, upload) do
-    ext = Path.extname(upload.filename)
-    object_name = "avatars/users/#{user_id}-#{Ecto.UUID.generate()}#{ext}"
-
-    # Fetch token from Goth (GenServer)
+  def upload_to_gcs(object_name, upload) do
     {:ok, %{token: token}} = Goth.fetch(Echo.Goth, @scope)
 
-    # Build Google API connection
     conn = GoogleApi.Storage.V1.Connection.new(token)
-
-    {:ok, _object} =
-      Objects.storage_objects_insert_simple(
+    {:ok, object} =
+      GoogleApi.Storage.V1.Api.Objects.storage_objects_insert_simple(
         conn,
         @bucket,
         "multipart",
@@ -37,16 +29,71 @@ defmodule Echo.Media do
         upload.path
       )
 
-    {:ok, public_url(object_name)}
+    {:ok, object}
   rescue
     e ->
-      IO.inspect(e, label: "Avatar upload error")
+      IO.inspect(e, label: "upload error")
       {:error, :upload_failed}
   end
 
   defp public_url(object_name) do
     "https://storage.googleapis.com/#{@bucket}/#{object_name}"
   end
+
+  def upload_chat_file(user_id, %Plug.Upload{} = upload) do
+    ext = Path.extname(upload.filename)
+
+    object_name =
+      "chat/#{user_id}/#{Ecto.UUID.generate()}#{ext}"
+
+    with {:ok, object} <- upload_to_gcs(object_name, upload) do
+      url = "https://storage.googleapis.com/#{@bucket}/#{object.name}"
+      {:ok, url}
+    end
+  end
+
+  def upload_avatar(user_id, %Plug.Upload{} = upload) do
+    ext = Path.extname(upload.filename)
+
+    object_name =
+      "avatars/users/#{user_id}-#{Ecto.UUID.generate()}#{ext}"
+
+    with {:ok, _object} <- upload_to_gcs(object_name, upload) do
+      {:ok, public_url(object_name)}
+    end
+  rescue
+    e ->
+      IO.inspect(e, label: "Avatar upload error")
+      {:error, :upload_failed}
+  end
+
+  # def upload_chat_file(user_id, %Plug.Upload{} = upload) do
+  #   ext = Path.extname(upload.filename)
+
+  #   object_name =
+  #     "chat/#{user_id}/#{Ecto.UUID.generate()}#{ext}"
+
+  #   # Fetch token from Goth
+  #   {:ok, %{token: token}} = Goth.fetch(Echo.Goth, @scope)
+
+  #   conn = GoogleApi.Storage.V1.Connection.new(token)
+
+  #   {:ok, object} =
+  #     GoogleApi.Storage.V1.Api.Objects.storage_objects_insert_simple(
+  #       conn,
+  #       @bucket,
+  #       "multipart",
+  #       %GoogleApi.Storage.V1.Model.Object{
+  #         name: object_name,
+  #         contentType: upload.content_type
+  #       },
+  #       File.read!(upload.path)
+  #     )
+
+  #   url = "https://storage.googleapis.com/#{@bucket}/#{object.name}"
+
+  #   {:ok, url}
+  # end
 
   # def upload_local_to_gcp(local_path, %Upload{} = original_upload) do
   #   fake_upload = %Upload{
