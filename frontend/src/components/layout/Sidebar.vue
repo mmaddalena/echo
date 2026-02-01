@@ -1,38 +1,69 @@
 <script setup>
   import { computed } from "vue";
   import { onMounted } from "vue";
+  import { watch } from "vue"
   import { useRouter } from "vue-router";
   import { useRoute } from 'vue-router';
   import { useSocketStore } from "@/stores/socket";
+  import { useUIStore } from "@/stores/ui"
 
   import IconContacts from '../icons/IconContacts.vue';
+  import IconPeople from '../icons/IconPeople.vue';
   import IconThemeMode from '../icons/IconThemeMode.vue';
   import IconSettings from '../icons/IconSettings.vue';
   import IconChats from '../icons/IconChats.vue';
+
 
   const router = useRouter();
   const route = useRoute();
   const socketStore = useSocketStore();
   const user = computed(() => socketStore.userInfo);
 
-  onMounted(() => {
-    const token = sessionStorage.getItem("token");
-    if (token){
-      socketStore.connect(token);
-    }
-  });
 
   const props = defineProps({
     avatarURL: String
   })
+
+  const uiStore = useUIStore()
+  const isChatsView = computed(() => route.name === 'chats')
+  const showingPeople = computed(() => uiStore.leftPanel === 'people')
+
+
+  function openPeople() {
+    uiStore.showPeople()
+    socketStore.requestContactsIfNeeded()
+  }
+
+  function openChats() {
+    uiStore.showChats()
+  }
+
+  // Si vengo desde settings (u otra view), que se mande chats de primera
+  watch(
+    () => route.name,
+    (name) => {
+      if (name === 'chats') {
+        uiStore.showChats()
+      }
+    }
+  )
 </script>
 
 <template>
   <aside class="sidebar">
     <div class="profile-opts">
       <img class="profile" :src="avatarURL"></img>
-      <button>
-        <IconContacts class="icon outline"/>
+      <button
+        v-if="isChatsView && !showingPeople"  
+        @click="openPeople"
+      >
+        <IconPeople class="icon outline"/>
+      </button>
+      <button
+        v-else-if="isChatsView && showingPeople"  
+        @click="openChats"
+      >
+        <IconChats class="icon" />
       </button>
     </div>
     <div class="config_opts">
@@ -87,7 +118,7 @@ button {
   height: 5rem;
   width: 5rem;
   border-radius: 50%;
-  background-color: cyan;
+  background-color: none;
 }
 .config_opts {
   display: flex;

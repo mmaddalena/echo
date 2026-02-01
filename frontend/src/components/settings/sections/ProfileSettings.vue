@@ -4,8 +4,8 @@ import { useSocketStore } from "@/stores/socket";
 
 const socketStore = useSocketStore();
 
-const username = ref("Manu");
-const status = ref("Activo");
+const username = socketStore.userInfo?.username;
+const name = socketStore.userInfo?.name;
 
 const uploading = ref(false);
 const fileInput = ref(null);
@@ -31,7 +31,10 @@ async function onAvatarSelected(e) {
 	uploading.value = true;
 
 	try {
-		const res = await fetch("/api/users/me/avatar", {
+		const res = await fetch(
+			"http://localhost:4000/api/users/me/avatar", 
+			//"/api/users/me/avatar", 
+			{
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -41,7 +44,7 @@ async function onAvatarSelected(e) {
 
 		const data = await res.json();
 
-		// 🔥 update avatar in store
+		// update avatar in store
 		socketStore.updateAvatar(data.avatar_url);
 	} catch (err) {
 		console.error("Avatar upload failed", err);
@@ -56,13 +59,13 @@ async function onAvatarSelected(e) {
 		<h2>Perfil</h2>
 
 		<div class="field">
-			<label>Nombre</label>
+			<label>Nombre de Usuario</label>
 			<input v-model="username" type="text" />
 		</div>
 
 		<div class="field">
-			<label>Estado</label>
-			<input v-model="status" type="text" />
+			<label>Nombre</label>
+			<input v-model="name" type="text" />
 		</div>
 
 		<!-- Avatar -->

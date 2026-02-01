@@ -33,10 +33,16 @@ Compilar dependencias (CLAVE para Windows) con `mix deps.compile`
 2. (En Windows) `$env:PATH = "C:\msys64\usr\bin;C:\msys64\mingw64\bin;" + $env:PATH` -> para que make, gcc y sh funcionen correctamente.
 3. `make up` -> Para levantar el contenedor de Docker.
 4. `make deps` -> Para instalar las dependencias necesarias.
-5. `make setup` -> Para preparar la DB.
-6. `make seed` -> Para cargar datos a la DB.
-7. `make run` -> Correr la app.
+5. `make build` -> .
+6. `make setup` -> Para preparar la DB.
+7. `make seed` -> Para cargar datos a la DB.
+8. `make run` -> Correr la app.
 
 
+Windows ENV local:
+`$env:DATABASE_URL="ecto://postgres:postgres@db:5432/echo_dev"` -> 
+`$env:DATABASE_URL="ecto://postgres:postgres@localhost:5432/echo_dev"`
 
+
+`$env:GOOGLE_APPLICATION_CREDENTIALS="/app/priv/gcp/service-account.json"`
 

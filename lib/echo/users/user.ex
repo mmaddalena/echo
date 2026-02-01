@@ -91,12 +91,16 @@ defmodule Echo.Users.User do
       join: cm in ChatMember,
       on: cm.chat_id == chat.id,
       where: cm.user_id == ^user_id and chat.type == "private",
+
       join: other_cm in ChatMember,
       on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
+
       join: other_user in User,
       on: other_user.id == other_cm.user_id,
+
       left_join: contact in Contact,
       on: contact.user_id == ^user_id and contact.contact_id == other_user.id,
+
       select: %{
         id: chat.id,
         type: chat.type,
