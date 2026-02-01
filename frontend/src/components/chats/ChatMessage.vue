@@ -104,7 +104,7 @@ import IconMessageState from "../icons/IconMessageState.vue";
 	height: 3rem;
 	width: 3rem;
 	border-radius: 50%;
-	background-color: cyan;
+	background-color: none;
 }
 .user-name {
 	font-size: 1.28rem;

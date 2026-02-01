@@ -8,18 +8,7 @@ const status = ref("Activo");
 <template>
   <section id="profile" class="settings-section">
     <h2>Privacidad</h2>
-
-    <div class="field">
-      <label>Algo</label>
-      <input v-model="username" type="text" />
-    </div>
-
-    <div class="field">
-      <label>Algo 2</label>
-      <input v-model="status" type="text" />
-    </div>
-
-    <button class="save">Guardar cambios</button>
+    
   </section>
 </template>
 

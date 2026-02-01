@@ -1,26 +1,27 @@
 <script setup>
-const emit = defineEmits(["open"]);
-import { computed } from "vue";
-
-const { chat } = defineProps({
-	chat: Object,
-});
-import IconMessageState from "../icons/IconMessageState.vue";
-import { formatChatTime } from "@/utils/formatChatTime";
-
-const isMuted = computed(() => {
-	const last = chat.last_message;
-	if (!last) return false;
-
-	return (
-		last.type === "outgoing" ||
-		(last.type === "incoming" && last.state === "read")
-	);
-});
-
-function handleClick() {
-	emit("open", chat.id);
-}
+	import { computed } from "vue";
+	import IconMessageState from "../icons/IconMessageState.vue";
+	import { formatChatTime } from "@/utils/formatChatTime";
+	
+	const { chat } = defineProps({
+		chat: Object,
+	});
+	
+	const isMuted = computed(() => {
+		const last = chat.last_message;
+		if (!last) return false;
+		
+		return (
+			last.type === "outgoing" ||
+			(last.type === "incoming" && last.state === "read")
+		);
+	});
+	
+	const emit = defineEmits(["open"]);
+	
+	function handleClick() {
+		emit("open", chat.id);
+	}
 </script>
 
 <template>
@@ -72,7 +73,7 @@ function handleClick() {
 .avatar {
 	height: 5rem;
 	width: 5rem;
-	background-color: cyan;
+	background-color: none;
 	border-radius: 50%;
 }
 .info {

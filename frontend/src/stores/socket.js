@@ -8,13 +8,15 @@ export const useSocketStore = defineStore("socket", () => {
 	const chats = ref([]);
 	const chatsInfo = ref({});
 	const activeChatId = ref(null);
+	const contacts = ref(null);
 
 	function connect(token) {
 		if (socket.value) return; // ya conectado
 
 		const protocol = location.protocol === "https:" ? "wss" : "ws";
 		socket.value = new WebSocket(
-			`${protocol}://${location.host}/ws?token=${token}`,
+			// `${protocol}://${location.host}/ws?token=${token}`,
+			`http://localhost:4000/ws?token=${token}`
 		);
 
 		socket.value.onopen = () => {
@@ -34,127 +36,25 @@ export const useSocketStore = defineStore("socket", () => {
 			const payload = JSON.parse(event.data);
 
 			if (payload.type === "user_info") {
-				userInfo.value = payload.user;
-				chats.value = payload.last_chats ?? [];
-			} else if (payload.type === "chat_info") {
-				const chat = payload.chat;
-
-				const normalizedMessages = chat.messages.map((m) => ({
-					...m,
-					front_msg_id: generateId(),
-				}));
-
-				chatsInfo.value = {
-					...chatsInfo.value,
-					[chat.id]: {
-						...chat,
-						messages: normalizedMessages,
-					},
-				};
-				activeChatId.value = chat.id;
-
-				// Seteamos como read los incoming
-				setReadIncomingMessages(chat.id);
-
-				// Actualizamos el ChatListItem
-				const lastMsg = getLastMessage(chat);
-
-				updateChatListItem(lastMsg);
-			} else if (payload.type === "new_message") {
-				const msg = payload.message;
-				const chatId = msg.chat_id;
-
-				// Actualizo la lista de chats
-				chats.value = chats.value.map((chat) => {
-					if (chat.id !== chatId) return chat;
-
-					const isIncoming = msg.user_id !== userInfo.value.id;
-					console.log(msg.avatar_url);
-					return {
-						...chat,
-						last_message: {
-							type: isIncoming ? "incoming" : "outgoing",
-							content: msg.content,
-							state: msg.state,
-							time: msg.time,
-							avatar_url: msg.avatar_url,
-						},
-						unread_messages: isIncoming
-							? chat.unread_messages + 1
-							: chat.unread_messages,
-					};
-				});
-
-				// Ahora sí, actualizo la caché de chatsInfo
-				if (msg.user_id == userInfo.value.id) {
-					// El mensaje es outgoing...
-					const index = chatsInfo.value[chatId].messages.findIndex(
-						(m) => m.front_msg_id === msg.front_msg_id,
-					);
-
-					if (index !== -1) {
-						// Por safety nomás, debería entrar sí o sí
-						Object.assign(chatsInfo.value[chatId].messages[index], msg);
-					}
-					console.log(`Mensaje outgoing recibido: `, msg);
-				} else {
-					// El mensaje es incoming...
-					const normalizedMsg = {
-						...msg,
-						front_msg_id: msg.front_msg_id ?? generateId(),
-					};
-
-					const chat = chatsInfo.value[chatId];
-
-					if (chat) {
-						chatsInfo.value = {
-							...chatsInfo.value,
-							[chatId]: {
-								...chat,
-								messages: [...chat.messages, normalizedMsg],
-							},
-						};
-					}
-
-					// Si tengo este chat abierto
-					if (normalizedMsg.chat_id == activeChatId.value) {
-						// Notifico al back que leí el mensaje
-						send({
-							type: "chat_messages_read",
-							chat_id: chatId,
-						});
-
-						// Seteamos como read los incoming
-						setReadIncomingMessages(chatId);
-
-						// Actualizamos el ChatListItem también
-						updateChatListItem(normalizedMsg);
-					}
-				}
-			} else if (payload.type === "chat_read") {
-				const chat_id = payload.chat_id;
-				const chat = chatsInfo.value[chat_id];
-
-				if (!chat || chat.type != "private") return;
-
-				chatsInfo.value = {
-					...chatsInfo.value,
-					[chat_id]: {
-						...chat,
-						messages: chat.messages.map((m) =>
-							m.type === "outgoing" && m.state !== "read"
-								? { ...m, state: "read" }
-								: m,
-						),
-					},
-				};
-
-				const lastMsg = getLastMessage(chatsInfo.value[chat_id]);
-				if (lastMsg) {
-					updateChatListItem({ ...lastMsg, state: "read" });
-				}
-			} else if (payload.type === "messages_delivered") {
+				dispatch_user_info(payload)
+			} 
+			else if (payload.type === "chat_info") {
+				dispatch_chat_info(payload)
+			} 
+			else if (payload.type === "new_message") {
+				dispatch_new_message(payload)
+			} 
+			else if (payload.type === "chat_read") {
+				dispatch_chat_read(payload)
+			} 
+			else if (payload.type === "messages_delivered") {
 				markMessagesDelivered(payload.message_ids);
+			}
+			else if (payload.type === "contacts") {
+				console.log("CONTACTS RECIBIDOS:", payload.contacts)
+				contacts.value = payload.contacts
+				// const peopleStore = usePeopleStore()
+				// peopleStore.setContacts(payload.contacts ?? [])
 			}
 		};
 
@@ -162,6 +62,132 @@ export const useSocketStore = defineStore("socket", () => {
 			console.error("Error en WS");
 		};
 	}
+
+	function dispatch_user_info(payload) {
+		userInfo.value = payload.user;
+		chats.value = payload.last_chats ?? [];
+	}
+	function dispatch_chat_info(payload) {
+		const chat = payload.chat;
+
+		const normalizedMessages = chat.messages.map((m) => ({
+			...m,
+			front_msg_id: generateId(),
+		}));
+
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chat.id]: {
+				...chat,
+				messages: normalizedMessages,
+			},
+		};
+		activeChatId.value = chat.id;
+
+		// Seteamos como read los incoming
+		setReadIncomingMessages(chat.id);
+
+		// Actualizamos el ChatListItem
+		const lastMsg = getLastMessage(chat);
+
+		updateChatListItem(lastMsg);
+	}
+	function dispatch_new_message(payload) {
+		const msg = payload.message;
+		const chatId = msg.chat_id;
+
+		// Actualizo la lista de chats
+		chats.value = chats.value.map((chat) => {
+			if (chat.id !== chatId) return chat;
+
+			const isIncoming = msg.user_id !== userInfo.value.id;
+			console.log(msg.avatar_url);
+			return {
+				...chat,
+				last_message: {
+					type: isIncoming ? "incoming" : "outgoing",
+					content: msg.content,
+					state: msg.state,
+					time: msg.time,
+					avatar_url: msg.avatar_url,
+				},
+				unread_messages: isIncoming
+					? chat.unread_messages + 1
+					: chat.unread_messages,
+			};
+		});
+
+		// Ahora sí, actualizo la caché de chatsInfo
+		if (msg.user_id == userInfo.value.id) {
+			// El mensaje es outgoing...
+			const index = chatsInfo.value[chatId].messages.findIndex(
+				(m) => m.front_msg_id === msg.front_msg_id,
+			);
+
+			if (index !== -1) {
+				// Por safety nomás, debería entrar sí o sí
+				Object.assign(chatsInfo.value[chatId].messages[index], msg);
+			}
+			console.log(`Mensaje outgoing recibido: `, msg);
+		} else {
+			// El mensaje es incoming...
+			const normalizedMsg = {
+				...msg,
+				front_msg_id: msg.front_msg_id ?? generateId(),
+			};
+
+			const chat = chatsInfo.value[chatId];
+
+			if (chat) {
+				chatsInfo.value = {
+					...chatsInfo.value,
+					[chatId]: {
+						...chat,
+						messages: [...chat.messages, normalizedMsg],
+					},
+				};
+			}
+
+			// Si tengo este chat abierto
+			if (normalizedMsg.chat_id == activeChatId.value) {
+				// Notifico al back que leí el mensaje
+				send({
+					type: "chat_messages_read",
+					chat_id: chatId,
+				});
+
+				// Seteamos como read los incoming
+				setReadIncomingMessages(chatId);
+
+				// Actualizamos el ChatListItem también
+				updateChatListItem(normalizedMsg);
+			}
+		}
+	}
+	function dispatch_chat_read(payload) {
+		const chat_id = payload.chat_id;
+		const chat = chatsInfo.value[chat_id];
+
+		if (!chat || chat.type != "private") return;
+
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chat_id]: {
+				...chat,
+				messages: chat.messages.map((m) =>
+					m.type === "outgoing" && m.state !== "read"
+						? { ...m, state: "read" }
+						: m,
+				),
+			},
+		};
+
+		const lastMsg = getLastMessage(chatsInfo.value[chat_id]);
+		if (lastMsg) {
+			updateChatListItem({ ...lastMsg, state: "read" });
+		}
+	}
+
 
 	function disconnect() {
 		if (socket.value) {
@@ -173,6 +199,7 @@ export const useSocketStore = defineStore("socket", () => {
 		chats.value = [];
 		chatsInfo.value = {};
 		activeChatId.value = null;
+		contacts.value = null;
 		sessionStorage.clear();
 	}
 
@@ -190,6 +217,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 		const hasCache = !!chatsInfo.value[chatId];
 
+		console.log(`HasCache: ${hasCache}`)
 		// Si no tenemos la info del chat se la pedimos al back
 		if (!hasCache) {
 			send({
@@ -317,17 +345,28 @@ export const useSocketStore = defineStore("socket", () => {
 		};
 	}
 
+	function requestContactsIfNeeded() {
+		if (contacts.value !== null) {
+			console.log("El ref de contacts del request no es null, por lo que no le pedimos nada al back")
+			return
+		}
+		console.log("El ref de contacts del request es null, por lo que le pedimos los contactos al back")
+		send({ type: "get_contacts" })
+	}
+
 	return {
 		socket,
 		userInfo,
 		chats,
 		chatsInfo,
 		activeChatId,
+		contacts,
 		connect,
 		disconnect,
 		send,
 		openChat,
 		sendMessage,
 		updateAvatar,
+		requestContactsIfNeeded
 	};
 });

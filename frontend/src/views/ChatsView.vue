@@ -1,57 +1,66 @@
 <script setup>
-import { computed } from "vue";
-import { onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { useSocketStore } from "@/stores/socket";
-import { storeToRefs } from "pinia";
+	import { computed } from "vue";
+	import { onMounted } from "vue";
 
-import Sidebar from "@/components/layout/Sidebar.vue";
-import ChatList from "@/components/chats/ChatList.vue";
-import ChatHeader from "@/components/chats/ChatHeader.vue";
-import ChatMessages from "@/components/chats/ChatMessages.vue";
-import ChatInput from "@/components/chats/ChatInput.vue";
-import { getCurrentISOTimeString } from "@/utils/formatChatTime";
-import { generateId } from "@/utils/idGenerator";
+	import { useSocketStore } from "@/stores/socket";
+	import { storeToRefs } from "pinia";
 
-const socketStore = useSocketStore();
+	import Sidebar from "@/components/layout/Sidebar.vue";
+	import ChatList from "@/components/chats/ChatList.vue";
+	import ChatHeader from "@/components/chats/ChatHeader.vue";
+	import ChatMessages from "@/components/chats/ChatMessages.vue";
+	import ChatInput from "@/components/chats/ChatInput.vue";
+	import { getCurrentISOTimeString } from "@/utils/formatChatTime";
+	import { generateId } from "@/utils/idGenerator";
 
-const { userInfo } = storeToRefs(socketStore);
-const { chats } = storeToRefs(socketStore);
-const { chatsInfo } = storeToRefs(socketStore);
-const { activeChatId } = storeToRefs(socketStore);
+	import { useUIStore } from "@/stores/ui"
+  import PeoplePanel from "@/components/people/PeoplePanel.vue";
 
-onMounted(() => {
-	const token = sessionStorage.getItem("token");
-	if (token) {
-		socketStore.connect(token);
-	}
-});
+	const socketStore = useSocketStore();
+	const uiStore = useUIStore()
 
-const activeChat = computed(() =>
-	activeChatId.value ? chatsInfo.value[activeChatId.value] : null,
-);
+	const { userInfo } = storeToRefs(socketStore);
+	const { chats } = storeToRefs(socketStore);
+	const { chatsInfo } = storeToRefs(socketStore);
+	const { activeChatId } = storeToRefs(socketStore);
 
-const messages = computed(() => activeChat.value?.messages ?? []);
-const chatType = computed(() => activeChat.value?.type ?? null);
+	onMounted(() => {
+		const token = sessionStorage.getItem("token");
+		if (token) {
+			socketStore.connect(token);
+		}
 
-function handleOpenChat(chatId) {
-	socketStore.openChat(chatId);
-}
-
-function handleSendMessage(text) {
-	if (!activeChatId.value) return;
-	socketStore.sendMessage({
-		id: null,
-		front_msg_id: generateId(),
-		chat_id: activeChatId.value,
-		content: text,
-		state: "sending", // Cuando se guarde en el back se pisa por sent
-		sender_user_id: userInfo.value.id,
-		type: "outgoing",
-		time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
-		avatar_url: userInfo.value.avatar_url,
+		uiStore.showChats()
+    console.log("Se montó la chatsview y se mostraron los chats")
 	});
-}
+
+	const activeChat = computed(() =>
+		activeChatId.value ? chatsInfo.value[activeChatId.value] : null,
+	);
+
+	const messages = computed(() => activeChat.value?.messages ?? []);
+	const chatType = computed(() => activeChat.value?.type ?? null);
+
+	const panel = computed(() => uiStore.leftPanel)
+
+	function handleOpenChat(chatId) {
+		socketStore.openChat(chatId);
+	}
+
+	function handleSendMessage(text) {
+		if (!activeChatId.value) return;
+		socketStore.sendMessage({
+			id: null,
+			front_msg_id: generateId(),
+			chat_id: activeChatId.value,
+			content: text,
+			state: "sending", // Cuando se guarde en el back se pisa por sent
+			sender_user_id: userInfo.value.id,
+			type: "outgoing",
+			time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
+			avatar_url: userInfo.value.avatar_url,
+		});
+	}
 </script>
 
 <template>
@@ -63,14 +72,28 @@ function handleSendMessage(text) {
 				alt="Echo logo"
 			/>
 			<div class="main">
-				<Sidebar :avatarURL="userInfo?.avatar_url" />
-				<ChatList :chats="chats" @open-chat="handleOpenChat" />
+				<Sidebar 
+					:avatarURL="userInfo?.avatar_url" 
+				/>
+				<ChatList
+					v-if="panel === 'chats'" 
+					:chats="chats" @open-chat="handleOpenChat" 
+				/>
+				<PeoplePanel 
+          v-if="panel === 'people'"
+        />
 			</div>
 		</div>
 		<div class="right">
-			<ChatHeader :chatInfo="activeChat" />
-			<ChatMessages :messages="messages" :chatType="chatType" />
-			<ChatInput @send-message="handleSendMessage" />
+			<ChatHeader 
+				:chatInfo="activeChat"
+			/>
+			<ChatMessages 
+				:messages="messages" :chatType="chatType" 
+			/>
+			<ChatInput 
+				@send-message="handleSendMessage" 
+			/>
 		</div>
 	</div>
 </template>
