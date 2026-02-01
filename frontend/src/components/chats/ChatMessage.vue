@@ -14,6 +14,7 @@ function formatHM(isoString) {
 }
 
 import IconMessageState from "../icons/IconMessageState.vue";
+import IconFile from "../icons/IconFile.vue";
 
 const zoomedImage = ref(null);
 
@@ -66,7 +67,7 @@ function closeImage() {
 				<img
 					v-else-if="message.format === 'image'"
 					:src="message.content"
-					class="content image clickable"
+					class="content image msg-image clickable"
 					loading="lazy"
 					@click="openImage(message.content)"
 				/>
@@ -78,7 +79,8 @@ function closeImage() {
 					target="_blank"
 					class="content file"
 				>
-					📎 {{ message.filename }}
+					<IconFile class="file-icon"/>	
+				 {{ message.filename }}
 				</a>
 
 				<span class="meta">
@@ -200,9 +202,15 @@ function closeImage() {
 
 .image {
 	max-width: 100%;
-	max-height: 32rem;
+	max-height: 18rem;
 	border-radius: 0.8rem;
 	object-fit: cover;
+}
+.image.avatar {
+	border-radius: 50%;
+}
+.msg-image {
+	margin: 0.2rem -8rem 1.8rem -0.2rem;
 }
 
 .file {
@@ -215,7 +223,7 @@ function closeImage() {
 }
 
 .clickable {
-	cursor: zoom-in;
+	cursor: pointer;
 }
 
 /* Overlay */
@@ -247,5 +255,13 @@ function closeImage() {
 .zoom-enter-from,
 .zoom-leave-to {
 	opacity: 0;
+}
+
+.file-icon {
+	height: 2.5rem;
+	margin: 0 0 0 -0.2rem;
+	fill: none;
+	stroke-width: 0.15rem;
+	stroke: var(--text-main);
 }
 </style>

@@ -1,6 +1,8 @@
 <script setup>
 import { computed } from "vue";
 import IconMessageState from "../icons/IconMessageState.vue";
+import IconFile from "../icons/IconFile.vue";
+import IconImage from "../icons/IconImage.vue";
 import { formatChatTime } from "@/utils/formatChatTime";
 
 const { chat } = defineProps({
@@ -47,13 +49,21 @@ function handleClick() {
 							:state="chat.last_message.state"
 						/>
 					</Transition>
-					<p class="text" :class="{ muted: isMuted }">
-						<span v-if="chat.last_message?.format === 'image'">📷</span>
-						<span v-else-if="chat.last_message?.format === 'file'"> 📎 </span>
-						<span v-else>
+					
+					<span v-if="chat.last_message?.format === 'image'" class="media-span">
+						<IconImage class="icon-media" :class="{ muted: isMuted }" />
+						<p class="text" :class="{ muted: isMuted }">Imagen</p>
+					</span>
+					<span v-else-if="chat.last_message?.format === 'file'" class="media-span">
+						<IconFile class="icon-media" :class="{ muted: isMuted }" />
+						<p class="text" :class="{ muted: isMuted }">Archivo</p>
+					</span>
+					<span v-else>
+						<p class="text" :class="{ muted: isMuted }">
 							{{ chat.last_message?.content }}
-						</span>
-					</p>
+						</p>
+					</span>
+
 				</div>
 				<span class="time" :class="{ muted: isMuted }">
 					{{ formatChatTime(chat.last_message?.time) }}
@@ -145,9 +155,7 @@ function handleClick() {
 .time {
 	font-size: 1.2rem;
 }
-.muted {
-	color: var(--text-muted);
-}
+
 
 .msg-state-enter-active,
 .msg-state-leave-active {
@@ -160,5 +168,19 @@ function handleClick() {
 .msg-state-leave-to {
 	opacity: 0;
 	transform: scale(0.85);
+}
+
+.icon-media {
+	height: 1.8rem;
+	margin: 0 0 0 0.2rem;
+	color: var(--text-main);
+}
+.media-span {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.muted {
+	color: var(--text-muted);
 }
 </style>
