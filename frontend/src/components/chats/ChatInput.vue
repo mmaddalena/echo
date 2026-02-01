@@ -2,6 +2,7 @@
 import { ref } from "vue";
 
 import IconSend from "../icons/IconSend.vue";
+import IconMedia from "../icons/IconMedia.vue";
 
 const emit = defineEmits(["send-message", "send-attachment"]);
 const text = ref("");
@@ -30,7 +31,9 @@ async function onFileSelected(e) {
 <template>
 	<div class="chat-input">
 		<div class="main">
-			<button @click="pickFile">📎</button>
+			<button @click="pickFile">
+				<IconMedia class="icon"/>
+			</button>
 
 			<input
 				v-model="text"
@@ -60,7 +63,7 @@ async function onFileSelected(e) {
 }
 .main {
 	height: fit-content;
-	padding: 0rem 1rem 0rem 2rem;
+	padding: 0rem 1rem;
 	display: flex;
 	justify-content: space-between;
 	background: var(--bg-input);
@@ -75,6 +78,7 @@ input {
 	color: var(--text-main);
 	outline: none;
 	font-size: 1.5rem;
+	margin-left: 1rem;
 }
 button {
 	background-color: var(--msg-out);
@@ -84,5 +88,11 @@ button {
 	height: 4rem;
 	color: white;
 	cursor: pointer;
+}
+.icon {
+	fill: none;
+	stroke: var(--text-main);
+	stroke-width: 0.15rem;
+	height: 2.5rem;
 }
 </style>

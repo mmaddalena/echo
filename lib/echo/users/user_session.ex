@@ -190,8 +190,7 @@ defmodule Echo.Users.UserSession do
       chat_id: chat_id,
       reader_user_id: reader_user_id
     }
-    send(state.socket, {:send, msg})
-
+    if state.socket, do: send(state.socket, {:send, msg})
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
 
