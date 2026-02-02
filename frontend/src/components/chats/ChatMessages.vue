@@ -1,132 +1,167 @@
 <script setup>
-  import ChatMessage from "./ChatMessage.vue";
-  import { computed, watch, ref, nextTick, onMounted } from 'vue'
-    import { formatDayLabel } from '@/utils/formatChatTime'
+import ChatMessage from "./ChatMessage.vue";
+import { computed, watch, ref, nextTick, onMounted } from "vue";
+import { formatDayLabel } from "@/utils/formatChatTime";
 
-  const props = defineProps({
-    messages: {
-      type: Array,
-      required: true
-    },
-    chatType: String
-  })
-  const orderedMessages = computed(() => {
-    return [...props.messages].sort((a, b) => {
-      const tA = new Date(a.time ?? 0)
-      const tB = new Date(b.time ?? 0)
-      return tA - tB
-    })
-  })
+const props = defineProps({
+	messages: {
+		type: Array,
+		required: true,
+	},
+	chatType: String,
+});
+const orderedMessages = computed(() => {
+	return [...props.messages].sort((a, b) => {
+		const tA = new Date(a.time ?? 0);
+		const tB = new Date(b.time ?? 0);
+		return tA - tB;
+	});
+});
 
-  watch(orderedMessages, (val) => {
-    console.log(val)
-  })
+watch(orderedMessages, (val) => {
+	console.log(val);
+});
 
-  const enhancedMessages = computed(() => {
-    let lastUserId = null
+const enhancedMessages = computed(() => {
+	let lastUserId = null;
 
-    return orderedMessages.value.map((message) => {
-      const currentUserId = message.user_id
+	return orderedMessages.value.map((message) => {
+		const currentUserId = message.user_id;
+		const isFirst = currentUserId !== lastUserId;
+		lastUserId = currentUserId;
 
-      const isFirst = currentUserId !== lastUserId
+		return {
+			...message,
+			isFirst,
+		};
+	});
+});
 
-      lastUserId = currentUserId
+const messagesWithDays = computed(() => {
+	let lastDay = null;
+	const result = [];
 
-      return {
-        ...message,
-        isFirst
-      }
-    })
-  })
+	enhancedMessages.value.forEach((message) => {
+		const dayKey = new Date(message.time).toDateString();
 
-  const messagesWithDays = computed(() => {
-    let lastDay = null
-    const result = []
+		if (dayKey !== lastDay) {
+			result.push({
+				front_msg_id: `day-${dayKey}`,
+				kind: "day",
+				label: formatDayLabel(message.time),
+			});
+			lastDay = dayKey;
+		}
 
-    enhancedMessages.value.forEach((message) => {
-      const dayKey = new Date(message.time).toDateString()
+		result.push({
+			...message,
+			kind: "message",
+		});
+	});
 
-      if (dayKey !== lastDay) {
-        result.push({
-          front_msg_id: `day-${dayKey}`,
-          kind: 'day',
-          label: formatDayLabel(message.time)
-        })
-        lastDay = dayKey
-      }
+	return result;
+});
 
-      result.push({
-        ...message,
-        kind: 'message'
-      })
-    })
+const messagesContainer = ref(null);
+const autoScrollEnabled = ref(true);
 
-    return result
-  })
+function scrollToBottom() {
+	nextTick(() => {
+		if (messagesContainer.value) {
+			messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+		}
+	});
+}
 
-  const messagesContainer = ref(null)
+async function scrollToMessage(messageId) {
+	autoScrollEnabled.value = false;
 
-  function scrollToBottom() {
-    nextTick(() => {
-      if (messagesContainer.value) {
-        messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-      }
-    })
-  }
+	await nextTick();
 
-  // Scroll al final al montar
-  onMounted(() => {
-    scrollToBottom()
-  });
+	const el = messagesContainer.value?.querySelector(
+		`[data-msg-id="${messageId}"]`,
+	);
 
-  // Scroll automático al agregar mensajes
-  watch(
-    () => messagesWithDays.value,
-    async () => {
-      await nextTick() // espera que Vue actualice el DOM
-      scrollToBottom()
-    },
-    { deep: true }
-  )
+	if (el) {
+		el.scrollIntoView({
+			behavior: "smooth",
+			block: "center",
+		});
+
+		// ✨ highlight
+		el.classList.add("focused");
+		setTimeout(() => el.classList.remove("focused"), 1500);
+	}
+}
+
+/* Expose to parent */
+defineExpose({ scrollToMessage });
+
+// Scroll al final al montar
+onMounted(() => {
+	scrollToBottom();
+});
+
+// Scroll automático al agregar mensajes
+watch(
+	() => messagesWithDays.value,
+	async () => {
+		await nextTick(); // espera que Vue actualice el DOM
+		scrollToBottom();
+	},
+	{ deep: true },
+);
 </script>
 
 <template>
-  <div class="chat-messages" ref="messagesContainer">
-    <template v-for="item in messagesWithDays" :key="item.front_msg_id">
-      <div v-if="item.kind === 'day'" class="day-separator">
-        {{ item.label }}
-      </div>
+	<div class="chat-messages" ref="messagesContainer">
+		<template v-for="item in messagesWithDays" :key="item.front_msg_id">
+			<div v-if="item.kind === 'day'" class="day-separator">
+				{{ item.label }}
+			</div>
 
-      <ChatMessage
-        v-else
-        :message="item"
-        :chatType="chatType"
-      />
-    </template>
-  </div>
+			<!-- <ChatMessage v-else :message="item" :chatType="chatType" /> -->
 
+			<div v-else :data-msg-id="item.id" class="message-wrapper">
+				<ChatMessage :message="item" :chatType="chatType" />
+			</div>
+		</template>
+	</div>
 </template>
 
 <style scoped>
 .chat-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-  background-color: var(--bg-chat);
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	flex: 1;
+	padding: 2rem;
+	overflow-y: auto;
+	background-color: var(--bg-chat);
 }
 .day-separator {
-  align-self: center;
-  margin: 1rem 0;
+	align-self: center;
+	margin: 1rem 0;
 
-  padding: 0.4rem 1rem;
-  border-radius: 999px;
+	padding: 0.4rem 1rem;
+	border-radius: 999px;
 
-  font-size: 1.2rem;
-  opacity: 0.7;
-  background: rgba(0,0,0,0.15);
+	font-size: 1.2rem;
+	opacity: 0.7;
+	background: rgba(0, 0, 0, 0.15);
 }
 
+.message-wrapper.focused {
+	background: rgba(186, 104, 200, 0.18);
+	border-radius: 0.6rem;
+	transition: background 0.3s;
+}
+
+.message-anchor.highlight {
+	animation: pulse 1.2s ease;
+}
+
+.message-wrapper {
+	transition: background 0.6s ease;
+}
 </style>

@@ -133,6 +133,16 @@ defmodule Echo.Http.Router do
     end
   end
 
+  defp route(conn, "GET", "/api/chats/" <> rest) do
+    case String.split(rest, "/") do
+      [chat_id, "search"] ->
+        handle_chat_search(conn, chat_id)
+
+      _ ->
+        not_found(conn)
+    end
+  end
+
   ## -------- SPA fallback (Vue Router support) --------
 
   defp route(conn, "GET", _path) do
@@ -180,5 +190,32 @@ defmodule Echo.Http.Router do
       true ->
         {:error, :no_file}
     end
+  end
+
+  defp handle_chat_search(conn, chat_id) do
+    conn = Plug.Conn.fetch_query_params(conn)
+    query = conn.params["q"]
+
+    cond do
+      is_nil(query) or query == "" ->
+        send_resp(
+          conn,
+          400,
+          Jason.encode!(%{error: "Missing search query"})
+        )
+
+      true ->
+        results = Echo.Chats.Chat.search_messages(chat_id, query)
+
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(200, Jason.encode!(results))
+    end
+  end
+
+  defp not_found(conn) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(404, Jason.encode!(%{error: "Not found"}))
   end
 end
