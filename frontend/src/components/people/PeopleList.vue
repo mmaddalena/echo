@@ -3,7 +3,7 @@
   import PeopleListItem from "./PeopleListItem.vue";
   import IconSearch from '../icons/IconSearch.vue';
 
-  const emit = defineEmits(['open-chat'])
+  const emit = defineEmits(['open-chat', "open-person"])
 
   const props = defineProps({
     people: {
@@ -13,6 +13,10 @@
   })
 
   const text = ref("")
+
+  function getPersonInfo(personId){
+    emit("open-person", personId);
+  }
 
 </script>
 
@@ -34,6 +38,7 @@
       v-for="person in people"
       :key="person.id"
       :person="person"
+      @get-person-info="getPersonInfo"
     />
   </div>
 </template>

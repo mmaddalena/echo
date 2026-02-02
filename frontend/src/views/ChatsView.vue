@@ -112,39 +112,39 @@ function scrollToMessage(messageId) {
 </script>
 
 <template>
-    <div class="chats-layout">
-        <div class="left">
-            <img
-                src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
-                class="logo"
-                alt="Echo logo"
-            />
-            <div class="main">
-                <Sidebar :avatarURL="userInfo?.avatar_url" />
-                <ChatList
-                    v-if="panel === 'chats'"
-                    :chats="chats"
-                    @open-chat="handleOpenChat"
-                />
-                <PeoplePanel v-if="panel === 'people'" />
-            </div>
-        </div>
-        <div class="right">
-            <ChatHeader
-                :chatInfo="activeChat"
-                @scroll-to-message="scrollToMessage"
-            />
-            <ChatMessages
-                :messages="messages"
-                :chatType="chatType"
-                ref="chatMessagesRef"
-            />
-            <ChatInput
-                @send-message="handleSendMessage"
-                @send-attachment="handleSendAttachment"
-            />
-        </div>
-    </div>
+	<div class="chats-layout">
+			<div class="left">
+					<img
+							src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
+							class="logo"
+							alt="Echo logo"
+					/>
+					<div class="main">
+							<Sidebar :avatarURL="userInfo?.avatar_url" />
+							<ChatList
+									v-if="panel === 'chats'"
+									:chats="chats"
+									@open-chat="handleOpenChat"
+							/>
+							<PeoplePanel v-if="panel === 'people'" />
+					</div>
+			</div>
+			<div class="right">
+					<ChatHeader
+							:chatInfo="activeChat"
+							@scroll-to-message="scrollToMessage"
+					/>
+					<ChatMessages
+							:messages="messages"
+							:chatType="chatType"
+							ref="chatMessagesRef"
+					/>
+					<ChatInput
+							@send-message="handleSendMessage"
+							@send-attachment="handleSendAttachment"
+					/>
+			</div>
+	</div>
 </template>
 
 <style scoped>

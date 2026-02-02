@@ -87,6 +87,11 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(%{"type" => "get_person_info", "person_id" => person_id}, state) do
+    UserSession.get_person_info(state.user_session, person_id)
+    {:ok, state}
+  end
+
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)
     #Process.exit(state.user_session, :normal)

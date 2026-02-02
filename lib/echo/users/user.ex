@@ -330,9 +330,9 @@ defmodule Echo.Users.User do
     ext = Path.extname(upload.filename)
     uuid = Ecto.UUID.generate()
     local_name = "#{uuid}#{ext}"
-    # local_path = Path.join(@avatar_dir, local_name)
 
     # 1️⃣ Store locally
+    # local_path = Path.join(@avatar_dir, local_name)
     # File.cp!(upload.path, local_path)
 
     # 2️⃣ Upload to GCP using existing Media module
@@ -344,4 +344,41 @@ defmodule Echo.Users.User do
         {:error, reason}
     end
   end
+
+
+  def get_person_info(person_id, asking_user_id) do
+    case Repo.get(User, person_id) do
+      nil ->
+        :error
+
+      user ->
+        contact =
+          Echo.Contacts.Contacts.get_contact_between(
+            asking_user_id,
+            person_id
+          )
+
+        base_payload = %{
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          avatar_url: user.avatar_url,
+          last_seen_at: user.last_seen_at,
+          private_chat_id: Echo.Chats.Chat.get_private_chat_id(person_id, asking_user_id)
+        }
+
+        if contact do
+          Map.put(base_payload,
+            :contact_info, %{
+              owner_user_id: contact.user_id,
+              nickname: contact.nickname,
+              added_at: contact.inserted_at
+            }
+          )
+        else
+          base_payload
+        end
+    end
+  end
+
 end

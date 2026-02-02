@@ -16,6 +16,7 @@ defmodule Echo.Users.UserSession do
 
   use GenServer
   alias Echo.ProcessRegistry
+  alias Echo.Users.User
   alias Echo.Messages.Messages
   alias Echo.Contacts.Contacts
 
@@ -57,6 +58,10 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, :get_contacts)
   end
 
+  def get_person_info(us_pid, person_id) do
+    GenServer.cast(us_pid, {:get_person_info, person_id})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -89,7 +94,7 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def init(user_id) do
-    user = Echo.Users.User.get(user_id)
+    user = User.get(user_id)
 
     state = %{
       user_id: user_id,
@@ -125,8 +130,8 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:send_user_info}, state) do
     user_info = %{
       type: "user_info",
-      user: Echo.Users.User.user_payload(state.user),
-      last_chats: Echo.Users.User.last_chats(state.user_id)
+      user: User.user_payload(state.user),
+      last_chats: User.last_chats(state.user_id)
     }
 
     send(state.socket, {:send, user_info})
@@ -221,7 +226,7 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast(:get_contacts, state) do
-    IO.puts("SE PIDIERON LOS CONTACTOS DEL USUARIO #{state.user.username}\n")
+    IO.puts("\n\nSE PIDIERON LOS CONTACTOS DEL USUARIO #{state.user.username}\n")
     case state.contacts do
       nil ->
         contacts = Contacts.list_contacts_for_user(state.user_id)
@@ -242,16 +247,22 @@ defmodule Echo.Users.UserSession do
   end
 
   @impl true
-  def handle_call(:socket_alive?, _from, %{socket: socket} = state) do
-    {:reply, socket != nil, state}
+  def handle_cast({:get_person_info, person_id}, state) do
+    IO.puts("\n\n SE PIDIÓ LA INFO DEL USUARIO #{person_id}\n")
+    info = User.get_person_info(person_id, state.user_id)
+    send(state.socket, {:send,
+      %{
+        type: "person_info",
+        person_info: info
+      }
+    })
+    {:noreply, state}
   end
 
-  @impl true
-  def handle_call(:logout, _from, state) do
-    ProcessRegistry.unregister_user_session(state.user_id)
-    {:stop, :normal, :ok, %{state | socket: nil}}
-  end
 
+
+
+  ################### Helpers
   defp serialize_contacts_for_front(contacts) do
     Enum.map(contacts, fn c ->
       %{
@@ -268,7 +279,18 @@ defmodule Echo.Users.UserSession do
       }
     end)
   end
+  ################### Calls
 
+  @impl true
+  def handle_call(:socket_alive?, _from, %{socket: socket} = state) do
+    {:reply, socket != nil, state}
+  end
+
+  @impl true
+  def handle_call(:logout, _from, state) do
+    ProcessRegistry.unregister_user_session(state.user_id)
+    {:stop, :normal, :ok, %{state | socket: nil}}
+  end
 
   @impl true
   def terminate(_reason, _state) do

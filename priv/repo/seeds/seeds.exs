@@ -37,13 +37,6 @@ users = [
     "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-d9f4a4a0-c943-451a-b05b-2f3e58df54ab.jpeg"
   },
   %{
-    "username" => "rocio",
-    "password" => "12345678",
-    "email" => "rocio@gallo.com",
-    "name" => "Rocío Gallo",
-    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-0924ea9b-9d73-42b8-a117-4397d91d8167.png"
-  },
-  %{
     "username" => "manuel",
     "password" => "12345678",
     "email" => "manuel@camejo.com",
@@ -70,7 +63,7 @@ end)
 IO.puts("✅ #{length(created_users)} users created")
 
 # Map users for easy access
-[lucas, martin, rocio, manuel, matias] = created_users
+[lucas, martin, manuel, matias] = created_users
 
 # Update last_seen_at for more realistic data (truncate microseconds)
 now = truncate_datetime.(DateTime.utc_now())
@@ -79,7 +72,6 @@ two_hours_ago = truncate_datetime.(DateTime.add(now, -7200, :second))
 
 Repo.get!(User, lucas.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
 Repo.get!(User, martin.id) |> Ecto.Changeset.change(last_seen_at: yesterday) |> Repo.update!()
-Repo.get!(User, rocio.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
 Repo.get!(User, manuel.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
 Repo.get!(User, matias.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
 
@@ -89,16 +81,10 @@ IO.puts("🤝 Creating contacts...")
 contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
-  %{user_id: lucas.id, contact_id: rocio.id, nickname: "Roci"},
   %{user_id: lucas.id, contact_id: manuel.id, nickname: "Manu"},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
-  %{user_id: martin.id, contact_id: rocio.id, nickname: "Roci"},
   %{user_id: martin.id, contact_id: manuel.id, nickname: nil},
-  # Rocio's contacts
-  %{user_id: rocio.id, contact_id: lucas.id, nickname: "Lucasss"},
-  %{user_id: rocio.id, contact_id: martin.id, nickname: "Marto"},
-  %{user_id: rocio.id, contact_id: manuel.id, nickname: "Manu"},
   # Manuel's contacts
   %{user_id: manuel.id, contact_id: matias.id, nickname: "Mati"},
   # Matias's contacts
@@ -117,8 +103,8 @@ IO.puts("✅ #{length(contacts)} contacts created")
 IO.puts("🚫 Creating blocked contacts...")
 
 blocked_contacts = [
-  # Rocio blocked Manuel
-  %{blocker_id: rocio.id, blocked_id: manuel.id},
+  # manuel blocked Martin
+  %{blocker_id: manuel.id, blocked_id: martin.id},
 ]
 
 Enum.each(blocked_contacts, fn blocked_attrs ->
@@ -169,10 +155,10 @@ chat_members = [
   %{chat_id: lucas_manuel_chat.id, user_id: lucas.id},
   %{chat_id: lucas_manuel_chat.id, user_id: manuel.id},
 
-  # Group chat: TP FINAL Taller (Lucas, Martin, Rocio)
+  # Group chat: TP FINAL Taller (Lucas, Martin, Manuel)
   %{chat_id: tp_final_taller_chat.id, user_id: lucas.id},
   %{chat_id: tp_final_taller_chat.id, user_id: martin.id},
-  %{chat_id: tp_final_taller_chat.id, user_id: rocio.id},
+  %{chat_id: tp_final_taller_chat.id, user_id: manuel.id},
 
   # Group chat: CS (Lucas, Martin, Manu, Mati)
   %{chat_id: cs2_chat.id, user_id: lucas.id},
@@ -300,19 +286,11 @@ create_messages.(tp_final_taller_chat.id, martin.id, [
   {"quedo muy copado, me gusta me gusta:)", "sent", 94}
 ])
 
-create_messages.(tp_final_taller_chat.id, rocio.id, [
-  {"Si, está muy bueno! Combina bastante bien", "sent", 93},
-  {"Capaz el azul podría ser un poquito más claro", "sent", 92}
-])
-
 create_messages.(tp_final_taller_chat.id, martin.id, [
   {"Sí puede ser", "sent", 91},
   {"Sino podrías hacer el violeta más oscuro para que contraste más", "sent", 90}
 ])
 
-create_messages.(tp_final_taller_chat.id, rocio.id, [
-  {"Sí, me gusta, si querés probalo así a ver como queda y después nos decís.\nIgual yo diría de no complicarnos tanto con esto, porque tampoco le van a prestar tanta atención, yo diría de cerrar rápido así ya nos ponemos bien con el back y con todo el tema de los registros", "sent", 89}
-])
 
 IO.puts("\n🎉 Seed data created successfully!")
 IO.puts("📊 Summary:")
@@ -326,6 +304,5 @@ IO.puts("  📝 Messages: #{Repo.aggregate(Message, :count, :id)}")
 IO.puts("\n🔑 Test credentials (all passwords: 12345678):")
 IO.puts("  • lucas (Lucas Couttulenc)")
 IO.puts("  • martin (Martin Maddalena)")
-IO.puts("  • rocio (Rocío Gallo)")
 IO.puts("  • manuel (Manuel Camejo)")
 IO.puts("  • matias (Matías Onorato)")

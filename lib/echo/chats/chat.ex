@@ -108,4 +108,22 @@ defmodule Echo.Chats.Chat do
 
     # Si implementamos el state en grupales ponemos un else aca y lo hacemos
   end
+
+
+  def get_private_chat_id(user1_id, user2_id) do
+    from(c in Chat,
+      join: cm1 in ChatMember,
+      on: cm1.chat_id == c.id,
+      join: cm2 in ChatMember,
+      on: cm2.chat_id == c.id,
+      where:
+        c.type == ^Constants.private_chat() and
+        cm1.user_id == ^user1_id and
+        cm2.user_id == ^user2_id,
+      select: c.id,
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
 end
