@@ -1,15 +1,17 @@
 <script setup>
   import PeopleTabs from "./PeopleTabs.vue";
   import PeopleList from "./PeopleList.vue";
+  import PersonInfoPanel from "./PersonInfoPanel.vue";
   import { useSocketStore } from "@/stores/socket"
+  import { storeToRefs } from "pinia";
   import { ref, computed } from "vue";
-  import { onMounted } from "vue";
+  import { onUnmounted } from "vue";
   import { watch } from "vue";
-
 
   const socketStore = useSocketStore();
   
   const activeTab = ref("contacts");
+  const { openedPersonInfo } = storeToRefs(socketStore);
 
   const peopleToShow = computed(() => {
     if (activeTab.value === "contacts") {
@@ -35,17 +37,43 @@
     }
   )
 
+  function getPersonInfo(person_id){ 
+    socketStore.getPersonInfo(person_id)
+  }
+
+  function closePersonInfoPanel() {
+    socketStore.deletePersonInfo()
+  }
+
+  onUnmounted(() => {
+    closePersonInfoPanel()
+  });
+
+  function handleOpenChat(chatId) {
+    socketStore.openChat(chatId);
+  }
+
 </script>
 
 <template>
   <div class="panel">
     <PeopleTabs 
+      v-if="openedPersonInfo == null"
       :activeTab="activeTab"
       @change-to-tab="handleChangeTab"
     />
 
     <PeopleList 
+      v-if="openedPersonInfo == null"
       :people="peopleToShow"
+      @open-person="getPersonInfo"
+    />
+
+    <PersonInfoPanel
+      v-if="openedPersonInfo != null"
+      :personInfo="openedPersonInfo"
+      @close-person-info-panel="closePersonInfoPanel"
+      @open-chat="handleOpenChat"
     />
   </div>
 </template>

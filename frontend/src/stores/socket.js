@@ -9,6 +9,7 @@ export const useSocketStore = defineStore("socket", () => {
 	const chatsInfo = ref({});
 	const activeChatId = ref(null);
 	const contacts = ref(null);
+	const openedPersonInfo = ref(null);
 
 	function connect(token) {
 		if (socket.value) return; // ya conectado
@@ -50,6 +51,9 @@ export const useSocketStore = defineStore("socket", () => {
 				contacts.value = payload.contacts;
 				// const peopleStore = usePeopleStore()
 				// peopleStore.setContacts(payload.contacts ?? [])
+			} else if(payload.type == "person_info") {
+				console.log(`LLegó la info de la persona ${payload.person_info.username}`)
+				openedPersonInfo.value = payload.person_info
 			}
 		};
 
@@ -196,6 +200,7 @@ export const useSocketStore = defineStore("socket", () => {
 		chatsInfo.value = {};
 		activeChatId.value = null;
 		contacts.value = null;
+		openedPersonInfo.value = null;
 		sessionStorage.clear();
 	}
 
@@ -354,6 +359,18 @@ export const useSocketStore = defineStore("socket", () => {
 		send({ type: "get_contacts" });
 	}
 
+	function getPersonInfo(personId) {
+		console.log(`Se quiere pedir la info de la persona cuyo id es ${personId}`)
+		send({
+			type: "get_person_info",
+			person_id: personId
+		})
+	}
+
+	function deletePersonInfo() {
+		openedPersonInfo.value = null;
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -361,6 +378,7 @@ export const useSocketStore = defineStore("socket", () => {
 		chatsInfo,
 		activeChatId,
 		contacts,
+		openedPersonInfo,
 		connect,
 		disconnect,
 		send,
@@ -368,5 +386,7 @@ export const useSocketStore = defineStore("socket", () => {
 		sendMessage,
 		updateAvatar,
 		requestContactsIfNeeded,
+		getPersonInfo,
+		deletePersonInfo
 	};
 });

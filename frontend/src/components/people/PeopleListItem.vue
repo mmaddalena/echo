@@ -1,10 +1,14 @@
 <script setup>
-  const props = defineProps({
-    person: {
-      type: Object,
-      required: true
-    }
-  })
+  const { person } = defineProps({
+    person: Object,
+  });
+
+  const emit = defineEmits(["get-person-info"]);
+
+  function handleClick(){
+    emit("get-person-info", person.id);
+  }
+  
 </script>
 
 <template>
@@ -13,7 +17,7 @@
     <div class="info">
       <div class="names">
         <p class="main-name">
-          {{ person.contact_info?.nickname ?? person.name }}
+          {{ person.contact_info?.nickname ?? person.name ??  person.username }}
         </p>
         <p class="second-name">
           {{ person.username }}

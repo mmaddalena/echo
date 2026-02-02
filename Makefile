@@ -1,4 +1,4 @@
-.PHONY: dev db stop deps
+.PHONY: dev db stop deps run build
 dev:
 	iex -S mix
 up:
@@ -13,7 +13,7 @@ deps:
 	docker compose run --rm app mix deps.get
 seed:
 	docker compose run --rm app mix run priv/repo/seeds/seeds.exs
-run:
+run: build
 	docker compose up app
 shell:
 	docker compose run --rm app sh
@@ -25,4 +25,4 @@ deps-local:
 compile-local:
 	mix compile
 run-local:
-	mix run --no-halt
+	mix run --no-halts
