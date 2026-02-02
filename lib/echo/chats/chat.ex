@@ -41,6 +41,20 @@ defmodule Echo.Chats.Chat do
     |> Enum.reverse()
   end
 
+  def search_messages(chat_id, query) do
+    from(m in Message,
+      where: m.chat_id == ^chat_id,
+      where: ilike(m.content, ^"%#{query}%"),
+      order_by: [asc: m.inserted_at],
+      select: %{
+        id: m.id,
+        content: m.content,
+        inserted_at: m.inserted_at
+      }
+    )
+    |> Repo.all()
+  end
+
   def get_members(chat_id) do
     from(cm in ChatMember,
       join: u in User,
