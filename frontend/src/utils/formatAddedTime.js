@@ -27,9 +27,10 @@ export function formatAddedTime(isoString) {
 
   // Entre 2 y 6 días → día de la semana
   if (diffDays < 7) {
-    return date.toLocaleDateString('es-AR', {
+    const day = date.toLocaleDateString('es-AR', {
       weekday: 'long'
     });
+    return `el ${day}`
   }
 
   // 7 días o más → fecha completa

@@ -1,4 +1,5 @@
 <script setup>
+  import IconClose from '../icons/IconClose.vue';
   import IconSearch from '../icons/IconSearch.vue';
   import { ref } from 'vue'
 
@@ -9,6 +10,11 @@
   function searchPeople(input){
     emit("search-people", input);
   }
+
+  function clearText() {
+    text.value = "";
+    searchPeople("");
+  }
 </script>
 
 <template>
@@ -18,11 +24,23 @@
         <input
           v-model="text"
           placeholder="Buscar"
-          @keydown.enter="searchPeople(text)"
+          @input="searchPeople(text)"
         />
-        <button @click="searchPeople(text)">
-          <IconSearch class="icon" />
-        </button>
+
+        <Transition name="fade" mode="out-in">
+          <button 
+            v-if="text == null || text == ''"
+          >
+            <IconSearch class="icon" style="cursor: default;" />
+          </button>
+
+          <button 
+            v-else
+            @click="clearText"
+          >
+            <IconClose class="icon" />
+          </button>
+        </Transition>
       </div>
     </div>
   </div>
@@ -66,5 +84,15 @@ button {
 }
 .icon {
   height: 1.75rem;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.1s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

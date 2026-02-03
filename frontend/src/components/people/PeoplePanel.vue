@@ -60,7 +60,9 @@
   }
 
   function closePersonInfoPanel() {
-    socketStore.deletePersonInfo()
+    socketStore.deletePersonInfo();
+    contactSearchText.value = null;
+    socketStore.deletePeopleSearchResults();
   }
 
   onUnmounted(() => {
@@ -92,6 +94,7 @@
     />
 
     <PeopleSearchBar
+      v-if="openedPersonInfo == null"
       @search-people="searchPeople"
     />
 
