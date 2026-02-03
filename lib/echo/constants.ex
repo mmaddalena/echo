@@ -26,4 +26,6 @@ defmodule Echo.Constants do
   def state_read(), do: @state_read
 
   def messages_page_size, do: 50
+
+  def max_search_results(), do: 50
 end

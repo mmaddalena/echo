@@ -62,6 +62,10 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:get_person_info, person_id})
   end
 
+  def search_people(us_pid, input) do
+    GenServer.cast(us_pid, {:search_people, input})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -259,6 +263,20 @@ defmodule Echo.Users.UserSession do
     {:noreply, state}
   end
 
+  @impl true
+  def handle_cast({:search_people, input}, state) do
+    IO.puts("\n\n SE HIZO UNA BÚSQUEDA DE USUARIOS CON ESTE INPUT: #{input}\n")
+    users = User.search_users(state.user_id, input)
+    front_users = serialize_users_for_search(users, state.user_id)
+    send(state.socket, {:send,
+      %{
+        type: "search_people_results",
+        search_people_results: front_users
+      }
+    })
+    {:noreply, state}
+  end
+
 
 
 
@@ -279,6 +297,32 @@ defmodule Echo.Users.UserSession do
       }
     end)
   end
+
+  defp serialize_users_for_search(users, asking_user_id) do
+    contacts_map = Contacts.get_contacts_map(asking_user_id)
+
+    Enum.map(users, fn user ->
+      base = %{
+        id: user.id,
+        username: user.username,
+        name: user.name,
+        avatar_url: user.avatar_url,
+        last_seen_at: user.last_seen_at
+      }
+
+      case Map.get(contacts_map, user.id) do
+        nil ->
+          base
+
+        nickname ->
+          Map.put(base, :contact_info, %{
+            owner_user_id: asking_user_id,
+            nickname: nickname
+          })
+      end
+    end)
+  end
+
   ################### Calls
 
   @impl true

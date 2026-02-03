@@ -1,9 +1,7 @@
 <script setup>
-  import { computed, ref } from 'vue'
   import PeopleListItem from "./PeopleListItem.vue";
-  import IconSearch from '../icons/IconSearch.vue';
 
-  const emit = defineEmits(['open-chat', "open-person"])
+  const emit = defineEmits(["open-person"])
 
   const props = defineProps({
     people: {
@@ -12,8 +10,6 @@
     }
   })
 
-  const text = ref("")
-
   function getPersonInfo(personId){
     emit("open-person", personId);
   }
@@ -21,26 +17,19 @@
 </script>
 
 <template>
-  <div class="people-list">
-    <div class="search">
-      <div class="main">
-        <input
-          v-model="text"
-          placeholder="Buscar"
-          @keydown.enter="send"
-        />
-        <button @click="send">
-          <IconSearch class="icon"/>
-        </button>
-      </div>
-    </div>
+  <TransitionGroup
+    name="people"
+    tag="div"
+    class="people-list"
+  >
     <PeopleListItem 
       v-for="person in people"
       :key="person.id"
       :person="person"
       @get-person-info="getPersonInfo"
     />
-  </div>
+  </TransitionGroup>
+
 </template>
 
 <style scoped>
@@ -50,39 +39,21 @@
   flex-direction: column;
   padding: 0 1rem;
 }
-.search {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  background-color: var(--bg-chatlist-hover);
-  justify-content: space-between;
-  border-radius: 2rem;
-  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
-  align-items: center;
-  margin: 2rem 3rem;
-  flex: 1;
+
+.people-move {
+  transition: transform 200ms ease;
 }
-.main {
-  display: flex;
-  flex: 1;
+.people-enter-active {
+  transition: all 180ms ease-out;
 }
-input, button {
-  all: unset;
+.people-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
 }
-input {
-  flex: 1;
+.people-enter-to {
+  opacity: 1;
+  transform: translateY(0);
 }
-button {
-  height: 3rem;
-  width: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--bg-main);
-  border-radius: 50%;
-  cursor: pointer;
-}
-.icon {
-  height: 1.75rem;
-}
+
+
 </style>

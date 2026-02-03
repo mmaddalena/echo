@@ -5,6 +5,7 @@ defmodule Echo.Users.User do
 
   import Ecto.Query
   alias Echo.Repo
+  alias Echo.Contacts.Contacts
   alias Echo.ProcessRegistry
   alias Echo.Schemas.User
   alias Echo.Schemas.Chat
@@ -380,5 +381,78 @@ defmodule Echo.Users.User do
         end
     end
   end
+
+
+  def search_users(asking_user, input) do
+    query =
+      input
+      |> String.downcase()
+      |> String.trim()
+
+    if query == "" do
+      []
+    else
+      users = search_users_by_text(query)
+
+      contacts_map = Contacts.get_contacts_map(asking_user)
+
+      users
+      |> Enum.map(fn user ->
+        score = base_score(user, query)
+
+        score =
+          case Map.get(contacts_map, user.id) do
+            nil -> score
+            nickname -> score + nickname_score(nickname, query)
+          end
+
+        {score, user}
+      end)
+      |> Enum.filter(fn {score, _} -> score > 0 end)
+      |> Enum.sort_by(fn {score, _} -> -score end)
+      |> Enum.take(Constants.max_search_results())
+      |> Enum.map(fn {_, user} -> user end)
+    end
+  end
+
+  defp search_users_by_text(query) do
+    like = "%#{query}%"
+
+    from(u in User,
+      where:
+        ilike(u.username, ^like) or
+        ilike(u.name, ^like),
+      limit: ^Constants.max_search_results() * 3
+    )
+    |> Repo.all()
+  end
+
+
+  defp base_score(user, query) do
+    username = String.downcase(user.username)
+    name = user.name && String.downcase(user.name)
+
+    cond do
+      String.starts_with?(username, query) -> 100
+      name && String.starts_with?(name, query) -> 80
+      String.contains?(username, query) -> 50
+      name && String.contains?(name, query) -> 30
+      true -> 0
+    end
+  end
+
+
+  defp nickname_score(nickname, query) do
+    nick = String.downcase(nickname)
+
+    cond do
+      String.starts_with?(nick, query) -> 150
+      String.contains?(nick, query) -> 90
+      true -> 0
+    end
+  end
+
+
+
 
 end
