@@ -2,6 +2,7 @@
   import PeopleTabs from "./PeopleTabs.vue";
   import PeopleList from "./PeopleList.vue";
   import PersonInfoPanel from "./PersonInfoPanel.vue";
+  import PeopleSearchBar from "./PeopleSearchBar.vue";
   import { useSocketStore } from "@/stores/socket"
   import { storeToRefs } from "pinia";
   import { ref, computed } from "vue";
@@ -13,11 +14,26 @@
   const activeTab = ref("contacts");
   const { openedPersonInfo } = storeToRefs(socketStore);
 
+  const contactSearchText = ref(null)
+
+  const filteredContacts = computed(() => {
+    if (!contactSearchText.value) return socketStore.contacts
+    if (!socketStore.contacts) return []
+
+    const q = contactSearchText.value.toLowerCase().trim()
+
+    return socketStore.contacts.filter(c =>
+      c.username.toLowerCase().includes(q) ||
+      c.name?.toLowerCase().includes(q) ||
+      c.contact_info?.nickname?.toLowerCase().includes(q)
+    )
+  })
+
   const peopleToShow = computed(() => {
     if (activeTab.value === "contacts") {
-      return socketStore.contacts ?? []
+      return filteredContacts.value ?? []
     }
-    return [] // después search results
+    return socketStore.peopleSearchResults ?? []
   })
 
   function handleChangeTab(newTab) {
@@ -28,6 +44,8 @@
     () => activeTab.value,
     (tab) => {
       console.log(`La tab activa es: ${tab}`)
+      socketStore.deletePeopleSearchResults()
+      contactSearchText.value = null;
     }
   )
   watch(
@@ -49,8 +67,18 @@
     closePersonInfoPanel()
   });
 
+
+
+
   function handleOpenChat(chatId) {
     socketStore.openChat(chatId);
+  }
+
+  function searchPeople(input){
+    if (activeTab.value === "people")
+      socketStore.searchPeople(input);
+    else if (activeTab.value === "contacts")
+      contactSearchText.value = input;
   }
 
 </script>
@@ -61,6 +89,10 @@
       v-if="openedPersonInfo == null"
       :activeTab="activeTab"
       @change-to-tab="handleChangeTab"
+    />
+
+    <PeopleSearchBar
+      @search-people="searchPeople"
     />
 
     <PeopleList 

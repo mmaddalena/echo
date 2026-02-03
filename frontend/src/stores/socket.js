@@ -10,6 +10,7 @@ export const useSocketStore = defineStore("socket", () => {
 	const activeChatId = ref(null);
 	const contacts = ref(null);
 	const openedPersonInfo = ref(null);
+	const peopleSearchResults = ref(null);
 
 	function connect(token) {
 		if (socket.value) return; // ya conectado
@@ -54,6 +55,9 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if(payload.type == "person_info") {
 				console.log(`LLegó la info de la persona ${payload.person_info.username}`)
 				openedPersonInfo.value = payload.person_info
+			} else if (payload.type == "search_people_results"){
+				console.log(`LLegaron los resultados de la busqueda de personas: ${payload.search_people_results}`)
+				peopleSearchResults.value = payload.search_people_results
 			}
 		};
 
@@ -371,6 +375,17 @@ export const useSocketStore = defineStore("socket", () => {
 		openedPersonInfo.value = null;
 	}
 
+	function deletePeopleSearchResults() {
+		peopleSearchResults.value = null;
+	}
+
+	function searchPeople(input) {
+		send({
+			type: "search_people",
+			input: input
+		})
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -379,6 +394,7 @@ export const useSocketStore = defineStore("socket", () => {
 		activeChatId,
 		contacts,
 		openedPersonInfo,
+		peopleSearchResults,
 		connect,
 		disconnect,
 		send,
@@ -387,6 +403,8 @@ export const useSocketStore = defineStore("socket", () => {
 		updateAvatar,
 		requestContactsIfNeeded,
 		getPersonInfo,
-		deletePersonInfo
+		deletePersonInfo,
+		deletePeopleSearchResults,
+		searchPeople,
 	};
 });
