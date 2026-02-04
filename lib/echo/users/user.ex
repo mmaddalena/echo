@@ -190,8 +190,7 @@ defmodule Echo.Users.User do
         from m in Message,
           where: m.chat_id == ^chat_id,
           where: is_nil(m.deleted_at),
-          where: m.user_id != ^user_id,
-          where: m.inserted_at > ^chat_member.inserted_at
+          where: m.user_id != ^user_id
 
       # Add condition for last_read_at if it exists
       query =
@@ -201,6 +200,8 @@ defmodule Echo.Users.User do
         else
           query
         end
+
+        # TODO si es grupal que agarre los mensajes desde que se inserto el member
 
       Repo.aggregate(query, :count, :id)
     end
