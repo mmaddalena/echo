@@ -24,6 +24,7 @@ const { userInfo } = storeToRefs(socketStore);
 const { chats } = storeToRefs(socketStore);
 const { chatsInfo } = storeToRefs(socketStore);
 const { activeChatId } = storeToRefs(socketStore);
+const { pendingPrivateChat } = storeToRefs(socketStore);
 
 const chatMessagesRef = ref(null);
 
@@ -37,21 +38,57 @@ onMounted(() => {
     console.log("Se montó la chatsview y se mostraron los chats");
 });
 
-const activeChat = computed(() =>
-    activeChatId.value ? chatsInfo.value[activeChatId.value] : null,
-);
+const activeChat = computed(() => {
+  if (pendingPrivateChat.value != null) {
+    return {
+      id: null,
+      type: "private",
+      name: pendingPrivateChat.value.name,
+      username: pendingPrivateChat.value.username,
+      avatar_url: pendingPrivateChat.value.avatar_url,
+      status: pendingPrivateChat.value.status,
+      messages: [],
+    }
+  }
+
+  if (activeChatId.value) {
+    return chatsInfo.value[activeChatId.value]
+  }
+
+  return null
+})
+
 
 const messages = computed(() => activeChat.value?.messages ?? []);
 const chatType = computed(() => activeChat.value?.type ?? null);
 
 const panel = computed(() => uiStore.leftPanel);
 
+const isPendingChat = computed(() => pendingPrivateChat.value != null)
+
 function handleOpenChat(chatId) {
     socketStore.openChat(chatId);
 }
 
 function handleSendMessage(text) {
+    if (isPendingChat.value) {
+        socketStore.createPrivateChatAndSendMessage({
+            id: null,
+            front_msg_id: generateId(),
+            chat_id: null, // Lo pisamos en el socket cuando se vaya a mandar
+            content: text,
+            state: "sending", // Cuando se guarde en el back se pisa por sent
+            sender_user_id: userInfo.value.id,
+            type: "outgoing",
+            time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
+            avatar_url: userInfo.value.avatar_url,
+            format: "text",
+        })
+        return;
+    }
+
     if (!activeChatId.value) return;
+    
     socketStore.sendMessage({
         id: null,
         front_msg_id: generateId(),
@@ -61,7 +98,7 @@ function handleSendMessage(text) {
         sender_user_id: userInfo.value.id,
         type: "outgoing",
         time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
-        avatar_url: userInfo.value.avatar_url,
+        avatar_url: userInfo.value.avatar_url, // TODO: POR QUE MANDA ESTO??? CREO QUE HAY QUE SACARLO
         format: "text",
     });
 }

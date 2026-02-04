@@ -49,6 +49,76 @@ users = [
     "email" => "matias@onorato.com",
     "name" => "Matías Onorato",
     "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-42effcee-d371-459b-a25f-83ef881b3c28.jpeg"
+  },
+  %{
+    "username" => "persona1",
+    "password" => "12345678",
+    "email" => "persona1@nada",
+    "name" => "Persona1",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona2",
+    "password" => "12345678",
+    "email" => "persona2@nada",
+    "name" => "Persona2",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona3",
+    "password" => "12345678",
+    "email" => "persona3@nada",
+    "name" => "Persona3",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona4",
+    "password" => "12345678",
+    "email" => "persona4@nada",
+    "name" => "Persona4",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona5",
+    "password" => "12345678",
+    "email" => "persona5@nada",
+    "name" => "Persona5",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona6",
+    "password" => "12345678",
+    "email" => "persona6@nada",
+    "name" => "Persona6",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona7",
+    "password" => "12345678",
+    "email" => "persona7@nada",
+    "name" => "Persona7",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona8",
+    "password" => "12345678",
+    "email" => "persona8@nada",
+    "name" => "Persona8",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona9",
+    "password" => "12345678",
+    "email" => "persona9@nada",
+    "name" => "Persona9",
+    "avatar_url" => nil,
+  },
+  %{
+    "username" => "persona10",
+    "password" => "12345678",
+    "email" => "persona10@nada",
+    "name" => "Persona10",
+    "avatar_url" => nil,
   }
 ]
 
@@ -63,7 +133,25 @@ end)
 IO.puts("✅ #{length(created_users)} users created")
 
 # Map users for easy access
-[lucas, martin, manuel, matias] = created_users
+users_by_username =
+  Map.new(created_users, fn u -> {u.username, u} end)
+
+lucas   = users_by_username["lucas"]
+martin  = users_by_username["martin"]
+manuel  = users_by_username["manuel"]
+matias  = users_by_username["matias"]
+
+persona1  = users_by_username["persona1"]
+persona2  = users_by_username["persona2"]
+persona3  = users_by_username["persona3"]
+persona4  = users_by_username["persona4"]
+persona5  = users_by_username["persona5"]
+persona6  = users_by_username["persona6"]
+persona7  = users_by_username["persona7"]
+persona8  = users_by_username["persona8"]
+persona9  = users_by_username["persona9"]
+persona10 = users_by_username["persona10"]
+
 
 # Update last_seen_at for more realistic data (truncate microseconds)
 now = truncate_datetime.(DateTime.utc_now())
@@ -82,6 +170,7 @@ contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
   %{user_id: lucas.id, contact_id: manuel.id, nickname: "Manu"},
+  %{user_id: lucas.id, contact_id: persona3.id, nickname: "Capo"},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
   %{user_id: martin.id, contact_id: manuel.id, nickname: nil},

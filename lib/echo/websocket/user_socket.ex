@@ -97,6 +97,11 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(%{"type" => "create_private_chat", "user_id" => receiver_id}, state) do
+    UserSession.create_private_chat(state.user_session, receiver_id)
+    {:ok, state}
+  end
+
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)
     #Process.exit(state.user_session, :normal)

@@ -19,6 +19,9 @@ defmodule Echo.Users.UserSession do
   alias Echo.Users.User
   alias Echo.Messages.Messages
   alias Echo.Contacts.Contacts
+  alias Echo.Chats.ChatSession
+  alias Echo.Chats.ChatSessionSup
+  alias Echo.Chats.Chat
 
   def start_link(user_id) do
     GenServer.start_link(
@@ -64,6 +67,10 @@ defmodule Echo.Users.UserSession do
 
   def search_people(us_pid, input) do
     GenServer.cast(us_pid, {:search_people, input})
+  end
+
+  def create_private_chat(us_pid, receiver_id) do
+    GenServer.cast(us_pid, {:create_private_chat, receiver_id})
   end
 
   def logout(us_pid) do
@@ -145,17 +152,21 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast({:open_chat, chat_id}, state) do
-    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
 
-    Echo.Chats.ChatSession.get_chat_info(cs_pid, state.user_id, self())
+    ChatSession.get_chat_info(cs_pid, state.user_id, self())
     IO.puts("\n\n\nSE PIDIO LA INFO DEL CHAT #{chat_id}\n")
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
   @impl true
   def handle_cast({:send_chat_info, chat_info}, state) do
+    msg = %{
+      type: "chat_info",
+      chat: chat_info
+    }
 
-    send(state.socket, {:send, chat_info})
+    send(state.socket, {:send, msg})
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
@@ -163,9 +174,9 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast({:send_message, front_msg}, state) do
-    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(front_msg["chat_id"])
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(front_msg["chat_id"])
 
-    Echo.Chats.ChatSession.send_message(cs_pid, front_msg, self())
+    ChatSession.send_message(cs_pid, front_msg, self())
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
@@ -185,9 +196,9 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast({:chat_messages_read, chat_id}, state) do
-    {:ok, cs_pid} = Echo.Chats.ChatSessionSup.get_or_start(chat_id)
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
 
-    Echo.Chats.ChatSession.chat_messages_read(cs_pid, chat_id, state.user_id)
+    ChatSession.chat_messages_read(cs_pid, chat_id, state.user_id)
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
@@ -278,6 +289,22 @@ defmodule Echo.Users.UserSession do
   end
 
 
+  @impl true
+  def handle_cast({:create_private_chat, receiver_id}, state) do
+    IO.puts("\n\n SE QUIERE CREAR UN CHAT PRIVADO ENTRE #{state.user_id} Y #{receiver_id}\n")
+    chat_id = Chat.create_private_chat(state.user_id, receiver_id)
+    chat_info = Chat.build_chat_info(chat_id, state.user_id)
+    chat_item = Chat.build_chat_list_item(chat_id, state.user_id)
+
+    send(state.socket, {:send,
+      %{
+        type: "private_chat_created",
+        chat: chat_info,
+        chat_item: chat_item
+      }
+    })
+    {:noreply, state}
+  end
 
 
   ################### Helpers

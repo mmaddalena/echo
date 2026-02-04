@@ -6,7 +6,8 @@ defmodule Echo.Chats.Chat do
 
   import Ecto.Query
   alias Echo.Repo
-  alias Echo.Schemas.User
+  alias Echo.Users.User
+  alias Echo.Schemas.User, as: SchemaUser
   alias Echo.Schemas.Chat
   alias Echo.Schemas.ChatMember
   alias Echo.Schemas.Message
@@ -18,7 +19,7 @@ defmodule Echo.Chats.Chat do
 
   def get_last_messages(chat_id) do
     from(m in Message,
-      join: u in User,
+      join: u in SchemaUser,
       on: u.id == m.user_id,
       where: m.chat_id == ^chat_id,
       where: is_nil(m.deleted_at),
@@ -57,7 +58,7 @@ defmodule Echo.Chats.Chat do
 
   def get_members(chat_id) do
     from(cm in ChatMember,
-      join: u in User,
+      join: u in SchemaUser,
       on: u.id == cm.user_id,
       where: cm.chat_id == ^chat_id,
       select: %{
@@ -88,7 +89,7 @@ defmodule Echo.Chats.Chat do
   def get_avatar_url(chat, other_user_id) do
     case chat.type do
       "private" ->
-        Repo.get!(User, other_user_id).avatar_url
+        Repo.get!(SchemaUser, other_user_id).avatar_url
 
       _group ->
         chat.avatar_url
@@ -125,5 +126,132 @@ defmodule Echo.Chats.Chat do
     )
     |> Repo.one()
   end
+
+  def create_private_chat(creator_id, receiver_id) do
+    case get_private_chat_id(creator_id, receiver_id) do
+      nil ->
+        Repo.transaction(fn ->
+          {:ok, chat} =
+            Chat.private_chat_changeset(creator_id)
+            |> Repo.insert()
+
+          Repo.insert!(%ChatMember{
+            chat_id: chat.id,
+            user_id: creator_id
+          })
+
+          Repo.insert!(%ChatMember{
+            chat_id: chat.id,
+            user_id: receiver_id
+          })
+
+          chat.id
+        end)
+        |> case do
+          {:ok, chat_id} -> chat_id
+          {:error, reason} -> raise reason
+        end
+
+      chat_id ->
+        IO.puts("\n\n\n\n YA ESTABA ESTE CHAT PRIVADO CREADO\n\n\n\n")
+        chat_id
+    end
+  end
+
+
+  def build_chat_info(chat_id, user_id) do
+    chat = get(chat_id)
+
+    is_private? = chat.type == Constants.private_chat()
+    other_user_id = get_other_user_id(chat_id, user_id)
+
+    status =
+      if is_private? do
+        if User.is_active?(other_user_id),
+          do: Constants.online(),
+          else: Constants.offline()
+      else
+        nil
+      end
+
+    members = get_members(chat_id)
+
+    senders =
+      members
+      |> Enum.map(fn m -> {m.user_id, m.name || m.username} end)
+      |> Map.new()
+
+    messages =
+      chat_id
+      |> get_last_messages()
+      |> Enum.map(fn message ->
+        type =
+          if message.user_id == user_id,
+            do: Constants.outgoing(),
+            else: Constants.incoming()
+
+        sender_name = Map.get(senders, message.user_id)
+
+        message
+        |> Map.put(:type, type)
+        |> Map.put(:sender_name, sender_name)
+      end)
+
+    name = User.get_usable_name(user_id, other_user_id, chat.name)
+
+    avatar_url = get_avatar_url(chat, other_user_id)
+
+    %{
+      id: chat_id,
+      messages: messages ,
+      name: name,
+      status: status,
+      type: chat.type,
+      avatar_url: avatar_url,
+      members: members
+    }
+  end
+
+
+  def build_chat_list_item(chat_id, user_id) do
+    chat = get(chat_id)
+
+    case chat.type do
+      "private" ->
+        other_user_id = get_other_user_id(chat_id, user_id)
+        other_user = Repo.get!(SchemaUser, other_user_id)
+
+        name = User.get_usable_name(user_id, other_user_id, nil)
+
+        status =
+          if User.is_active?(other_user_id),
+            do: Constants.online(),
+            else: Constants.offline()
+
+        %{
+          id: chat.id,
+          type: chat.type,
+          name: name,
+          avatar_url: other_user.avatar_url,
+          status: status,
+          unread_messages: 0,
+          last_message: nil
+        }
+
+      "group" ->
+        %{
+          id: chat.id,
+          type: chat.type,
+          name: chat.name,
+          avatar_url: chat.avatar_url,
+          status: nil,
+          unread_messages: 0,
+          last_message: nil
+        }
+    end
+  end
+
+
+
 
 end

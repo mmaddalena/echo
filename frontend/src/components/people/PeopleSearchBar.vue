@@ -30,8 +30,9 @@
         <Transition name="fade" mode="out-in">
           <button 
             v-if="text == null || text == ''"
+            style="cursor: default;"
           >
-            <IconSearch class="icon" style="cursor: default;" />
+            <IconSearch class="icon" />
           </button>
 
           <button 
