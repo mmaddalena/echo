@@ -155,6 +155,7 @@ defmodule Echo.Users.UserSession do
     {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
 
     ChatSession.get_chat_info(cs_pid, state.user_id, self())
+
     IO.puts("\n\n\nSE PIDIO LA INFO DEL CHAT #{chat_id}\n")
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
