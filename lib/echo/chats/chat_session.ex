@@ -10,6 +10,7 @@ defmodule Echo.Chats.ChatSession do
   alias Echo.Users.UserSession
   alias Echo.Messages.Messages
   alias Echo.Constants
+  alias Echo.ChatMembers.ChatMembers
 
   def start_link(chat_id) do
     GenServer.start_link(
@@ -186,6 +187,8 @@ defmodule Echo.Chats.ChatSession do
   @impl true
   def handle_cast({:chat_messages_read, chat_id, reader_user_id}, state) do
     Chat.set_messages_read(chat_id, reader_user_id)
+
+    ChatMembers.set_last_read(reader_user_id, chat_id)
 
     new_last_messages =
       Enum.map(state.last_messages, fn msg ->
