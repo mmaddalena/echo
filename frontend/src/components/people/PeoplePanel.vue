@@ -73,8 +73,13 @@
 
 
   function handleOpenChat(chatId) {
-    socketStore.openChat(chatId);
+    if (chatId) {
+      socketStore.openChat(chatId)
+    } else {
+      socketStore.openPendingPrivateChat(openedPersonInfo)
+    }
   }
+
 
   function searchPeople(input){
     if (activeTab.value === "people")

@@ -50,55 +50,13 @@ defmodule Echo.Chats.ChatSession do
 
   @impl true
   def handle_cast({:chat_info, user_id, us_pid}, state) do
-    is_private? = state.chat.type == Constants.private_chat()
-    other_user_id = Chat.get_other_user_id(state.chat_id, user_id)
-
-    status =
-      case is_private? do
-        true ->
-          if User.is_active?(other_user_id), do: Constants.online(), else: Constants.offline()
-
-        false ->
-          nil
-      end
-
-    senders = get_senders(user_id, state)
-
-    messages =
-      Enum.map(state.last_messages, fn message ->
-        type =
-          if message.user_id == user_id,
-            do: Constants.outgoing(),
-            else: Constants.incoming()
-
-        sender_name = Map.get(senders, message.user_id)
-
-        message
-        |> Map.put(:type, type)
-        |> Map.put(:sender_name, sender_name)
-      end)
-
-    name = User.get_usable_name(user_id, other_user_id, state.chat.name)
-
-    avatar_url = Chat.get_avatar_url(state.chat, other_user_id)
-
-    chat_info = %{
-      type: "chat_info",
-      chat: %{
-        id: state.chat_id,
-        messages: messages,
-        name: name,
-        status: status,
-        type: state.chat.type,
-        avatar_url: avatar_url,
-        members: state.members
-      }
-    }
+    chat_info = Chat.build_chat_info(state.chat_id, user_id)
 
     UserSession.send_chat_info(us_pid, chat_info)
 
     {:noreply, %{state | last_activity: DateTime.utc_now()}}
   end
+
 
   @impl true
   def handle_cast({:send_message, msg_front, _sender_us_pid}, state) do
@@ -250,17 +208,4 @@ defmodule Echo.Chats.ChatSession do
     {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
   end
 
-  defp get_senders(user_id, state) do
-    is_private? = state.chat.type == Constants.private_chat()
-
-    senders_ids =
-      state.last_messages
-      |> Enum.map(& &1.user_id)
-      |> Enum.uniq()
-
-    case is_private? do
-      true -> %{}
-      false -> User.get_usable_names(user_id, senders_ids)
-    end
-  end
 end

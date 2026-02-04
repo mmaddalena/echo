@@ -7,7 +7,7 @@ defmodule Echo.Users.User do
   alias Echo.Repo
   alias Echo.Contacts.Contacts
   alias Echo.ProcessRegistry
-  alias Echo.Schemas.User
+  alias Echo.Schemas.User, as: UserSchema
   alias Echo.Schemas.Chat
   alias Echo.Schemas.ChatMember
   alias Echo.Schemas.Contact
@@ -16,22 +16,22 @@ defmodule Echo.Users.User do
   alias Plug.Upload
 
   def get(id) do
-    Repo.get(User, id)
+    Repo.get(UserSchema, id)
   end
 
   def get_by_username(username) do
-    Repo.get_by(User, username: username)
+    Repo.get_by(UserSchema, username: username)
   end
 
   def get_avatar_url(user_id) do
-    case Repo.get(User, user_id) do
+    case Repo.get(UserSchema, user_id) do
       nil -> nil
       user -> user.avatar_url
     end
   end
 
   def update_username(user_id, new_username) do
-    user = Repo.get(User, user_id)
+    user = Repo.get(UserSchema, user_id)
 
     case user do
       nil ->
@@ -39,7 +39,7 @@ defmodule Echo.Users.User do
 
       user ->
         user
-        |> User.changeset(%{username: new_username})
+        |> UserSchema.changeset(%{username: new_username})
         |> Repo.update()
 
         # Devuelve {:ok, %User{}} o {:error, %Ecto.Changeset{}}
@@ -47,7 +47,7 @@ defmodule Echo.Users.User do
   end
 
   def change_password(user_id, new_pw) do
-    user = Repo.get(User, user_id)
+    user = Repo.get(UserSchema, user_id)
 
     case user do
       nil ->
@@ -55,7 +55,7 @@ defmodule Echo.Users.User do
 
       user ->
         user
-        |> User.registration_changeset(%{password: new_pw})
+        |> UserSchema.registration_changeset(%{password: new_pw})
         |> Repo.update()
 
         # Devuelve {:ok, %User{}} o {:error, %Ecto.Changeset{}}
@@ -63,8 +63,8 @@ defmodule Echo.Users.User do
   end
 
   def create(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
+    %UserSchema{}
+    |> UserSchema.registration_changeset(attrs)
     |> Repo.insert()
   end
 
@@ -95,7 +95,7 @@ defmodule Echo.Users.User do
       join: other_cm in ChatMember,
       on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
 
-      join: other_user in User,
+      join: other_user in UserSchema,
       on: other_user.id == other_cm.user_id,
 
       left_join: contact in Contact,
@@ -209,7 +209,7 @@ defmodule Echo.Users.User do
   defp get_last_message(user_id, chat_id) do
     query =
       from m in Message,
-        join: sender in User,
+        join: sender in UserSchema,
         on: sender.id == m.user_id,
         where: m.chat_id == type(^chat_id, :binary_id),
         where: is_nil(m.deleted_at),
@@ -241,7 +241,7 @@ defmodule Echo.Users.User do
 
   # Mismo usuario
   def get_usable_name(user_id, user_id, _chat_name) do
-    user = Repo.get!(User, user_id)
+    user = Repo.get!(UserSchema, user_id)
     user.name || user.username
   end
 
@@ -254,7 +254,7 @@ defmodule Echo.Users.User do
     |> Repo.one()
     |> case do
       nil ->
-        other = Repo.get!(User, other_user_id)
+        other = Repo.get!(UserSchema, other_user_id)
         other.name || other.username
 
       nickname ->
@@ -276,7 +276,7 @@ defmodule Echo.Users.User do
       |> Enum.reject(&Map.has_key?(nicknames, &1))
 
     users =
-      from(u in User,
+      from(u in UserSchema,
         where: u.id in ^missing_ids,
         select: {u.id, coalesce(u.name, u.username)}
       )
@@ -287,7 +287,7 @@ defmodule Echo.Users.User do
   end
 
   def update_avatar(user_id, avatar_url) do
-    case Repo.get(User, user_id) do
+    case Repo.get(UserSchema, user_id) do
       nil ->
         {:error, :not_found}
 
@@ -348,7 +348,7 @@ defmodule Echo.Users.User do
 
 
   def get_person_info(person_id, asking_user_id) do
-    case Repo.get(User, person_id) do
+    case Repo.get(UserSchema, person_id) do
       nil ->
         :error
 
@@ -359,11 +359,17 @@ defmodule Echo.Users.User do
             person_id
           )
 
+        status =
+          if is_active?(person_id),
+            do: Constants.online(),
+            else: Constants.offline()
+
         base_payload = %{
           id: user.id,
           username: user.username,
           name: user.name,
           avatar_url: user.avatar_url,
+          status: status,
           last_seen_at: user.last_seen_at,
           private_chat_id: Echo.Chats.Chat.get_private_chat_id(person_id, asking_user_id)
         }
@@ -418,7 +424,7 @@ defmodule Echo.Users.User do
   defp search_users_by_text(query) do
     like = "%#{query}%"
 
-    from(u in User,
+    from(u in UserSchema,
       where:
         ilike(u.username, ^like) or
         ilike(u.name, ^like),

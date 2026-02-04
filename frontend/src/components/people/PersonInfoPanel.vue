@@ -1,6 +1,7 @@
 <script setup>
   import { computed } from 'vue';
   import IconClose from '../icons/IconClose.vue';
+  import IconChats from '../icons/IconChats.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
 
   const {personInfo} = defineProps({
@@ -35,10 +36,17 @@
     <p v-if="isContact" class="second-name">{{ personInfo.username}}</p>
     <p v-else class="second-name">{{personInfo.name }}</p>
 
-    <p v-if="isContact" class="added-date">Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }}</p>
+    <p v-if="isContact" class="added-date">
+      Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }}
+    </p>
 
     <div class="buttons">
-      <button class="send-msg" @click="handleSendMsg">Enviar Mensaje</button>
+      <button class="btn" @click="handleSendMsg">
+        <IconChats class="btn-icon" />
+        <p class="btn-text">
+          Enviar Mensaje
+        </p>
+      </button>
     </div>
 
   </div>
@@ -93,13 +101,24 @@
 .buttons {
   margin-top: 2rem;
 }
-.send-msg {
+.btn {
   all: unset;
   width: auto;
-  height: 3rem;
+  height: fit-content;
   background-color: var(--msg-out);
   border-radius: 1rem;
-  padding: 0 1rem;
+  padding: 0.5rem 1rem;
   cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.btn-icon {
+  height: 3.5rem;
+}
+.btn-text {
+  font-size: 1.4rem;
+
 }
 </style>
