@@ -29,188 +29,188 @@ const { pendingPrivateChat } = storeToRefs(socketStore);
 const chatMessagesRef = ref(null);
 
 onMounted(() => {
-    const token = sessionStorage.getItem("token");
-    if (token) {
-        socketStore.connect(token);
-    }
+	const token = sessionStorage.getItem("token");
+	if (token) {
+		socketStore.connect(token);
+	}
 
-    uiStore.showChats();
-    console.log("Se montó la chatsview y se mostraron los chats");
+	uiStore.showChats();
+	console.log("Se montó la chatsview y se mostraron los chats");
 });
 
 const activeChat = computed(() => {
-  if (pendingPrivateChat.value != null) {
-    return {
-      id: null,
-      type: "private",
-      name: pendingPrivateChat.value.name,
-      username: pendingPrivateChat.value.username,
-      avatar_url: pendingPrivateChat.value.avatar_url,
-      status: pendingPrivateChat.value.status,
-      messages: [],
-    }
-  }
+	if (pendingPrivateChat.value != null) {
+		return {
+			id: null,
+			type: "private",
+			name: pendingPrivateChat.value.name,
+			username: pendingPrivateChat.value.username,
+			avatar_url: pendingPrivateChat.value.avatar_url,
+			status: pendingPrivateChat.value.status,
+			messages: [],
+		};
+	}
 
-  if (activeChatId.value) {
-    return chatsInfo.value[activeChatId.value]
-  }
+	if (activeChatId.value) {
+		return chatsInfo.value[activeChatId.value];
+	}
 
-  return null
-})
-
+	return null;
+});
 
 const messages = computed(() => activeChat.value?.messages ?? []);
 const chatType = computed(() => activeChat.value?.type ?? null);
 
 const panel = computed(() => uiStore.leftPanel);
 
-const isPendingChat = computed(() => pendingPrivateChat.value != null)
+const isPendingChat = computed(() => pendingPrivateChat.value != null);
 
 function handleOpenChat(chatId) {
-    socketStore.openChat(chatId);
+	socketStore.openChat(chatId);
 }
 
 function handleSendMessage(text) {
-    if (isPendingChat.value) {
-        socketStore.createPrivateChatAndSendMessage({
-            id: null,
-            front_msg_id: generateId(),
-            chat_id: null, // Lo pisamos en el socket cuando se vaya a mandar
-            content: text,
-            state: "sending", // Cuando se guarde en el back se pisa por sent
-            sender_user_id: userInfo.value.id,
-            type: "outgoing",
-            time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
-            avatar_url: userInfo.value.avatar_url,
-            format: "text",
-        })
-        return;
-    }
+	if (isPendingChat.value) {
+		socketStore.createPrivateChatAndSendMessage({
+			id: null,
+			front_msg_id: generateId(),
+			chat_id: null, // Lo pisamos en el socket cuando se vaya a mandar
+			content: text,
+			state: "sending", // Cuando se guarde en el back se pisa por sent
+			sender_user_id: userInfo.value.id,
+			type: "outgoing",
+			time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
+			avatar_url: userInfo.value.avatar_url,
+			format: "text",
+		});
+		return;
+	}
 
-    if (!activeChatId.value) return;
-    
-    socketStore.sendMessage({
-        id: null,
-        front_msg_id: generateId(),
-        chat_id: activeChatId.value,
-        content: text,
-        state: "sending", // Cuando se guarde en el back se pisa por sent
-        sender_user_id: userInfo.value.id,
-        type: "outgoing",
-        time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
-        avatar_url: userInfo.value.avatar_url, // TODO: POR QUE MANDA ESTO??? CREO QUE HAY QUE SACARLO
-        format: "text",
-    });
+	if (!activeChatId.value) return;
+
+	socketStore.sendMessage({
+		id: null,
+		front_msg_id: generateId(),
+		chat_id: activeChatId.value,
+		content: text,
+		state: "sending", // Cuando se guarde en el back se pisa por sent
+		sender_user_id: userInfo.value.id,
+		type: "outgoing",
+		time: getCurrentISOTimeString(), // Despues se pisa con el inserted_at del back
+		avatar_url: userInfo.value.avatar_url, // TODO: POR QUE MANDA ESTO??? CREO QUE HAY QUE SACARLO
+		format: "text",
+	});
 }
 
 async function handleSendAttachment(file) {
-    if (!activeChatId.value) return;
+	if (!activeChatId.value) return;
 
-    const token = sessionStorage.getItem("token");
+	const token = sessionStorage.getItem("token");
 
-    const formData = new FormData();
-    formData.append("file", file);
+	const formData = new FormData();
+	formData.append("file", file);
 
-    // 1. Upload via HTTP
-    const res = await fetch("/api/chat/upload", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-    });
+	// 1. Upload via HTTP
+	const res = await fetch("/api/chat/upload", {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+		body: formData,
+	});
 
-    console.log(res);
+	console.log(res);
 
-    if (!res.ok) return;
+	if (!res.ok) return;
 
-    const { url, mime } = await res.json();
+	const { url, mime } = await res.json();
 
-    // 2. Send message via WebSocket
-    socketStore.sendMessage({
-        id: null,
-        front_msg_id: generateId(),
-        chat_id: activeChatId.value,
-        content: url,
-        mime,
-        filename: file.name,
-        state: "sending",
-        sender_user_id: userInfo.value.id,
-        type: "outgoing",
-        format: mime.startsWith("image/") ? "image" : "file",
-        time: getCurrentISOTimeString(),
-        avatar_url: userInfo.value.avatar_url,
-    });
+	// 2. Send message via WebSocket
+	socketStore.sendMessage({
+		id: null,
+		front_msg_id: generateId(),
+		chat_id: activeChatId.value,
+		content: url,
+		mime,
+		filename: file.name,
+		state: "sending",
+		sender_user_id: userInfo.value.id,
+		type: "outgoing",
+		format: mime.startsWith("image/") ? "image" : "file",
+		time: getCurrentISOTimeString(),
+		avatar_url: userInfo.value.avatar_url,
+	});
 }
 
 function scrollToMessage(messageId) {
-    chatMessagesRef.value?.scrollToMessage(messageId);
+	chatMessagesRef.value?.scrollToMessage(messageId);
 }
 </script>
 
 <template>
 	<div class="chats-layout">
-			<div class="left">
-					<img
-							src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
-							class="logo"
-							alt="Echo logo"
-					/>
-					<div class="main">
-							<Sidebar :avatarURL="userInfo?.avatar_url" />
-							<ChatList
-									v-if="panel === 'chats'"
-									:chats="chats"
-									@open-chat="handleOpenChat"
-							/>
-							<PeoplePanel v-if="panel === 'people'" />
-					</div>
+		<div class="left">
+			<img
+				src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
+				class="logo"
+				alt="Echo logo"
+			/>
+			<div class="main">
+				<Sidebar :avatarURL="userInfo?.avatar_url" />
+				<ChatList
+					v-if="panel === 'chats'"
+					:chats="chats"
+					@open-chat="handleOpenChat"
+				/>
+				<PeoplePanel v-if="panel === 'people'" />
 			</div>
-			<div class="right">
-					<ChatHeader
-							:chatInfo="activeChat"
-							@scroll-to-message="scrollToMessage"
-					/>
-					<ChatMessages
-							:messages="messages"
-							:chatType="chatType"
-							ref="chatMessagesRef"
-					/>
-					<ChatInput
-							@send-message="handleSendMessage"
-							@send-attachment="handleSendAttachment"
-					/>
-			</div>
+		</div>
+		<div class="right">
+			<ChatHeader
+				:chatInfo="activeChat"
+				:last_seen_at="userInfo?.last_seen_at"
+				@scroll-to-message="scrollToMessage"
+			/>
+			<ChatMessages
+				:messages="messages"
+				:chatType="chatType"
+				ref="chatMessagesRef"
+			/>
+			<ChatInput
+				@send-message="handleSendMessage"
+				@send-attachment="handleSendAttachment"
+			/>
+		</div>
 	</div>
 </template>
 
 <style scoped>
 .chats-layout {
-    display: flex;
-    flex-direction: row;
-    height: 100vh;
+	display: flex;
+	flex-direction: row;
+	height: 100vh;
 }
 .left {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    height: 100%;
-    width: var(--left-section-width);
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	height: 100%;
+	width: var(--left-section-width);
 }
 .logo {
-    height: 6rem;
-    margin: 2rem;
+	height: 6rem;
+	margin: 2rem;
 }
 .main {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-    width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	width: 100%;
 }
 .right {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    height: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	height: 100%;
 }
 </style>
