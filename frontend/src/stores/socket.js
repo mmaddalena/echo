@@ -42,38 +42,49 @@ export const useSocketStore = defineStore("socket", () => {
 
 			if (payload.type === "user_info") {
 				dispatch_user_info(payload);
-			} else if (payload.type === "chat_info") {
+			} 
+			else if (payload.type === "chat_info") {
 				dispatch_chat_info(payload);
-			} else if (payload.type === "new_message") {
+			} 
+			else if (payload.type === "new_message") {
 				dispatch_new_message(payload);
-			} else if (payload.type === "chat_read") {
+			} 
+			else if (payload.type === "chat_read") {
 				dispatch_chat_read(payload);
-			} else if (payload.type === "messages_delivered") {
+			} 
+			else if (payload.type === "messages_delivered") {
 				markMessagesDelivered(payload.message_ids);
-			} else if (payload.type === "contacts") {
+			} 
+			else if (payload.type === "contacts") {
 				console.log("CONTACTS RECIBIDOS:", payload.contacts);
 				contacts.value = payload.contacts;
 				// const peopleStore = usePeopleStore()
 				// peopleStore.setContacts(payload.contacts ?? [])
-			} else if(payload.type === "person_info") {
+			} 
+			else if(payload.type === "person_info") {
 				console.log(`LLegó la info de la persona ${payload.person_info.username}`)
 				openedPersonInfo.value = payload.person_info
-			} else if (payload.type === "search_people_results"){
+			} 
+			else if (payload.type === "search_people_results"){
 				console.log(`LLegaron los resultados de la busqueda de personas: ${payload.search_people_results}`)
 				peopleSearchResults.value = payload.search_people_results
-			} else if (payload.type === "private_chat_created") {
-				console.log(`Se creó el chat privado con id: ${payload.chat.id}`);
+			} 
+			else if (payload.type === "private_chat_created") {
 				// Meto la info en la caché de los chats
 				chats.value = [payload.chat_item, ...chats.value]
-				dispatch_chat_info(payload);
-				// Mando el mensaje pendiente
-				const msg = {...pendingMessage.value,
-					chat_id: payload.chat.id
-				}
-				sendMessage(msg);
-				// Seteo todo lo pending en null, ya que ya no hay nada pendiente
+				if (pendingPrivateChat.value != null) {
+					console.log(`Se creó el chat privado con id: ${payload.chat.id}`);
+					
+					dispatch_chat_info(payload);
+					// Mando el mensaje pendiente
+					const msg = {...pendingMessage.value,
+						chat_id: payload.chat.id
+					}
+					sendMessage(msg);
+					// Seteo todo lo pending en null, ya que ya no hay nada pendiente
 					pendingPrivateChat.value = null;
 					pendingMessage.value = null;
+				}
 			}
 		};
 
