@@ -101,6 +101,11 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:messages_delivered, message_ids})
   end
 
+  # Manda el payload tal cual al socket, se usa acá mismo por otro UserSession
+  def send_payload(us_pid, payload) do
+    GenServer.cast(us_pid, {:send_payload, payload})
+  end
+
   ##### Callbacks
 
   @impl true
@@ -294,19 +299,37 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:create_private_chat, receiver_id}, state) do
     IO.puts("\n\n SE QUIERE CREAR UN CHAT PRIVADO ENTRE #{state.user_id} Y #{receiver_id}\n")
     chat_id = Chat.create_private_chat(state.user_id, receiver_id)
-    chat_info = Chat.build_chat_info(chat_id, state.user_id)
-    chat_item = Chat.build_chat_list_item(chat_id, state.user_id)
+
+    chat_info_a = Chat.build_chat_info(chat_id, state.user_id)
+    chat_item_a = Chat.build_chat_list_item(chat_id, state.user_id)
 
     send(state.socket, {:send,
       %{
         type: "private_chat_created",
-        chat: chat_info,
-        chat_item: chat_item
+        chat: chat_info_a,
+        chat_item: chat_item_a
       }
     })
+
+    IO.puts("\n\n SE ENVIÓ EL MENSAJE DE QUE SE CREÓ EL CHAT AL EMISOR\n")
+
+    if other_us_pid = ProcessRegistry.whereis_user_session(receiver_id) do
+      chat_item_b = Chat.build_chat_list_item(chat_id, receiver_id)
+
+      send_payload(other_us_pid, %{
+        type: "private_chat_created",
+        chat_item: chat_item_b
+      })
+    end
+
     {:noreply, state}
   end
 
+  @impl true
+  def handle_cast({:send_payload, payload}, state) do
+    send(state.socket, {:send, payload})
+    {:noreply, state}
+  end
 
   ################### Helpers
   defp serialize_contacts_for_front(contacts) do
