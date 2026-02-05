@@ -49,7 +49,22 @@ defmodule Echo.Schemas.User do
     |> unique_constraint(:username)
     |> unique_constraint(:email)
     |> put_password_hash()
+    |> validate_avatar_url(:avatar_url)
   end
+
+  defp validate_avatar_url(changeset, field) do
+  case get_field(changeset, field) do
+    nil ->
+      put_change(changeset, field, default_avatar_url())
+
+    _value ->
+      changeset
+  end
+end
+
+defp default_avatar_url do
+  "https://storage.googleapis.com/echo-fiuba/avatars/users/8234eff0-3e87-48b6-82de-7a7a0997a363-aa02bab7-b960-4dbf-b286-3229c150f0df.webp"
+end
 
   defp put_password_hash(
          %Ecto.Changeset{

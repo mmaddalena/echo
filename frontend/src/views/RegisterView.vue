@@ -28,12 +28,13 @@ async function handleRegister() {
 		}
 
 		const res = await fetch(
-			"http://localhost:4000/api/register", 
-			//"api/register", 
+			"http://localhost:4000/api/register",
+			//"api/register",
 			{
-			method: "POST",
-			body: formData, // multipart/form-data
-		});
+				method: "POST",
+				body: formData, // multipart/form-data
+			},
+		);
 
 		if (!res.ok) throw new Error("Error en los datos");
 
