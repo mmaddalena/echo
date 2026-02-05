@@ -168,6 +168,7 @@ defmodule Echo.Users.User do
 
       _ ->
         IO.inspect("User #{user_id} is active")
+        # if (UserSession.has_socket(pid))
         true
     end
   end
