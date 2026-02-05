@@ -22,6 +22,7 @@ defmodule Echo.Users.UserSession do
   alias Echo.Chats.ChatSession
   alias Echo.Chats.ChatSessionSup
   alias Echo.Chats.Chat
+  alias Echo.Constants
 
   def start_link(user_id) do
     GenServer.start_link(
@@ -110,6 +111,8 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def init(user_id) do
+    Process.flag(:trap_exit, true)
+
     user = User.get(user_id)
 
     state = %{
@@ -118,7 +121,8 @@ defmodule Echo.Users.UserSession do
       socket: nil,
       current_chat_id: nil,
       last_activity: DateTime.utc_now(),
-      contacts: nil
+      contacts: nil,
+      disconnect_timer: nil
     }
 
     messages = Messages.get_sent_messages_for_user(user.id)
@@ -139,7 +143,12 @@ defmodule Echo.Users.UserSession do
   @impl true
   def handle_cast({:attach_socket, socket_pid}, state) do
     Process.link(socket_pid)
-    {:noreply, %{state | socket: socket_pid}}
+
+    if state.disconnect_timer do
+      Process.cancel_timer(state.disconnect_timer)
+    end
+
+    {:noreply, %{state | socket: socket_pid, disconnect_timer: nil}}
   end
 
   @impl true
@@ -391,4 +400,19 @@ defmodule Echo.Users.UserSession do
   def terminate(_reason, _state) do
     :ok
   end
+
+  ##################### HANDLE INFOS
+
+  @impl true
+  def handle_info({:EXIT, _socket_pid, _reason}, state) do
+    ref = Process.send_after(self(), :disconnect_timeout, Constants.session_timeout())
+    {:noreply, %{state | socket: nil, disconnect_timer: ref}}
+  end
+
+  @impl true
+  def handle_info(:disconnect_timeout, state) do
+    ProcessRegistry.unregister_user_session(state.user_id)
+    {:stop, :normal, state}
+  end
+
 end
