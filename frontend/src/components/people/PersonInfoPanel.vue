@@ -37,7 +37,14 @@
     <p v-else class="second-name">{{personInfo.name }}</p>
 
     <p v-if="isContact" class="added-date">
-      Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }}
+      <!-- Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }} -->
+       <p v-if="personInfo.status == 'Offline' && last_seen_at">
+							- Ultima vez activo
+							{{ formatAddedTime(last_seen_at) }}
+       </p>
+       <p v-else>
+         Estado: {{ personInfo.status }}
+         </p>
     </p>
 
     <div class="buttons">

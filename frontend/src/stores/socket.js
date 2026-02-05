@@ -12,8 +12,7 @@ export const useSocketStore = defineStore("socket", () => {
 	const openedPersonInfo = ref(null);
 	const peopleSearchResults = ref(null);
 	const pendingPrivateChat = ref(null);
-	const pendingMessage = ref(null)
-
+	const pendingMessage = ref(null);
 
 	function connect(token) {
 		if (socket.value) return; // ya conectado
@@ -42,44 +41,38 @@ export const useSocketStore = defineStore("socket", () => {
 
 			if (payload.type === "user_info") {
 				dispatch_user_info(payload);
-			} 
-			else if (payload.type === "chat_info") {
+			} else if (payload.type === "chat_info") {
 				dispatch_chat_info(payload);
-			} 
-			else if (payload.type === "new_message") {
+			} else if (payload.type === "new_message") {
 				dispatch_new_message(payload);
-			} 
-			else if (payload.type === "chat_read") {
+			} else if (payload.type === "chat_read") {
 				dispatch_chat_read(payload);
-			} 
-			else if (payload.type === "messages_delivered") {
+			} else if (payload.type === "messages_delivered") {
 				markMessagesDelivered(payload.message_ids);
-			} 
-			else if (payload.type === "contacts") {
+			} else if (payload.type === "contacts") {
 				console.log("CONTACTS RECIBIDOS:", payload.contacts);
 				contacts.value = payload.contacts;
 				// const peopleStore = usePeopleStore()
 				// peopleStore.setContacts(payload.contacts ?? [])
-			} 
-			else if(payload.type === "person_info") {
-				console.log(`LLegó la info de la persona ${payload.person_info.username}`)
-				openedPersonInfo.value = payload.person_info
-			} 
-			else if (payload.type === "search_people_results"){
-				console.log(`LLegaron los resultados de la busqueda de personas: ${payload.search_people_results}`)
-				peopleSearchResults.value = payload.search_people_results
-			} 
-			else if (payload.type === "private_chat_created") {
+			} else if (payload.type === "person_info") {
+				console.log(
+					`LLegó la info de la persona ${payload.person_info.username}`,
+				);
+				openedPersonInfo.value = payload.person_info;
+			} else if (payload.type === "search_people_results") {
+				console.log(
+					`LLegaron los resultados de la busqueda de personas: ${payload.search_people_results}`,
+				);
+				peopleSearchResults.value = payload.search_people_results;
+			} else if (payload.type === "private_chat_created") {
 				// Meto la info en la caché de los chats
-				chats.value = [payload.chat_item, ...chats.value]
+				chats.value = [payload.chat_item, ...chats.value];
 				if (pendingPrivateChat.value != null) {
 					console.log(`Se creó el chat privado con id: ${payload.chat.id}`);
-					
+
 					dispatch_chat_info(payload);
 					// Mando el mensaje pendiente
-					const msg = {...pendingMessage.value,
-						chat_id: payload.chat.id
-					}
+					const msg = { ...pendingMessage.value, chat_id: payload.chat.id };
 					sendMessage(msg);
 					// Seteo todo lo pending en null, ya que ya no hay nada pendiente
 					pendingPrivateChat.value = null;
@@ -388,11 +381,11 @@ export const useSocketStore = defineStore("socket", () => {
 	}
 
 	function getPersonInfo(personId) {
-		console.log(`Se quiere pedir la info de la persona cuyo id es ${personId}`)
+		console.log(`Se quiere pedir la info de la persona cuyo id es ${personId}`);
 		send({
 			type: "get_person_info",
-			person_id: personId
-		})
+			person_id: personId,
+		});
 	}
 
 	function deletePersonInfo() {
@@ -406,29 +399,29 @@ export const useSocketStore = defineStore("socket", () => {
 	function searchPeople(input) {
 		send({
 			type: "search_people",
-			input: input
-		})
+			input: input,
+		});
 	}
 
 	function openPendingPrivateChat(personInfo) {
-		console.log("Se abre un chat que no está creado en el back")
-		pendingPrivateChat.value = personInfo.value
-		activeChatId.value = null
-		sessionStorage.removeItem("activeChatId")
+		console.log("Se abre un chat que no está creado en el back");
+		pendingPrivateChat.value = personInfo.value;
+		activeChatId.value = null;
+		sessionStorage.removeItem("activeChatId");
 	}
 
-
 	function createPrivateChatAndSendMessage(front_pending_msg) {
-		console.log(`Queremos crear un chat para mandar despues '${front_pending_msg.content}'`)
-		pendingMessage.value = front_pending_msg
+		console.log(
+			`Queremos crear un chat para mandar despues '${front_pending_msg.content}'`,
+		);
+		pendingMessage.value = front_pending_msg;
 
 		send({
 			type: "create_private_chat",
-			user_id: pendingPrivateChat.value.id
-		})
-		console.log(`Se hizo el send`)
+			user_id: pendingPrivateChat.value.id,
+		});
+		console.log(`Se hizo el send`);
 	}
-
 
 	return {
 		socket,
@@ -453,6 +446,6 @@ export const useSocketStore = defineStore("socket", () => {
 		deletePeopleSearchResults,
 		searchPeople,
 		openPendingPrivateChat,
-		createPrivateChatAndSendMessage
+		createPrivateChatAndSendMessage,
 	};
 });
