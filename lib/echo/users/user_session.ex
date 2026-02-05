@@ -121,7 +121,6 @@ defmodule Echo.Users.UserSession do
       socket: nil,
       current_chat_id: nil,
       last_activity: DateTime.utc_now(),
-      contacts: nil,
       disconnect_timer: nil
     }
 
@@ -257,23 +256,16 @@ defmodule Echo.Users.UserSession do
   @impl true
   def handle_cast(:get_contacts, state) do
     IO.puts("\n\nSE PIDIERON LOS CONTACTOS DEL USUARIO #{state.user.username}\n")
-    case state.contacts do
-      nil ->
-        contacts = Contacts.list_contacts_for_user(state.user_id)
-        front_contacts = serialize_contacts_for_front(contacts)
 
-        send(state.socket, {:send, %{type: "contacts", contacts: front_contacts}})
+    contacts = Contacts.list_contacts_for_user(state.user_id)
+    front_contacts = serialize_contacts_for_front(contacts)
 
-        IO.puts("SE ENVIAN LOS CONTACTOS: #{inspect(front_contacts)}")
+    send(state.socket, {:send, %{type: "contacts", contacts: front_contacts}})
 
-        {:noreply, %{state | contacts: front_contacts}}
-      _ ->
-        send(state.socket, {:send, %{type: "contacts", contacts: state.contacts}})
+    IO.puts("SE ENVIAN LOS CONTACTOS: #{inspect(front_contacts)}")
 
-        IO.puts("SE ENVIAN LOS CONTACTOS: #{inspect(state.contacts)}")
+    {:noreply, state}
 
-        {:noreply, state}
-    end
   end
 
   @impl true
