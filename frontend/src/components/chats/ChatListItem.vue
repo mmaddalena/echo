@@ -49,12 +49,15 @@ function handleClick() {
 							:state="chat.last_message.state"
 						/>
 					</Transition>
-					
+
 					<span v-if="chat.last_message?.format === 'image'" class="media-span">
 						<IconImage class="icon-media" :class="{ muted: isMuted }" />
 						<p class="text" :class="{ muted: isMuted }">Imagen</p>
 					</span>
-					<span v-else-if="chat.last_message?.format === 'file'" class="media-span">
+					<span
+						v-else-if="chat.last_message?.format === 'file'"
+						class="media-span"
+					>
 						<IconFile class="icon-media" :class="{ muted: isMuted }" />
 						<p class="text" :class="{ muted: isMuted }">Archivo</p>
 					</span>
@@ -63,7 +66,6 @@ function handleClick() {
 							{{ chat.last_message?.content }}
 						</p>
 					</span>
-
 				</div>
 				<span class="time" :class="{ muted: isMuted }">
 					{{ formatChatTime(chat.last_message?.time) }}
@@ -155,7 +157,6 @@ function handleClick() {
 .time {
 	font-size: 1.2rem;
 }
-
 
 .msg-state-enter-active,
 .msg-state-leave-active {

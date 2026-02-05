@@ -16,6 +16,7 @@ import { generateId } from "@/utils/idGenerator";
 
 import { useUIStore } from "@/stores/ui";
 import PeoplePanel from "@/components/people/PeoplePanel.vue";
+import ChatPanel from "@/components/chats/ChatPanel.vue";
 
 const socketStore = useSocketStore();
 const uiStore = useUIStore();
@@ -64,10 +65,6 @@ const chatType = computed(() => activeChat.value?.type ?? null);
 const panel = computed(() => uiStore.leftPanel);
 
 const isPendingChat = computed(() => pendingPrivateChat.value != null);
-
-function handleOpenChat(chatId) {
-	socketStore.openChat(chatId);
-}
 
 function handleSendMessage(text) {
 	if (isPendingChat.value) {
@@ -157,11 +154,7 @@ function scrollToMessage(messageId) {
 			/>
 			<div class="main">
 				<Sidebar :avatarURL="userInfo?.avatar_url" />
-				<ChatList
-					v-if="panel === 'chats'"
-					:chats="chats"
-					@open-chat="handleOpenChat"
-				/>
+				<ChatPanel v-if="panel === 'chats'" />
 				<PeoplePanel v-if="panel === 'people'" />
 			</div>
 		</div>
