@@ -28,4 +28,6 @@ defmodule Echo.Constants do
   def messages_page_size, do: 50
 
   def max_search_results(), do: 50
+
+  def session_timeout(), do: 500
 end
