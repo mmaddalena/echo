@@ -97,8 +97,11 @@
 		if (field === "username") {
 			socketStore.changeUsername(username.value)
 		} else if (field === "name") {
-			socketStore.changeUsername(name.value)
+			socketStore.changeName(name.value)
 		}
+		editing.value['username'] = false
+		editing.value['name'] = false
+		//username.value = socketStore.userInfo.username
 	}
 
 
