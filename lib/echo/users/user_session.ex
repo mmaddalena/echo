@@ -74,6 +74,14 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:create_private_chat, receiver_id})
   end
 
+  def change_username(us_pid, new_username) do
+    GenServer.cast(us_pid, {:change_username, new_username})
+  end
+
+  def change_name(us_pid, new_name) do
+    GenServer.cast(us_pid, {:change_name, new_name})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -147,7 +155,12 @@ defmodule Echo.Users.UserSession do
       Process.cancel_timer(state.disconnect_timer)
     end
 
-    {:noreply, %{state | socket: socket_pid, disconnect_timer: nil}}
+    {:noreply, %{state |
+        socket: socket_pid,
+        disconnect_timer: nil,
+        #user: user = User.get(user_id)
+      }
+    }
   end
 
   @impl true
@@ -327,10 +340,62 @@ defmodule Echo.Users.UserSession do
   end
 
   @impl true
+  def handle_cast({:change_username, new_username}, state) do
+    IO.puts("\n\n\n SE QUIERE CAMBIAR EL USERNAME A #{new_username}\n\n\n")
+
+    {status, extra} =
+      case User.change_username(state.user_id, new_username) do
+        :ok ->
+          {:success, %{new_username: new_username}}
+
+        {:error, reason} ->
+          {:failure, %{reason: reason}}
+      end
+
+    payload = %{
+      type: "username_change_result",
+      status: status,
+      data: extra
+    }
+
+    send(state.socket, {:send, payload})
+    {:noreply, %{state | user: User.get(state.user_id)}}
+  end
+
+  @impl true
+  def handle_cast({:change_name, new_name}, state) do
+    IO.puts("\n\n\n SE QUIERE CAMBIAR EL NAME A #{new_name}\n\n\n")
+
+    {status, extra} =
+      case User.change_name(state.user_id, new_name) do
+        {:ok, _user} ->
+          {:success, %{new_name: new_name}}
+
+        {:error, changeset} ->
+          {:failure, %{reason: changeset}}
+      end
+
+    payload = %{
+      type: "name_change_result",
+      status: status,
+      data: extra
+    }
+
+    send(state.socket, {:send, payload})
+    {:noreply, %{state | user: User.get(state.user_id)}}
+  end
+
+
+
+  @impl true
   def handle_cast({:send_payload, payload}, state) do
     send(state.socket, {:send, payload})
     {:noreply, state}
   end
+
+
+
+
 
   ################### Helpers
   defp serialize_contacts_for_front(contacts) do

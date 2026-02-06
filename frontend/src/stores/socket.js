@@ -52,17 +52,9 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "contacts") {
 				console.log("CONTACTS RECIBIDOS:", payload.contacts);
 				contacts.value = payload.contacts;
-				// const peopleStore = usePeopleStore()
-				// peopleStore.setContacts(payload.contacts ?? [])
 			} else if (payload.type === "person_info") {
-				console.log(
-					`LLegó la info de la persona ${payload.person_info.username}`,
-				);
 				openedPersonInfo.value = payload.person_info;
 			} else if (payload.type === "search_people_results") {
-				console.log(
-					`LLegaron los resultados de la busqueda de personas: ${payload.search_people_results}`,
-				);
 				peopleSearchResults.value = payload.search_people_results;
 			} else if (payload.type === "private_chat_created") {
 				// Meto la info en la caché de los chats
@@ -77,6 +69,14 @@ export const useSocketStore = defineStore("socket", () => {
 					// Seteo todo lo pending en null, ya que ya no hay nada pendiente
 					pendingPrivateChat.value = null;
 					pendingMessage.value = null;
+				}
+			} else if (payload.type === "username_change_result") {
+				userInfo.value = {...userInfo.value, 
+					username: payload.data?.new_username
+				}
+			} else if (payload.type === "name_change_result") {
+				userInfo.value = {...userInfo.value, 
+					name: payload.data?.new_name
 				}
 			}
 		};
@@ -423,6 +423,22 @@ export const useSocketStore = defineStore("socket", () => {
 		console.log(`Se hizo el send`);
 	}
 
+
+	function changeUsername(new_usr) {
+		console.log(`Se llama a changeUSername con: ${new_usr}`)
+		send({
+			type: "change_username",
+			new_username: new_usr,
+		});
+	}
+
+	function changeName(new_name) {
+		send({
+			type: "change_name",
+			new_name: new_name,
+		});
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -447,5 +463,7 @@ export const useSocketStore = defineStore("socket", () => {
 		searchPeople,
 		openPendingPrivateChat,
 		createPrivateChatAndSendMessage,
+		changeUsername,
+		changeName
 	};
 });

@@ -77,4 +77,24 @@ end
   end
 
   defp put_password_hash(changeset), do: changeset
+
+  def username_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:username])
+    |> validate_required([:username])
+    |> validate_length(:username, min: 3, max: 30)
+    |> validate_format(:username, @username_regex,
+        message: "can only contain letters, numbers, and underscores"
+    )
+    |> unique_constraint(:username)
+  end
+
+  def name_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:name])
+    |> validate_required([:name])
+    |> validate_length(:name, min: 1, max: 50)
+  end
+
+
 end

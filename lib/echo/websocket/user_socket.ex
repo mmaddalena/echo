@@ -102,6 +102,16 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(%{"type" => "change_username", "new_username" => new_username}, state) do
+    UserSession.change_username(state.user_session, new_username)
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "change_name", "new_name" => new_name}, state) do
+    UserSession.change_name(state.user_session, new_name)
+    {:ok, state}
+  end
+
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)
     #Process.exit(state.user_session, :normal)

@@ -461,6 +461,45 @@ defmodule Echo.Users.User do
   end
 
 
+  def change_username(user_id, new_username) do
+    case Repo.get(UserSchema, user_id) do
+      nil ->
+        {:error, :not_found}
+
+      user ->
+        user
+        |> UserSchema.username_changeset(%{username: new_username})
+        |> Repo.update()
+        |> case do
+          {:ok, _updated_user} ->
+            :ok
+
+          {:error, changeset} ->
+            {:error, format_changeset_error(changeset)}
+        end
+    end
+  end
+  defp format_changeset_error(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+    |> Enum.map(fn {field, [error | _]} ->
+      {field, error}
+    end)
+    |> Map.new()
+  end
+
+
+  def change_name(user_id, new_name) do
+    case Repo.get(UserSchema, user_id) do
+      nil ->
+        {:error, :not_found}
+
+      user ->
+        user
+        |> UserSchema.name_changeset(%{name: new_name})
+        |> Repo.update()
+    end
+  end
+
 
 
 end
