@@ -7,6 +7,7 @@ defmodule Echo.Schemas.Chat do
 
   schema "chats" do
     field :name, :string
+    field :description, :string
     field :avatar_url, :string
     field :type, :string, default: "private"
     timestamps(type: :utc_datetime)
@@ -18,11 +19,26 @@ defmodule Echo.Schemas.Chat do
 
   def changeset(chat, attrs) do
     chat
-    |> cast(attrs, [:name, :type, :creator_id, :avatar_url])
+    |> cast(attrs, [:name, :type, :creator_id, :avatar_url, :description])
     |> validate_required([:type, :creator_id])
     |> validate_inclusion(:type, ["private", "group"])
     |> validate_name_based_on_type()
     |> foreign_key_constraint(:creator_id)
+    |> validate_avatar_url(:avatar_url)
+  end
+
+  defp validate_avatar_url(changeset, field) do
+    case get_field(changeset, field) do
+      nil ->
+        put_change(changeset, field, default_group_avatar_url())
+
+      _value ->
+        changeset
+    end
+  end
+
+  defp default_group_avatar_url do
+    "https://storage.googleapis.com/echo-fiuba/avatars/groups/c20ba101-77d9-49b9-bb9e-fb363ceb0351-8f5b243d-a549-4af4-a89c-fef532aa7596.jpeg"
   end
 
   defp validate_name_based_on_type(changeset) do

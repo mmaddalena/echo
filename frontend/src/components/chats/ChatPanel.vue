@@ -3,6 +3,7 @@ import ChatTabs from "./ChatTabs.vue";
 import ChatList from "./ChatList.vue";
 import ChatInfoPanel from "./ChatInfoPanel.vue";
 // import ChatSearchBar from "./ChatSearchBar.vue";
+import CreateGroupModal from "../groups/CreateGroupModal.vue";
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
 import { ref, computed } from "vue";
@@ -65,6 +66,17 @@ function searchChat(input) {
 function handleOpenChat(chatId) {
 	socketStore.openChat(chatId);
 }
+
+const showCreateGroupModal = ref(false);
+
+function openCreateGroup() {
+	socketStore.requestContactsIfNeeded(); // important
+	showCreateGroupModal.value = true;
+}
+
+function closeCreateGroup() {
+	showCreateGroupModal.value = false;
+}
 </script>
 
 <template>
@@ -73,7 +85,19 @@ function handleOpenChat(chatId) {
 
 		<!-- <ChatSearchBar v-if="activeChatId == null" @search-chat="searchChat" /> -->
 
+		<div class="chat-list-header" v-if="activeTab === 'groups'">
+			<button
+				class="create-group-btn"
+				v-if="activeTab === 'groups'"
+				@click="openCreateGroup"
+			>
+				Crear grupo
+			</button>
+		</div>
+
 		<ChatList :chats="filteredChats" @open-chat="handleOpenChat" />
+
+		<CreateGroupModal :open="showCreateGroupModal" @close="closeCreateGroup" />
 
 		<!-- <PersonInfoPanel
 			v-if="activeChatId != null"
@@ -90,5 +114,23 @@ function handleOpenChat(chatId) {
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+}
+
+.create-group-btn {
+	padding: 6px 14px;
+	border-radius: 20px;
+	border: none;
+	background-color: var(--msg-out);
+	color: white;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.chat-list-header {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 10px 10px 0px 10px;
+	background: var(--bg-chatlist-panel);
 }
 </style>

@@ -67,49 +67,19 @@ defmodule Echo.Media do
       {:error, :upload_failed}
   end
 
-  # def upload_chat_file(user_id, %Plug.Upload{} = upload) do
-  #   ext = Path.extname(upload.filename)
+  def upload_group_avatar(group_id, %Plug.Upload{} = upload) do
+    ext = Path.extname(upload.filename)
 
-  #   object_name =
-  #     "chat/#{user_id}/#{Ecto.UUID.generate()}#{ext}"
+    object_name =
+      "avatars/groups/#{group_id}-#{Ecto.UUID.generate()}#{ext}"
 
-  #   # Fetch token from Goth
-  #   {:ok, %{token: token}} = Goth.fetch(Echo.Goth, @scope)
+    with {:ok, _object} <- upload_to_gcs(object_name, upload) do
+      {:ok, public_url(object_name)}
+    end
 
-  #   conn = GoogleApi.Storage.V1.Connection.new(token)
-
-  #   {:ok, object} =
-  #     GoogleApi.Storage.V1.Api.Objects.storage_objects_insert_simple(
-  #       conn,
-  #       @bucket,
-  #       "multipart",
-  #       %GoogleApi.Storage.V1.Model.Object{
-  #         name: object_name,
-  #         contentType: upload.content_type
-  #       },
-  #       File.read!(upload.path)
-  #     )
-
-  #   url = "https://storage.googleapis.com/#{@bucket}/#{object.name}"
-
-  #   {:ok, url}
-  # end
-
-  # def upload_local_to_gcp(local_path, %Upload{} = original_upload) do
-  #   fake_upload = %Upload{
-  #     original_upload
-  #     | path: local_path
-  #   }
-
-  #   # we use a temporary UUID instead of user_id
-  #   temp_id = Ecto.UUID.generate()
-
-  #   case Echo.Media.upload_user_avatar(temp_id, fake_upload) do
-  #     {:ok, %{avatar_url: url}} ->
-  #       {:ok, url}
-
-  #     {:error, reason} ->
-  #       {:error, reason}
-  #   end
-  # end
+    rescue
+      e ->
+        IO.inspect(e, label: "Group avatar upload error")
+        {:error, :upload_failed}
+    end
 end

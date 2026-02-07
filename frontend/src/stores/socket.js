@@ -15,6 +15,14 @@ export const useSocketStore = defineStore("socket", () => {
 	const pendingPrivateChat = ref(null);
 	const pendingMessage = ref(null);
 
+	const creatingGroup = ref(false);
+	const selectedGroupMembers = ref([]);
+	const newGroupInfo = ref({
+		name: "",
+		description: "",
+		avatar: null, // File or uploaded URL
+	});
+
 	function connect(token) {
 		if (socket.value) return; // ya conectado
 
@@ -73,11 +81,13 @@ export const useSocketStore = defineStore("socket", () => {
 					pendingMessage.value = null;
 				}
 			} else if (payload.type === "username_change_result") {
-				dispatch_change_username(payload)
+				dispatch_change_username(payload);
 			} else if (payload.type === "name_change_result") {
-				dispatch_change_name(payload)
+				dispatch_change_name(payload);
 			} else if (payload.type === "nickname_change_result") {
-				dispatch_change_nickname(payload)
+				dispatch_change_nickname(payload);
+			} else if (payload.type === "group_created") {
+				dispatch_group_created(payload);
 			}
 		};
 
@@ -210,12 +220,13 @@ export const useSocketStore = defineStore("socket", () => {
 			updateChatListItem({ ...lastMsg, state: "read" });
 		}
 	}
-	
+
 	function dispatch_change_username(payload) {
 		if (payload.status === "success") {
-			userInfo.value = {...userInfo.value, 
-				username: payload.data?.new_username
-			}
+			userInfo.value = {
+				...userInfo.value,
+				username: payload.data?.new_username,
+			};
 		} else {
 			// TODO Notificar que salio mal
 		}
@@ -223,9 +234,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 	function dispatch_change_name(payload) {
 		if (payload.status === "success") {
-			userInfo.value = {...userInfo.value, 
-				name: payload.data?.new_name
-			}
+			userInfo.value = { ...userInfo.value, name: payload.data?.new_name };
 		} else {
 			// TODO Notificar que salio mal
 		}
@@ -233,11 +242,11 @@ export const useSocketStore = defineStore("socket", () => {
 
 	function dispatch_change_nickname(payload) {
 		if (payload.status === "success") {
-			const contact_id = payload.data.contact_id
-			const new_nickname = payload.data.new_nickname
+			const contact_id = payload.data.contact_id;
+			const new_nickname = payload.data.new_nickname;
 			// Actualizamos los contactos
-			contacts.value = contacts.value.map(c => {
-				if (c.id !== contact_id) return { ...c }
+			contacts.value = contacts.value.map((c) => {
+				if (c.id !== contact_id) return { ...c };
 
 				return {
 					id: c.id,
@@ -247,11 +256,10 @@ export const useSocketStore = defineStore("socket", () => {
 					last_seen_at: c.last_seen_at,
 					contact_info: {
 						...c.contact_info,
-						nickname: new_nickname
-					}
-				}
-			})
-
+						nickname: new_nickname,
+					},
+				};
+			});
 
 			// Actualizamos el panel de la info de la persona
 			if (openedPersonInfo.value?.id === contact_id) {
@@ -259,40 +267,36 @@ export const useSocketStore = defineStore("socket", () => {
 					...openedPersonInfo.value,
 					contact_info: {
 						...openedPersonInfo.value.contact_info,
-						nickname: new_nickname
-					}
+						nickname: new_nickname,
+					},
 				};
 			}
 
-			const private_chat_id = Object.values(chatsInfo.value)
-				.find(chat => {
-					if (chat.type !== "private") return false
+			const private_chat_id = Object.values(chatsInfo.value).find((chat) => {
+				if (chat.type !== "private") return false;
 
-					const otherMember = chat.members.find(
-						m => m.user_id !== userInfo.value.id
-					)
+				const otherMember = chat.members.find(
+					(m) => m.user_id !== userInfo.value.id,
+				);
 
-					return otherMember?.user_id === contact_id
-				})?.id
+				return otherMember?.user_id === contact_id;
+			})?.id;
 
-
-			console.log(`ID del private chat: ${private_chat_id}`)
+			console.log(`ID del private chat: ${private_chat_id}`);
 
 			if (private_chat_id) {
 				// Actualizamos el chatsInfo
 				chatsInfo.value = {
 					...chatsInfo.value,
 					[private_chat_id]: {
-						...chatsInfo.value[private_chat_id], 
-						name: new_nickname
-					}
-				}
+						...chatsInfo.value[private_chat_id],
+						name: new_nickname,
+					},
+				};
 
 				// Actualizamos chats
-				chats.value = chats.value.map(chat =>
-					chat.id === private_chat_id
-						? { ...chat, name: new_nickname }
-						: chat
+				chats.value = chats.value.map((chat) =>
+					chat.id === private_chat_id ? { ...chat, name: new_nickname } : chat,
 				);
 
 				//Actualizamos el sender_name en los grupales
@@ -300,32 +304,65 @@ export const useSocketStore = defineStore("socket", () => {
 					if (chat.type !== "group") return;
 
 					// si no es miembro ni gastamos CPU
-					const isMember = chat.members.some(m => m.user_id === contact_id);
+					const isMember = chat.members.some((m) => m.user_id === contact_id);
 					if (!isMember) return;
 
-					const updatedMessages = chat.messages.map(msg =>
+					const updatedMessages = chat.messages.map((msg) =>
 						msg.user_id === contact_id
 							? { ...msg, sender_name: new_nickname }
-							: msg
+							: msg,
 					);
 
 					chatsInfo.value = {
 						...chatsInfo.value,
 						[chatId]: {
 							...chat,
-							messages: updatedMessages
-						}
+							messages: updatedMessages,
+						},
 					};
 				});
-
 			}
-
-
 		} else {
 			// TODO Notificar que salio mal
 		}
 	}
 
+	function dispatch_group_created(payload) {
+		// 1️⃣ Add chat to chat list
+		if (payload.chat_item) {
+			chats.value = [payload.chat_item, ...chats.value];
+		}
+
+		// 2️⃣ If full chat info is present (creator)
+		if (payload.chat) {
+			const chat = payload.chat;
+
+			const normalizedMessages = chat.messages.map((m) => ({
+				...m,
+				front_msg_id: generateId(),
+			}));
+
+			chatsInfo.value = {
+				...chatsInfo.value,
+				[chat.id]: {
+					...chat,
+					messages: normalizedMessages,
+				},
+			};
+
+			activeChatId.value = chat.id;
+			sessionStorage.setItem("activeChatId", chat.id);
+		}
+
+		// 3️⃣ Reset group creation UI state
+		creatingGroup.value = false;
+		selectedGroupMembers.value = [];
+		newGroupInfo.value = {
+			name: "",
+			description: "",
+			avatar: null,
+		};
+	}
 
 	function disconnect() {
 		if (socket.value) {
@@ -482,11 +519,18 @@ export const useSocketStore = defineStore("socket", () => {
 		};
 	}
 
+	function updateGroupAvatar(avatarUrl) {
+		if (!newGroupInfo.value) return;
+
+		newGroupInfo.value = {
+			...newGroupInfo.value,
+			avatar: avatarUrl,
+		};
+	}
+
 	function requestContactsIfNeeded() {
-		if (contactsLoaded.value) return
-		console.log(
-			"Le pedimos los contactos al back",
-		);
+		if (contactsLoaded.value) return;
+		console.log("Le pedimos los contactos al back");
 		send({ type: "get_contacts" });
 	}
 
@@ -533,9 +577,8 @@ export const useSocketStore = defineStore("socket", () => {
 		console.log(`Se hizo el send`);
 	}
 
-
 	function changeUsername(new_usr) {
-		console.log(`Se llama a changeUSername con: ${new_usr}`)
+		console.log(`Se llama a changeUSername con: ${new_usr}`);
 		send({
 			type: "change_username",
 			new_username: new_usr,
@@ -583,6 +626,11 @@ export const useSocketStore = defineStore("socket", () => {
 		createPrivateChatAndSendMessage,
 		changeUsername,
 		changeName,
-		changeNickname
+		changeNickname,
+
+		creatingGroup,
+		selectedGroupMembers,
+		newGroupInfo,
+		updateGroupAvatar,
 	};
 });

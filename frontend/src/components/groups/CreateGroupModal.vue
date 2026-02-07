@@ -1,0 +1,413 @@
+<script setup>
+import { ref, computed, watch } from "vue";
+import { useSocketStore } from "@/stores/socket";
+import { storeToRefs } from "pinia";
+
+const props = defineProps({
+	open: {
+		type: Boolean,
+		required: true,
+	},
+});
+
+const emit = defineEmits(["close"]);
+
+const socketStore = useSocketStore();
+const { contacts } = storeToRefs(socketStore);
+
+/* -----------------------
+ * Step control
+ * --------------------- */
+const step = ref(1); // 1: select members, 2: group info
+
+watch(
+	() => props.open,
+	(val) => {
+		if (val) reset();
+	},
+);
+
+/* -----------------------
+ * Local state
+ * --------------------- */
+const selectedIds = ref([]);
+const name = ref("");
+const description = ref("");
+const avatarFile = ref(null);
+const avatarPreview = ref(null);
+
+/* -----------------------
+ * Computed
+ * --------------------- */
+
+const canGoNext = computed(() => selectedIds.value.length >= 1);
+
+const canCreate = computed(() => name.value.trim().length > 0);
+
+/* -----------------------
+ * Methods
+ * --------------------- */
+function toggleMember(userId) {
+	if (selectedIds.value.includes(userId)) {
+		selectedIds.value = selectedIds.value.filter((id) => id !== userId);
+	} else {
+		selectedIds.value.push(userId);
+	}
+	console.log(`Selected IDs: ${selectedIds.value}`);
+}
+
+function onAvatarChange(e) {
+	const file = e.target.files[0];
+	if (!file) return;
+
+	avatarFile.value = file;
+	avatarPreview.value = URL.createObjectURL(file);
+}
+
+function nextStep() {
+	if (!canGoNext.value) return;
+	step.value = 2;
+}
+
+function prevStep() {
+	step.value = 1;
+}
+
+async function createGroup() {
+	if (!canCreate.value) return;
+
+	let avatarUrl = null;
+
+	try {
+		if (avatarFile.value) {
+			// temporary UUID so we can upload before group exists
+			const tempGroupId = crypto.randomUUID();
+			avatarUrl = await uploadGroupAvatar(tempGroupId, avatarFile.value);
+		}
+
+		socketStore.send({
+			type: "create_group",
+			name: name.value.trim(),
+			description: description.value.trim(),
+			avatar_url: avatarUrl,
+			member_ids: selectedIds.value,
+		});
+
+		close();
+	} catch (e) {
+		console.error("Error creating group:", e);
+	}
+}
+
+function close() {
+	emit("close");
+}
+
+function reset() {
+	step.value = 1;
+	selectedIds.value = [];
+	name.value = "";
+	description.value = "";
+	avatarFile.value = null;
+	avatarPreview.value = null;
+}
+
+async function uploadGroupAvatar(groupId, file) {
+	const formData = new FormData();
+	formData.append("avatar", file);
+
+	try {
+		const res = await fetch(
+			`http://localhost:4000/api/groups/${groupId}/avatar`,
+			//"/api/users/me/avatar",
+			{
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+				},
+				body: formData,
+			},
+		);
+
+		const data = await res.json();
+
+		// update avatar in store
+		socketStore.updateGroupAvatar(data.avatar_url);
+		return data.avatar_url;
+	} catch (err) {
+		console.error("Avatar upload failed", err);
+	}
+}
+</script>
+
+<template>
+	<div v-if="open" class="modal-backdrop">
+		<div class="modal">
+			<!-- Header -->
+			<div class="modal-header">
+				<h3 v-if="step === 1">New group</h3>
+				<h3 v-else>Group info</h3>
+
+				<button class="close-btn" @click="close">✕</button>
+			</div>
+
+			<!-- STEP 1: SELECT MEMBERS -->
+			<div v-if="step === 1" class="modal-body">
+				<p class="subtitle">Select at least 2 contacts</p>
+
+				<div class="contacts-list">
+					<label
+						v-for="contact in contacts"
+						:key="contact.id"
+						class="contact-item"
+					>
+						<input
+							type="checkbox"
+							:checked="selectedIds.includes(contact.id)"
+							@change="toggleMember(contact.id)"
+						/>
+
+						<img :src="contact.avatar_url" class="avatar" alt="avatar" />
+
+						<span>{{ contact.name }}</span>
+					</label>
+				</div>
+			</div>
+
+			<!-- STEP 2: GROUP INFO -->
+			<div v-else class="modal-body">
+				<div class="avatar-section">
+					<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
+					<div v-else class="group-avatar placeholder">👥</div>
+
+					<input type="file" accept="image/*" @change="onAvatarChange" />
+				</div>
+
+				<input
+					v-model="name"
+					type="text"
+					placeholder="Group name"
+					class="input"
+				/>
+
+				<textarea
+					v-model="description"
+					placeholder="Description (optional)"
+					class="textarea"
+				/>
+			</div>
+
+			<!-- Footer -->
+			<div class="modal-footer">
+				<button v-if="step === 2" @click="prevStep">Back</button>
+
+				<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
+					Next
+				</button>
+
+				<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
+					Create group
+				</button>
+			</div>
+		</div>
+	</div>
+</template>
+
+<style scoped>
+.modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.55);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+	backdrop-filter: blur(2px);
+}
+
+.modal {
+	width: 420px;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-chatlist-panel);
+	border-radius: 14px;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+	overflow: hidden;
+	color: var(--text-primary, #fff);
+}
+
+/* ---------- HEADER ---------- */
+.modal-header {
+	padding: 14px 18px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.modal-header h3 {
+	font-size: 16px;
+	font-weight: 600;
+	margin: 0;
+}
+
+.close-btn {
+	background: transparent;
+	border: none;
+	color: #aaa;
+	font-size: 18px;
+	cursor: pointer;
+}
+
+.close-btn:hover {
+	color: #fff;
+}
+
+/* ---------- BODY ---------- */
+.modal-body {
+	padding: 16px 18px;
+	overflow-y: auto;
+}
+
+.subtitle {
+	font-size: 13px;
+	color: rgba(255, 255, 255, 0.65);
+	margin-bottom: 10px;
+}
+
+/* ---------- CONTACT LIST ---------- */
+.contacts-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.contact-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 10px;
+	border-radius: 10px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+}
+
+.contact-item:hover {
+	background: rgba(255, 255, 255, 0.05);
+}
+
+.contact-item input {
+	accent-color: var(--msg-out);
+	cursor: pointer;
+}
+
+.avatar {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	object-fit: cover;
+}
+
+.contact-item span {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+/* ---------- AVATAR PICKER ---------- */
+.avatar-section {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-bottom: 14px;
+}
+
+.group-avatar {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	object-fit: cover;
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26px;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.avatar-section input[type="file"] {
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+/* ---------- INPUTS ---------- */
+.input,
+.textarea {
+	width: 100%;
+	padding: 10px 12px;
+	margin-top: 10px;
+	border-radius: 10px;
+	border: none;
+	background: rgba(255, 255, 255, 0.06);
+	color: white;
+	font-size: 14px;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+	color: rgba(255, 255, 255, 0.5);
+}
+
+.textarea {
+	resize: none;
+	min-height: 80px;
+}
+
+/* ---------- FOOTER ---------- */
+.modal-footer {
+	padding: 12px 18px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- BUTTONS ---------- */
+button {
+	border: none;
+	border-radius: 20px;
+	padding: 6px 16px;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		opacity 0.15s ease,
+		transform 0.05s ease;
+}
+
+button:active {
+	transform: scale(0.97);
+}
+
+button:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.modal-footer button {
+	background: var(--msg-out);
+	color: white;
+}
+
+.modal-footer button:first-child {
+	/* background: transparent; */
+	color: white;
+}
+
+.modal-footer button:first-child:hover {
+	color: white;
+}
+</style>
