@@ -72,6 +72,7 @@ defmodule Echo.Chats.Chat do
     |> Repo.all()
   end
 
+
   def get_other_user_id(chat_id, user_id) do
     from(cm in ChatMember,
       join: c in Chat,
@@ -174,12 +175,21 @@ defmodule Echo.Chats.Chat do
         nil
       end
 
-    members = get_members(chat_id)
+    members =
+      get_members(chat_id)
+      |> Enum.map(fn m ->
+        Map.put(m, :nickname, User.get_nickname(user_id, m.user_id))
+      end)
+
 
     senders =
       members
-      |> Enum.map(fn m -> {m.user_id, m.name || m.username} end)
+      |> Enum.map(fn m ->
+        sender_name = m.nickname || m.name || m.username
+        {m.user_id, sender_name}
+      end)
       |> Map.new()
+
 
     messages =
       chat_id

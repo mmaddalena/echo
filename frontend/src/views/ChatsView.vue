@@ -1,6 +1,5 @@
 <script setup>
-import { computed } from "vue";
-import { onMounted } from "vue";
+import { computed, onMounted, watch, nextTick } from "vue";
 import { ref } from "vue";
 
 import { useSocketStore } from "@/stores/socket";
@@ -22,12 +21,13 @@ const socketStore = useSocketStore();
 const uiStore = useUIStore();
 
 const { userInfo } = storeToRefs(socketStore);
-const { chats } = storeToRefs(socketStore);
 const { chatsInfo } = storeToRefs(socketStore);
 const { activeChatId } = storeToRefs(socketStore);
 const { pendingPrivateChat } = storeToRefs(socketStore);
 
 const chatMessagesRef = ref(null);
+
+const chatInputRef = ref(null);
 
 onMounted(() => {
 	const token = sessionStorage.getItem("token");
@@ -142,6 +142,14 @@ async function handleSendAttachment(file) {
 function scrollToMessage(messageId) {
 	chatMessagesRef.value?.scrollToMessage(messageId);
 }
+
+
+watch(activeChatId, async (newVal) => {
+	if (!newVal) return;
+	await nextTick();
+	chatInputRef.value?.clear();
+	chatInputRef.value?.focusInput();
+});
 </script>
 
 <template>
@@ -170,6 +178,7 @@ function scrollToMessage(messageId) {
 				ref="chatMessagesRef"
 			/>
 			<ChatInput
+				ref="chatInputRef"
 				@send-message="handleSendMessage"
 				@send-attachment="handleSendAttachment"
 			/>

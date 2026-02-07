@@ -1,7 +1,10 @@
 <script setup>
-  import { computed } from 'vue';
-  import IconClose from '../icons/IconClose.vue';
-  import IconChats from '../icons/IconChats.vue';
+  import { computed, ref, watch, onMounted, nextTick } from 'vue';
+  import IconClose from '@/components/icons/IconClose.vue';
+  import IconChats from '@/components/icons/IconChats.vue';
+  import IconEdit from '@/components/icons/IconEdit.vue';
+  import IconConfirm from '@/components/icons/IconConfirm.vue';
+  import IconAddContact from '@/components/icons/IconAddContact.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
 
   const {personInfo} = defineProps({
@@ -11,7 +14,7 @@
     }
   })
 
-  const emit = defineEmits(["close-person-info-panel", "open-chat"]);
+  const emit = defineEmits(["close-person-info-panel", "open-chat", "change-nickname"]);
 
   function handleClosePanel(){
     emit("close-person-info-panel");
@@ -22,6 +25,37 @@
   }
 
   const isContact = computed(() => personInfo.contact_info != null);
+
+
+  const nickname = ref("")
+  const nicknameInput = ref(null)
+
+	watch(
+		() => personInfo,
+		(info) => {
+			if (!info) return
+			nickname.value = info.contact_info?.nickname ?? personInfo.name
+		},
+		{ immediate: true }
+	)
+
+  const editingNickname = ref(false)
+  onMounted(() => {
+		editingNickname.value = false;
+	});
+
+  function handleEditNicknameMode() {
+		editingNickname.value = true;
+    nickname.value = personInfo.contact_info?.nickname ?? personInfo.name;
+    nextTick(() => {
+      nicknameInput.value.focus()
+    })
+	}
+
+	function handleConfirmEditNickname() {
+		emit("change-nickname", personInfo.id, nickname.value)
+		editingNickname.value = false;
+	}
 </script>
 
 <template>
@@ -30,17 +64,41 @@
       <IconClose />
     </button>
     <img class="avatar" :src="personInfo.avatar_url"></img>
-    <p v-if="isContact" class="main-name">{{ personInfo.contact_info?.nickname}}</p>
-    <p v-else class="main-name">{{personInfo.username }}</p>
+    <div class="editable-field" v-if="isContact">
+      <input 
+        ref="nicknameInput"
+        class="main-name"
+        v-model="nickname" 
+        :type="editingNickname ? 'text' : 'text'" 
+        :readonly="!editingNickname"
+      />
+      <Transition name="mini-swap" mode="out-in">
+        <button 
+          v-if="!editingNickname"
+          class="edit-button" 
+          @click="handleEditNicknameMode()"
+        >
+          <IconEdit class="icon"/>
+        </button>
+        <button 
+          v-else
+          class="confirm-button" 
+          @click="handleConfirmEditNickname()"
+        >
+          <IconConfirm class="icon"/>
+        </button>
+      </Transition>
+    </div>
 
-    <p v-if="isContact" class="second-name">{{ personInfo.username}}</p>
-    <p v-else class="second-name">{{personInfo.name }}</p>
+    <p class="second-name">
+      {{ personInfo.username}}
+    </p>
 
     <p v-if="isContact" class="added-date">
       <!-- Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }} -->
-       <p v-if="personInfo.status == 'Offline' && last_seen_at">
-							- Ultima vez activo
-							{{ formatAddedTime(last_seen_at) }}
+       <p v-if="personInfo.status == 'Offline' && personInfo.last_seen_at">
+          Última vez activo:
+          {{ formatAddedTime(personInfo.last_seen_at) }}
        </p>
        <p v-else>
          Estado: {{ personInfo.status }}
@@ -54,6 +112,19 @@
           Enviar Mensaje
         </p>
       </button>
+
+      <button 
+        v-if="!isContact"
+        class="btn" 
+        @click="handleAddContact"
+      >
+        <IconAddContact class="btn-icon" />
+        <p class="btn-text">
+          Añadir Contacto
+        </p>
+      </button>
+
+     
     </div>
 
   </div>
@@ -92,7 +163,7 @@
   margin: 4rem auto 2rem auto;
 }
 .main-name {
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: bold;
 }
 .second-name {
@@ -107,6 +178,10 @@
 
 .buttons {
   margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
 }
 .btn {
   all: unset;
@@ -126,6 +201,74 @@
 }
 .btn-text {
   font-size: 1.4rem;
-
 }
+
+
+
+.editable-field {
+	display: flex;
+	gap: 1rem;
+  align-items: center;
+  margin-left: 4rem;
+}
+
+input {
+	background: none;
+	border: 1px solid #2f3e63;
+	border-radius: 0.8rem;
+	padding: 0.8rem;
+	color: var(--text-main);
+	width: 15rem;
+	font-size: 2.2rem;
+  text-align: center;
+}
+input[readonly] {
+	border: none;
+	cursor: text;
+	opacity: 0.85;
+	outline: none;
+}
+input:not([readonly]) {
+	border: 1px solid #2f3e63;
+}
+
+.edit-button {
+	all: unset;
+	height: 3rem;
+	width: 3rem;
+	border-radius: 50%;
+	background-color: var(--msg-out);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.confirm-button {
+	all: unset;
+	height: 3rem;
+	width: 3rem;
+	border-radius: 50%;
+	background-color: var(--msg-in);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.icon {
+	max-height: 2.2rem;
+	max-width: 2.2rem;
+	color: var(--text-main);
+}
+
+.mini-swap-enter-active,
+.mini-swap-leave-active {
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.mini-swap-enter-from {
+	opacity: 0;
+	transform: scale(0.85);
+}
+.mini-swap-leave-to {
+	opacity: 0;
+	transform: scale(0.85);
+}
+
 </style>

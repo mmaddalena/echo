@@ -169,7 +169,7 @@ IO.puts("🤝 Creating contacts...")
 contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
-  %{user_id: lucas.id, contact_id: manuel.id, nickname: "Manu"},
+  %{user_id: lucas.id, contact_id: manuel.id},
   %{user_id: lucas.id, contact_id: persona3.id, nickname: "Capo"},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
@@ -177,7 +177,7 @@ contacts = [
   # Manuel's contacts
   %{user_id: manuel.id, contact_id: matias.id, nickname: "Mati"},
   # Matias's contacts
-  %{user_id: matias.id, contact_id: manuel.id, nickname: "Manu"}
+  %{user_id: matias.id, contact_id: manuel.id, nickname: "Manuuu"}
 ]
 
 Enum.each(contacts, fn contact_attrs ->

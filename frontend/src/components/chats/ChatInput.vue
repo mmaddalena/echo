@@ -7,6 +7,7 @@ import IconMedia from "../icons/IconMedia.vue";
 const emit = defineEmits(["send-message", "send-attachment"]);
 const text = ref("");
 const fileInput = ref(null);
+const inputRef = ref(null);
 
 function send() {
 	if (!text.value.trim()) return;
@@ -26,6 +27,15 @@ async function onFileSelected(e) {
 	emit("send-attachment", file);
 	e.target.value = "";
 }
+
+function focusInput() {
+	inputRef.value?.focus();
+}
+function clear() {
+	text.value = ""
+}
+defineExpose({focusInput, clear});
+
 </script>
 
 <template>
@@ -36,6 +46,7 @@ async function onFileSelected(e) {
 			</button>
 
 			<input
+				ref="inputRef"
 				v-model="text"
 				placeholder="Escribe un mensaje..."
 				@keydown.enter="send"

@@ -8,7 +8,8 @@ export const useSocketStore = defineStore("socket", () => {
 	const chats = ref([]);
 	const chatsInfo = ref({});
 	const activeChatId = ref(null);
-	const contacts = ref(null);
+	const contacts = ref([]);
+	const contactsLoaded = ref(false);
 	const openedPersonInfo = ref(null);
 	const peopleSearchResults = ref(null);
 	const pendingPrivateChat = ref(null);
@@ -52,6 +53,7 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "contacts") {
 				console.log("CONTACTS RECIBIDOS:", payload.contacts);
 				contacts.value = payload.contacts;
+				contactsLoaded.value = true;
 			} else if (payload.type === "person_info") {
 				openedPersonInfo.value = payload.person_info;
 			} else if (payload.type === "search_people_results") {
@@ -71,13 +73,11 @@ export const useSocketStore = defineStore("socket", () => {
 					pendingMessage.value = null;
 				}
 			} else if (payload.type === "username_change_result") {
-				userInfo.value = {...userInfo.value, 
-					username: payload.data?.new_username
-				}
+				dispatch_change_username(payload)
 			} else if (payload.type === "name_change_result") {
-				userInfo.value = {...userInfo.value, 
-					name: payload.data?.new_name
-				}
+				dispatch_change_name(payload)
+			} else if (payload.type === "nickname_change_result") {
+				dispatch_change_nickname(payload)
 			}
 		};
 
@@ -122,9 +122,7 @@ export const useSocketStore = defineStore("socket", () => {
 		// Actualizo la lista de chats
 		chats.value = chats.value.map((chat) => {
 			if (chat.id !== chatId) return chat;
-
 			const isIncoming = msg.user_id !== userInfo.value.id;
-			console.log(msg.avatar_url);
 			return {
 				...chat,
 				last_message: {
@@ -212,6 +210,122 @@ export const useSocketStore = defineStore("socket", () => {
 			updateChatListItem({ ...lastMsg, state: "read" });
 		}
 	}
+	
+	function dispatch_change_username(payload) {
+		if (payload.status === "success") {
+			userInfo.value = {...userInfo.value, 
+				username: payload.data?.new_username
+			}
+		} else {
+			// TODO Notificar que salio mal
+		}
+	}
+
+	function dispatch_change_name(payload) {
+		if (payload.status === "success") {
+			userInfo.value = {...userInfo.value, 
+				name: payload.data?.new_name
+			}
+		} else {
+			// TODO Notificar que salio mal
+		}
+	}
+
+	function dispatch_change_nickname(payload) {
+		if (payload.status === "success") {
+			const contact_id = payload.data.contact_id
+			const new_nickname = payload.data.new_nickname
+			// Actualizamos los contactos
+			contacts.value = contacts.value.map(c => {
+				if (c.id !== contact_id) return { ...c }
+
+				return {
+					id: c.id,
+					username: c.username,
+					name: c.name,
+					avatar_url: c.avatar_url,
+					last_seen_at: c.last_seen_at,
+					contact_info: {
+						...c.contact_info,
+						nickname: new_nickname
+					}
+				}
+			})
+
+
+			// Actualizamos el panel de la info de la persona
+			if (openedPersonInfo.value?.id === contact_id) {
+				openedPersonInfo.value = {
+					...openedPersonInfo.value,
+					contact_info: {
+						...openedPersonInfo.value.contact_info,
+						nickname: new_nickname
+					}
+				};
+			}
+
+			const private_chat_id = Object.values(chatsInfo.value)
+				.find(chat => {
+					if (chat.type !== "private") return false
+
+					const otherMember = chat.members.find(
+						m => m.user_id !== userInfo.value.id
+					)
+
+					return otherMember?.user_id === contact_id
+				})?.id
+
+
+			console.log(`ID del private chat: ${private_chat_id}`)
+
+			if (private_chat_id) {
+				// Actualizamos el chatsInfo
+				chatsInfo.value = {
+					...chatsInfo.value,
+					[private_chat_id]: {
+						...chatsInfo.value[private_chat_id], 
+						name: new_nickname
+					}
+				}
+
+				// Actualizamos chats
+				chats.value = chats.value.map(chat =>
+					chat.id === private_chat_id
+						? { ...chat, name: new_nickname }
+						: chat
+				);
+
+				//Actualizamos el sender_name en los grupales
+				Object.entries(chatsInfo.value).forEach(([chatId, chat]) => {
+					if (chat.type !== "group") return;
+
+					// si no es miembro ni gastamos CPU
+					const isMember = chat.members.some(m => m.user_id === contact_id);
+					if (!isMember) return;
+
+					const updatedMessages = chat.messages.map(msg =>
+						msg.user_id === contact_id
+							? { ...msg, sender_name: new_nickname }
+							: msg
+					);
+
+					chatsInfo.value = {
+						...chatsInfo.value,
+						[chatId]: {
+							...chat,
+							messages: updatedMessages
+						}
+					};
+				});
+
+			}
+
+
+		} else {
+			// TODO Notificar que salio mal
+		}
+	}
+
 
 	function disconnect() {
 		if (socket.value) {
@@ -223,7 +337,8 @@ export const useSocketStore = defineStore("socket", () => {
 		chats.value = [];
 		chatsInfo.value = {};
 		activeChatId.value = null;
-		contacts.value = null;
+		contacts.value = [];
+		contactsLoaded.value = false;
 		openedPersonInfo.value = null;
 		peopleSearchResults.value = null;
 		pendingPrivateChat.value = null;
@@ -368,14 +483,9 @@ export const useSocketStore = defineStore("socket", () => {
 	}
 
 	function requestContactsIfNeeded() {
-		if (contacts.value !== null) {
-			console.log(
-				"El ref de contacts del request no es null, por lo que no le pedimos nada al back",
-			);
-			return;
-		}
+		if (contactsLoaded.value) return
 		console.log(
-			"El ref de contacts del request es null, por lo que le pedimos los contactos al back",
+			"Le pedimos los contactos al back",
 		);
 		send({ type: "get_contacts" });
 	}
@@ -439,6 +549,14 @@ export const useSocketStore = defineStore("socket", () => {
 		});
 	}
 
+	function changeNickname(person_id, new_nickname) {
+		send({
+			type: "change_nickname",
+			user_id: person_id,
+			new_nickname: new_nickname,
+		});
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -464,6 +582,7 @@ export const useSocketStore = defineStore("socket", () => {
 		openPendingPrivateChat,
 		createPrivateChatAndSendMessage,
 		changeUsername,
-		changeName
+		changeName,
+		changeNickname
 	};
 });
