@@ -71,8 +71,19 @@ function jump() {
 function next() {
 	if (index.value < results.value.length - 1) {
 		index.value++;
-		jump();
+	} else {
+		index.value = 0;
 	}
+	jump();
+}
+
+function prev() {
+	if (index.value > 0) {
+		index.value--;
+	} else {
+		index.value = results.value.length - 1;
+	}
+	jump();
 }
 
 /* Reset search when chat changes */
@@ -86,20 +97,20 @@ watch(
 	},
 );
 
-function prev() {
-	if (index.value > 0) {
-		index.value--;
-		jump();
-	}
-}
 
 const membersStr = computed(() => {
 	return props.chatInfo?.members?.map((m) => m.username).join(", ") ?? "";
 });
+
+
+function toggleSearch(){
+	showSearch.value = !showSearch.value;
+	query.value = "";
+}
 </script>
 
 <template>
-	<header v-if="chatInfo" class="chat-header">
+	<header v-if="chatInfo" class="chat-header" :class="{'no-border': showSearch}">
 		<div class="user_info">
 			<img
 				:src="chatInfo.avatar_url"
@@ -122,7 +133,7 @@ const membersStr = computed(() => {
 			</div>
 		</div>
 		<div class="opts_icons">
-			<IconSearch class="icon" @click="showSearch = !showSearch" />
+			<IconSearch class="icon" @click="toggleSearch" />
 			<IconOptsMenu class="icon" />
 		</div>
 	</header>
@@ -130,10 +141,16 @@ const membersStr = computed(() => {
 	<div v-if="showSearch" class="search-bar">
 		<input v-model="query" placeholder="Search in chat" @keyup.enter="search" />
 
-		<template v-if="results.length">
-			<button @click="prev">↑</button>
-			<span>{{ index + 1 }} / {{ results.length }}</span>
-			<button @click="next">↓</button>
+		<template v-if="results.length" class="search-results">
+			<button @click="prev" class="search-move-btn">
+				↑
+			</button>
+			<span class="search-amount-results">
+				{{ index + 1 }} / {{ results.length }}
+			</span>
+			<button @click="next" class="search-move-btn">
+				↓
+			</button>
 		</template>
 
 		<span v-if="loading">Searching…</span>
@@ -158,6 +175,9 @@ const membersStr = computed(() => {
 	align-items: center;
 	justify-content: space-between;
 	border-bottom: 0.3rem solid rgba(255, 255, 255, 0.05);
+}
+.no-border {
+	border-bottom: none;
 }
 .user_info {
 	display: flex;
@@ -229,13 +249,37 @@ const membersStr = computed(() => {
 	gap: 0.5rem;
 	padding: 0.6rem 1rem;
 	background: var(--bg-chat-header);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	border-bottom: 0.3rem solid rgba(255, 255, 255, 0.05);
 }
 
 .search-bar input {
+	all: unset;
 	flex: 1;
-	padding: 0.4rem 0.6rem;
-	border-radius: 4px;
+	padding: 0.4rem 2rem;
+	border-radius: 2rem;
 	border: none;
+	background-color: var(--bg-chatlist-hover);
+}
+
+.search-results {
+
+}
+.search-amount-results {
+	font-size: 1.6rem;
+	align-self: center;
+}
+.search-move-btn {
+	all: unset;
+	height: 3rem;
+	width: 3rem;
+	border-radius: 50%;
+	background-color: var(--msg-in);
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.search-move-btn:hover {
+	background-color: var(--accent);
 }
 </style>
