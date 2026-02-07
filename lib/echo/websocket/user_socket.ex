@@ -117,6 +117,29 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(
+       %{
+         "type" => "create_group",
+         "name" => name,
+         "description" => description,
+         "avatar_url" => avatar_url,
+         "member_ids" => member_ids
+       },
+       state
+     ) do
+  UserSession.create_group(
+    state.user_session,
+    %{
+      name: name,
+      description: description,
+      avatar_url: avatar_url,
+      member_ids: member_ids
+    }
+  )
+
+  {:ok, state}
+end
+
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)
     #Process.exit(state.user_session, :normal)

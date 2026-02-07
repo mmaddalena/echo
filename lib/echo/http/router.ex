@@ -112,6 +112,16 @@ defmodule Echo.Http.Router do
     end
   end
 
+  defp route(conn, "POST", "/api/groups/" <> rest) do
+  case String.split(rest, "/") do
+    [group_id, "avatar"] ->
+      handle_group_avatar_upload(conn, group_id)
+
+    _ ->
+      send_resp(conn, 404, Jason.encode!(%{error: "Not found"}))
+  end
+end
+
   defp route(conn, "POST", "/api/chat/upload") do
     auth_header = List.first(get_req_header(conn, "authorization")) || ""
     token = String.replace(auth_header, "Bearer ", "")
@@ -212,6 +222,21 @@ defmodule Echo.Http.Router do
         |> send_resp(200, Jason.encode!(results))
     end
   end
+
+  defp handle_group_avatar_upload(conn, group_id) do
+    auth_header = List.first(get_req_header(conn, "authorization")) || ""
+    token = String.replace(auth_header, "Bearer ", "")
+
+    with {:ok, _user_id} <- Echo.Auth.JWT.extract_user_id(token),
+        {:ok, upload, conn} <- parse_multipart(conn),
+        {:ok, url} <- Echo.Media.upload_group_avatar(group_id, upload) do
+      send_resp(conn, 200, Jason.encode!(%{avatar_url: url}))
+    else
+      error ->
+        IO.inspect(error, label: "GROUP AVATAR UPLOAD ERROR")
+        send_resp(conn, 400, Jason.encode!(%{error: "Avatar upload failed"}))
+    end
+end
 
   defp not_found(conn) do
     conn

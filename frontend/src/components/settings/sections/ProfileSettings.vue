@@ -1,178 +1,173 @@
 <script setup>
-	import { ref, nextTick, computed, onMounted, watch } from "vue";
-	import { useSocketStore } from "@/stores/socket";
-	import IconEdit from '@/components/icons/IconEdit.vue';
-	import IconConfirm from '@/components/icons/IconConfirm.vue';
+import { ref, nextTick, computed, onMounted, watch } from "vue";
+import { useSocketStore } from "@/stores/socket";
+import IconEdit from "@/components/icons/IconEdit.vue";
+import IconConfirm from "@/components/icons/IconConfirm.vue";
 
-	const socketStore = useSocketStore();
+const socketStore = useSocketStore();
 
-	const uploading = ref(false);
-	const fileInput = ref(null);
+const uploading = ref(false);
+const fileInput = ref(null);
 
-	const avatarUrl = computed(() => socketStore.userInfo?.avatar_url);
+const avatarUrl = computed(() => socketStore.userInfo?.avatar_url);
 
-	function triggerFilePicker() {
-		fileInput.value.click();
+function triggerFilePicker() {
+	fileInput.value.click();
+}
+
+async function onAvatarSelected(e) {
+	const file = e.target.files[0];
+	if (!file) return;
+
+	if (file.size > 5_000_000) {
+		alert("Max 5MB");
+		return;
 	}
 
-	async function onAvatarSelected(e) {
-		const file = e.target.files[0];
-		if (!file) return;
+	const formData = new FormData();
+	formData.append("avatar", file);
 
-		if (file.size > 5_000_000) {
-			alert("Max 5MB");
-			return;
-		}
+	uploading.value = true;
 
-		const formData = new FormData();
-		formData.append("avatar", file);
-
-		uploading.value = true;
-
-		try {
-			const res = await fetch(
-				"http://localhost:4000/api/users/me/avatar", 
-				//"/api/users/me/avatar", 
-				{
+	try {
+		const res = await fetch(
+			"http://localhost:4000/api/users/me/avatar",
+			//"/api/users/me/avatar",
+			{
 				method: "POST",
 				headers: {
 					Authorization: `Bearer ${sessionStorage.getItem("token")}`,
 				},
 				body: formData,
-			});
+			},
+		);
 
-			const data = await res.json();
+		const data = await res.json();
 
-			// update avatar in store
-			socketStore.updateAvatar(data.avatar_url);
-		} catch (err) {
-			console.error("Avatar upload failed", err);
-		} finally {
-			uploading.value = false;
-		}
+		// update avatar in store
+		socketStore.updateAvatar(data.avatar_url);
+	} catch (err) {
+		console.error("Avatar upload failed", err);
+	} finally {
+		uploading.value = false;
 	}
+}
 
-	const editing = ref({
-		username: false,
-		name: false,
-	});
+const editing = ref({
+	username: false,
+	name: false,
+});
 
-	const username = ref("")
-	const name = ref("")
+const username = ref("");
+const name = ref("");
 
-	watch(
-		() => socketStore.userInfo,
-		(user) => {
-			if (!user) return
-			username.value = user.username
-			name.value = user.name
-		},
-		{ immediate: true }
-	)
+watch(
+	() => socketStore.userInfo,
+	(user) => {
+		if (!user) return;
+		username.value = user.username;
+		name.value = user.name;
+	},
+	{ immediate: true },
+);
 
+const usernameInput = ref(null);
+const nameInput = ref(null);
 
-
-	const usernameInput = ref(null)
-	const nameInput = ref(null)
-
-	function handleEditMode(field) {
-		editing.value[field] = true
-		if (field === "username") {
-			editing.value['name'] = false
-			name.value = socketStore.userInfo.name
-			nextTick(() => {
-				usernameInput.value.focus()
-			})
-
-		} else if (field === "name") {
-			editing.value['username'] = false
-			username.value = socketStore.userInfo.username
-			nextTick(() => {
-				nameInput.value.focus()
-			})
-		}
+function handleEditMode(field) {
+	editing.value[field] = true;
+	if (field === "username") {
+		editing.value["name"] = false;
+		name.value = socketStore.userInfo.name;
+		nextTick(() => {
+			usernameInput.value.focus();
+		});
+	} else if (field === "name") {
+		editing.value["username"] = false;
+		username.value = socketStore.userInfo.username;
+		nextTick(() => {
+			nameInput.value.focus();
+		});
 	}
+}
 
-	function handleConfirmEdit(field) {
-		if (field === "username") {
-			socketStore.changeUsername(username.value)
-		} else if (field === "name") {
-			socketStore.changeName(name.value)
-		}
-		editing.value['username'] = false
-		editing.value['name'] = false
-		//username.value = socketStore.userInfo.username
+function handleConfirmEdit(field) {
+	if (field === "username") {
+		socketStore.changeUsername(username.value);
+	} else if (field === "name") {
+		socketStore.changeName(name.value);
 	}
+	editing.value["username"] = false;
+	editing.value["name"] = false;
+	//username.value = socketStore.userInfo.username
+}
 
-
-
-	onMounted(() => {
-		editing.value['username'] = false;
-		editing.value['name'] = false;
-	});
+onMounted(() => {
+	editing.value["username"] = false;
+	editing.value["name"] = false;
+});
 </script>
 
 <template>
 	<section id="profile" class="settings-section">
 		<h2>Perfil</h2>
 		<div class="fields">
-
 			<div class="field">
 				<label>Nombre de Usuario</label>
 				<div class="editable-field">
-					<input 
+					<input
 						ref="usernameInput"
-						v-model="username" 
-						:type="editing.username ? 'text' : 'text'" 
+						v-model="username"
+						:type="editing.username ? 'text' : 'text'"
 						:readonly="!editing.username"
 					/>
 					<Transition name="mini-swap" mode="out-in">
-						<button 
+						<button
 							v-if="!editing.username"
-							class="edit-button" 
+							class="edit-button"
 							@click="handleEditMode('username')"
 						>
-							<IconEdit class="icon"/>
+							<IconEdit class="icon" />
 						</button>
-						<button 
+						<button
 							v-else
-							class="confirm-button" 
+							class="confirm-button"
 							@click="handleConfirmEdit('username')"
 						>
-							<IconConfirm class="icon"/>
+							<IconConfirm class="icon" />
 						</button>
 					</Transition>
 				</div>
 			</div>
-	
+
 			<div class="field">
 				<label>Nombre</label>
 				<div class="editable-field">
-					<input 
+					<input
 						ref="nameInput"
 						v-model="name"
 						type="text"
-						:readonly="!editing.name" 
+						:readonly="!editing.name"
 					/>
 					<Transition name="mini-swap" mode="out-in">
-						<button 
+						<button
 							v-if="!editing.name"
-							class="edit-button" 
+							class="edit-button"
 							@click="handleEditMode('name')"
 						>
-							<IconEdit class="icon"/>
+							<IconEdit class="icon" />
 						</button>
-						<button 
+						<button
 							v-else
-							class="confirm-button" 
+							class="confirm-button"
 							@click="handleConfirmEdit('name')"
 						>
-							<IconConfirm class="icon"/>
+							<IconConfirm class="icon" />
 						</button>
 					</Transition>
 				</div>
 			</div>
-	
+
 			<!-- Avatar -->
 			<div class="avatar-block">
 				<img
@@ -180,11 +175,11 @@
 					class="avatar"
 					alt="Avatar"
 				/>
-	
+
 				<button @click="triggerFilePicker" :disabled="uploading">
 					{{ uploading ? "Subiendo..." : "Cambiar avatar" }}
 				</button>
-	
+
 				<input
 					ref="fileInput"
 					type="file"
@@ -250,7 +245,6 @@ input:not([readonly]) {
 	border: 1px solid #2f3e63;
 }
 
-
 .edit-button {
 	all: unset;
 	height: 3rem;
@@ -279,7 +273,9 @@ input:not([readonly]) {
 
 .mini-swap-enter-active,
 .mini-swap-leave-active {
-	transition: opacity 0.15s ease, transform 0.15s ease;
+	transition:
+		opacity 0.15s ease,
+		transform 0.15s ease;
 }
 .mini-swap-enter-from {
 	opacity: 0;
@@ -289,11 +285,6 @@ input:not([readonly]) {
 	opacity: 0;
 	transform: scale(0.85);
 }
-
-
-
-
-
 
 .avatar-block {
 	display: flex;

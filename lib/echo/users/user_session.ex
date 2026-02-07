@@ -86,11 +86,13 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:change_nickname, contact_id, new_nickname})
   end
 
+  def create_group(us_pid, group_payload) do
+    GenServer.cast(us_pid, {:create_group, group_payload})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
-
-
 
   ##### Funciones llamadas desde el dominio
 
@@ -412,7 +414,64 @@ defmodule Echo.Users.UserSession do
     {:noreply, %{state | user: User.get(state.user_id)}}
   end
 
+  @impl true
+  def handle_cast(
+        {:create_group,
+        %{
+          name: name,
+          description: description,
+          avatar_url: avatar_url,
+          member_ids: member_ids
+        }},
+        state
+      ) do
+    creator_id = state.user_id
 
+    members =
+      member_ids
+      |> Enum.uniq()
+      |> Enum.concat([creator_id])
+      |> Enum.uniq()
+
+    {:ok, chat_id} =
+      Chat.create_group_chat(
+        %{
+          name: name,
+          description: description,
+          avatar_url: avatar_url,
+          creator_id: creator_id,
+          member_ids: members
+        }
+      )
+
+    # Payload for creator (full chat info)
+    chat_info = Chat.build_chat_info(chat_id, creator_id)
+    chat_item = Chat.build_chat_list_item(chat_id, creator_id)
+
+    send(state.socket, {:send,
+      %{
+        type: "group_created",
+        chat: chat_info,
+        chat_item: chat_item
+      }
+    })
+
+    # Notify other members
+    Enum.each(members, fn member_id ->
+      if member_id != creator_id do
+        if us_pid = ProcessRegistry.whereis_user_session(member_id) do
+          chat_item_other = Chat.build_chat_list_item(chat_id, member_id)
+
+          send_payload(us_pid, %{
+            type: "group_created",
+            chat_item: chat_item_other
+          })
+        end
+      end
+    end)
+
+    {:noreply, state}
+  end
 
   @impl true
   def handle_cast({:send_payload, payload}, state) do

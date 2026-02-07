@@ -261,7 +261,49 @@ defmodule Echo.Chats.Chat do
     end
   end
 
+  @doc """
+  Creates a group chat and its members.
 
+  Returns {:ok, chat_id} or {:error, reason}
+  """
+  def create_group_chat(%{
+        name: name,
+        description: description,
+        avatar_url: avatar_url,
+        creator_id: creator_id,
+        member_ids: member_ids
+      }) do
+    members =
+      member_ids
+      |> Enum.uniq()
+      |> Enum.concat([creator_id])
+      |> Enum.uniq()
 
+    Repo.transaction(fn ->
+      # 1️⃣ Create the group chat
+      {:ok, chat} =
+        %Chat{}
+        |> Chat.changeset(%{
+          type: "group",
+          name: name,
+          description: description,
+          avatar_url: avatar_url,
+          creator_id: creator_id
+        })
+        |> Repo.insert()
 
+      # 2️⃣ Insert members
+      Enum.each(members, fn user_id ->
+        %ChatMember{}
+        |> ChatMember.changeset(%{
+          chat_id: chat.id,
+          user_id: user_id,
+          role: if(user_id == creator_id, do: "admin", else: "member")
+        })
+        |> Repo.insert!()
+      end)
+
+      chat.id
+    end)
+  end
 end
