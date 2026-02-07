@@ -60,7 +60,7 @@ defmodule Echo.Chats.ChatSession do
 
 
   @impl true
-  def handle_cast({:send_message, msg_front, _sender_us_pid}, state) do
+  def handle_cast({:send_message, msg_front, sender_us_pid}, state) do
     front_msg_id = msg_front["front_msg_id"]
     chat_id = msg_front["chat_id"]
     content = msg_front["content"]
@@ -68,12 +68,26 @@ defmodule Echo.Chats.ChatSession do
     format = msg_front["format"]
     filename = msg_front["filename"]
 
+    self_chat? =
+      state.chat.type == "private" and length(state.members) == 1
+
+
     msg_state =
       if state.chat.type == "private" do
         other_user_id =
           state.members
           |> Enum.map(& &1.user_id)
-          |> Enum.find(&(&1 != sender_user_id))
+          |> case do
+            [only_user] ->
+              only_user
+
+            [u1, u2] ->
+              if u1 == sender_user_id, do: u2, else: u1
+
+            _ ->
+              nil
+          end
+
 
         case ProcessRegistry.whereis_user_session(other_user_id) do
           nil ->
@@ -110,6 +124,9 @@ defmodule Echo.Chats.ChatSession do
           |> Map.delete(:inserted_at)
 
         IO.inspect(base_message, label: "Base message para incoming")
+        IO.puts("\n\n\n\n\nSTATE.MEMBERS:")
+        IO.inspect(state.members)
+
 
         {alive_sessions, _dead_users} =
           Enum.reduce(state.members, {[], []}, fn member, {alive, dead} ->
@@ -124,52 +141,63 @@ defmodule Echo.Chats.ChatSession do
             end
           end)
 
-        Enum.each(alive_sessions, fn {sess_user_id, us_pid} ->
-          username = Repo.get(Echo.Schemas.User, sess_user_id).username
+        cond do
+          self_chat? ->
+            UserSession.new_message(
+              sender_us_pid,
+              %{
+                type: "new_message",
+                message:
+                  base_message
+                  |> Map.put(:front_msg_id, front_msg_id)
+                  |> Map.put(:type, Constants.outgoing())
+                  |> Map.put(:sender_name, User.get_name(sender_user_id))
+              }
+            )
+            IO.puts("=|=|=|=|=|=|=|=|=|=|=|=|  MANDAMOS UN SOLO MENSAJE AL USUARIO |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|")
+          true ->
+            Enum.each(alive_sessions, fn {sess_user_id, us_pid} ->
+              username = Repo.get(Echo.Schemas.User, sess_user_id).username
 
-          IO.puts(
-            "=|=|=|=|=|=|=|=|=|=|=|=|  Usuario VIVO: #{username} |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|"
-          )
-
-          case sess_user_id == sender_user_id do
-            # Es ougoing
-            true ->
-              sender_name = User.get_usable_name(sender_user_id, sender_user_id, nil)
-
-              UserSession.new_message(
-                us_pid,
-                %{
-                  type: "new_message",
-                  message:
-                    base_message
-                    |> Map.put(:front_msg_id, front_msg_id)
-                    |> Map.put(:type, Constants.outgoing())
-                    |> Map.put(:sender_name, sender_name)
-                }
+              IO.puts(
+                "=|=|=|=|=|=|=|=|=|=|=|=|  Usuario VIVO: #{username} |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|"
               )
 
-            # Es incoming
-            false ->
-              sender_name = User.get_usable_name(sess_user_id, sender_user_id, nil)
+              case sess_user_id == sender_user_id do
+                # Es ougoing
+                true ->
+                  sender_name = User.get_usable_name(sender_user_id, sender_user_id, nil)
 
-              UserSession.new_message(
-                us_pid,
-                %{
-                  type: "new_message",
-                  message:
-                    base_message
-                    |> Map.put(:front_msg_id, nil)
-                    |> Map.put(:type, Constants.incoming())
-                    |> Map.put(:sender_name, sender_name)
-                }
-              )
-          end
-        end)
+                  UserSession.new_message(
+                    us_pid,
+                    %{
+                      type: "new_message",
+                      message:
+                        base_message
+                        |> Map.put(:front_msg_id, front_msg_id)
+                        |> Map.put(:type, Constants.outgoing())
+                        |> Map.put(:sender_name, sender_name)
+                    }
+                  )
 
-        # Enum.each(dead_users, fn us_pid ->
-        #   nil
-        #   # Agregar una notificacion o como lo hagamos
-        # end)
+                # Es incoming
+                false ->
+                  sender_name = User.get_usable_name(sess_user_id, sender_user_id, nil)
+
+                  UserSession.new_message(
+                    us_pid,
+                    %{
+                      type: "new_message",
+                      message:
+                        base_message
+                        |> Map.put(:front_msg_id, nil)
+                        |> Map.put(:type, Constants.incoming())
+                        |> Map.put(:sender_name, sender_name)
+                    }
+                  )
+              end
+            end)
+        end
 
         {:noreply,
          %{

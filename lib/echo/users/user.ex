@@ -19,6 +19,13 @@ defmodule Echo.Users.User do
     Repo.get(UserSchema, id)
   end
 
+  def get_name(user_id) do
+    case Repo.get(UserSchema, user_id) do
+      nil -> nil
+      user -> user.name
+    end
+  end
+
   def get_by_username(username) do
     Repo.get_by(UserSchema, username: username)
   end
@@ -92,11 +99,14 @@ defmodule Echo.Users.User do
       on: cm.chat_id == chat.id,
       where: cm.user_id == ^user_id and chat.type == "private",
 
-      join: other_cm in ChatMember,
+      left_join: other_cm in ChatMember,
       on: other_cm.chat_id == chat.id and other_cm.user_id != ^user_id,
 
-      join: other_user in UserSchema,
+      left_join: other_user in UserSchema,
       on: other_user.id == other_cm.user_id,
+
+      join: self_user in UserSchema,
+      on: self_user.id == ^user_id,
 
       left_join: contact in Contact,
       on: contact.user_id == ^user_id and contact.contact_id == other_user.id,
@@ -106,13 +116,15 @@ defmodule Echo.Users.User do
         type: chat.type,
         name:
           fragment(
-            "COALESCE(?, ?, ?)",
+            "COALESCE(?, ?, ?, ?, ?)",
             contact.nickname,
             other_user.name,
-            other_user.username
+            other_user.username,
+            self_user.name,
+            self_user.username
           ),
-        avatar_url: other_user.avatar_url,
-        other_user_id: other_user.id
+        avatar_url: fragment("COALESCE(?, ?)", other_user.avatar_url, self_user.avatar_url),
+        other_user_id: fragment("COALESCE(?, ?)", other_user.id, self_user.id)
       }
     )
     |> Repo.all()

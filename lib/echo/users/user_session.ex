@@ -320,6 +320,8 @@ defmodule Echo.Users.UserSession do
     IO.puts("\n\n SE QUIERE CREAR UN CHAT PRIVADO ENTRE #{state.user_id} Y #{receiver_id}\n")
     chat_id = Chat.create_private_chat(state.user_id, receiver_id)
 
+    IO.puts("\n\n EL CHATID CREADO ES: #{chat_id}\n")
+
     chat_info_a = Chat.build_chat_info(chat_id, state.user_id)
     chat_item_a = Chat.build_chat_list_item(chat_id, state.user_id)
 
@@ -332,14 +334,15 @@ defmodule Echo.Users.UserSession do
     })
 
     IO.puts("\n\n SE ENVIÓ EL MENSAJE DE QUE SE CREÓ EL CHAT AL EMISOR\n")
+    if (state.user_id != receiver_id) do
+      if other_us_pid = ProcessRegistry.whereis_user_session(receiver_id) do
+        chat_item_b = Chat.build_chat_list_item(chat_id, receiver_id)
 
-    if other_us_pid = ProcessRegistry.whereis_user_session(receiver_id) do
-      chat_item_b = Chat.build_chat_list_item(chat_id, receiver_id)
-
-      send_payload(other_us_pid, %{
-        type: "private_chat_created",
-        chat_item: chat_item_b
-      })
+        send_payload(other_us_pid, %{
+          type: "private_chat_created",
+          chat_item: chat_item_b
+        })
+      end
     end
 
     {:noreply, state}

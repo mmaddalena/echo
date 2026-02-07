@@ -67,6 +67,7 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "search_people_results") {
 				peopleSearchResults.value = payload.search_people_results;
 			} else if (payload.type === "private_chat_created") {
+				console.log(`LLEGO LA CREACION DEL CHAT: ${payload.chat.id}`);
 				// Meto la info en la caché de los chats
 				chats.value = [payload.chat_item, ...chats.value];
 				if (pendingPrivateChat.value != null) {
@@ -128,6 +129,7 @@ export const useSocketStore = defineStore("socket", () => {
 	function dispatch_new_message(payload) {
 		const msg = payload.message;
 		const chatId = msg.chat_id;
+		console.log(`LLegó un nuevo mensaje '${msg.content}'`)
 
 		// Actualizo la lista de chats
 		chats.value = chats.value.map((chat) => {
