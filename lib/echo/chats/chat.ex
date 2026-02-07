@@ -113,19 +113,20 @@ defmodule Echo.Chats.Chat do
 
 
   def get_private_chat_id(user1_id, user2_id) do
-    from(c in Chat,
+    res = from(c in Chat,
       join: cm1 in ChatMember,
       on: cm1.chat_id == c.id,
       join: cm2 in ChatMember,
       on: cm2.chat_id == c.id,
       where:
-        c.type == ^Constants.private_chat() and
-        cm1.user_id == ^user1_id and
-        cm2.user_id == ^user2_id,
+      c.type == ^Constants.private_chat() and
+      cm1.user_id == ^user1_id and
+      cm2.user_id == ^user2_id,
       select: c.id,
       limit: 1
     )
     |> Repo.one()
+    IO.puts("\n\n\n SE PASA EL PRIVATE CHATID DE #{user1_id} y #{user2_id}:\n Resultado: #{IO.inspect(res)} \n\n\n")
   end
 
   def create_private_chat(creator_id, receiver_id) do

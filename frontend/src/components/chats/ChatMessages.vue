@@ -122,8 +122,12 @@ watch(
 
 			<!-- <ChatMessage v-else :message="item" :chatType="chatType" /> -->
 
-			<div v-else :data-msg-id="item.id" class="message-wrapper">
-				<ChatMessage :message="item" :chatType="chatType" />
+			<div v-else>
+				<ChatMessage 
+					:message="item" 
+					:chatType="chatType"
+					:data-msg-id="item.id"
+					/>
 			</div>
 		</template>
 	</div>
@@ -149,19 +153,5 @@ watch(
 	font-size: 1.2rem;
 	opacity: 0.7;
 	background: rgba(0, 0, 0, 0.15);
-}
-
-.message-wrapper.focused {
-	background: rgba(186, 104, 200, 0.18);
-	border-radius: 0.6rem;
-	transition: background 0.3s;
-}
-
-.message-anchor.highlight {
-	animation: pulse 1.2s ease;
-}
-
-.message-wrapper {
-	transition: background 0.6s ease;
 }
 </style>

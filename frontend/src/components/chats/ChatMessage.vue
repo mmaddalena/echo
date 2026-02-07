@@ -28,7 +28,10 @@ function closeImage() {
 </script>
 
 <template>
-	<div class="all" :class="{ first: message?.isFirst }">
+	<div class="all" 
+		:class="{ first: message?.isFirst }"
+		:data-msg-id="message.id"
+	>
 		<img
 			v-if="
 				chatType == 'group' && message.type == 'incoming' && message?.isFirst
@@ -45,7 +48,7 @@ function closeImage() {
 				message.type,
 				{
 					'with-avatar-offset':
-						chatType == 'private' || (chatType == 'group' && !message.isFirst),
+						chatType == 'private' || (chatType == 'group' && !message.isFirst)
 				},
 			]"
 		>
@@ -263,5 +266,20 @@ function closeImage() {
 	fill: none;
 	stroke-width: 0.15rem;
 	stroke: var(--text-main);
+}
+
+
+.all.focused {
+	background: var(--msg-focused);
+	border-radius: 0.6rem;
+	transition: background 0.3s;
+}
+
+.all-anchor.highlight {
+	animation: pulse 1.2s ease;
+}
+
+.all {
+	transition: background 0.6s ease;
 }
 </style>
