@@ -74,17 +74,25 @@ defmodule Echo.Chats.Chat do
 
 
   def get_other_user_id(chat_id, user_id) do
-    from(cm in ChatMember,
-      join: c in Chat,
-      on: c.id == cm.chat_id,
-      where:
-        cm.chat_id == ^chat_id and
-          cm.user_id != ^user_id and
-          c.type == "private",
-      select: cm.user_id,
-      limit: 1
-    )
-    |> Repo.one()
+    users =
+      from(cm in ChatMember,
+        join: c in Chat,
+        on: c.id == cm.chat_id,
+        where: cm.chat_id == ^chat_id and c.type == "private",
+        select: cm.user_id
+      )
+      |> Repo.all()
+
+    case users do
+      [only_user] ->
+        only_user
+
+      [u1, u2] ->
+        if u1 == user_id, do: u2, else: u1
+
+      _ ->
+        nil
+    end
   end
 
   def get_avatar_url(chat, other_user_id) do
@@ -112,6 +120,9 @@ defmodule Echo.Chats.Chat do
   end
 
 
+  def get_private_chat_id(user1_id, user2_id) when user1_id == user2_id do
+    nil
+  end
   def get_private_chat_id(user1_id, user2_id) do
     res = from(c in Chat,
       join: cm1 in ChatMember,
@@ -127,6 +138,7 @@ defmodule Echo.Chats.Chat do
     )
     |> Repo.one()
     IO.puts("\n\n\n SE PASA EL PRIVATE CHATID DE #{user1_id} y #{user2_id}:\n Resultado: #{IO.inspect(res)} \n\n\n")
+    res
   end
 
   def create_private_chat(creator_id, receiver_id) do
@@ -142,10 +154,12 @@ defmodule Echo.Chats.Chat do
             user_id: creator_id
           })
 
-          Repo.insert!(%ChatMember{
-            chat_id: chat.id,
-            user_id: receiver_id
-          })
+          if creator_id != receiver_id do
+            Repo.insert!(%ChatMember{
+              chat_id: chat.id,
+              user_id: receiver_id
+            })
+          end
 
           chat.id
         end)
@@ -166,6 +180,8 @@ defmodule Echo.Chats.Chat do
 
     is_private? = chat.type == Constants.private_chat()
     other_user_id = get_other_user_id(chat_id, user_id)
+
+    IO.puts("\n\n\n\n El OTHER USER ID ES: #{other_user_id}\n\n\n\n")
 
     status =
       if is_private? do
