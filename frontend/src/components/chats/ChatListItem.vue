@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import IconMessageState from "../icons/IconMessageState.vue";
 import IconFile from "../icons/IconFile.vue";
 import IconImage from "../icons/IconImage.vue";
@@ -15,7 +15,7 @@ const isMuted = computed(() => {
 
 	return (
 		last.type === "outgoing" ||
-		(last.type === "incoming" && last.state === "read")
+		(last.type === "incoming" && 	chat.unread_messages == 0)
 	);
 });
 
@@ -24,6 +24,10 @@ const emit = defineEmits(["open"]);
 function handleClick() {
 	emit("open", chat.id);
 }
+
+onMounted(() => {
+	console.log(`ID del chat con ${chat.name}: ${chat.id}`)
+});
 </script>
 
 <template>

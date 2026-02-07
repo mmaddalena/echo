@@ -14,6 +14,8 @@
     emit("open-person", personId);
   }
 
+  
+
 </script>
 
 <template>
@@ -23,7 +25,7 @@
     class="people-list"
   >
     <PeopleListItem 
-      v-for="person in people"
+      v-for="person in props.people"
       :key="person.id"
       :person="person"
       @get-person-info="getPersonInfo"

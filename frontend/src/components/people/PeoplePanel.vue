@@ -13,27 +13,29 @@
   
   const activeTab = ref("contacts");
   const { openedPersonInfo } = storeToRefs(socketStore);
+  const { contacts } = storeToRefs(socketStore);
+  const { peopleSearchResults } = storeToRefs(socketStore);
 
   const contactSearchText = ref(null)
 
   const filteredContacts = computed(() => {
-    if (!contactSearchText.value) return socketStore.contacts
-    if (!socketStore.contacts) return []
+    if (!contactSearchText.value) return contacts.value
 
     const q = contactSearchText.value.toLowerCase().trim()
 
-    return socketStore.contacts.filter(c =>
+    return contacts.value.filter(c =>
       c.username.toLowerCase().includes(q) ||
       c.name?.toLowerCase().includes(q) ||
       c.contact_info?.nickname?.toLowerCase().includes(q)
     )
   })
 
+
   const peopleToShow = computed(() => {
     if (activeTab.value === "contacts") {
-      return filteredContacts.value ?? []
+      return filteredContacts.value
     }
-    return socketStore.peopleSearchResults ?? []
+    return peopleSearchResults.value
   })
 
   function handleChangeTab(newTab) {
@@ -88,6 +90,11 @@
       contactSearchText.value = input;
   }
 
+
+  function handleChangeNickname(personId, newNickname) {
+    socketStore.changeNickname(personId, newNickname)
+  }
+
 </script>
 
 <template>
@@ -114,6 +121,7 @@
       :personInfo="openedPersonInfo"
       @close-person-info-panel="closePersonInfoPanel"
       @open-chat="handleOpenChat"
+      @change-nickname="handleChangeNickname"
     />
   </div>
 </template>

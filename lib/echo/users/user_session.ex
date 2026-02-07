@@ -82,6 +82,10 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:change_name, new_name})
   end
 
+  def change_nickname(us_pid, contact_id, new_nickname) do
+    GenServer.cast(us_pid, {:change_nickname, contact_id, new_nickname})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -377,6 +381,29 @@ defmodule Echo.Users.UserSession do
 
     payload = %{
       type: "name_change_result",
+      status: status,
+      data: extra
+    }
+
+    send(state.socket, {:send, payload})
+    {:noreply, %{state | user: User.get(state.user_id)}}
+  end
+
+  @impl true
+  def handle_cast({:change_nickname, contact_id, new_nickname}, state) do
+    IO.puts("\n\n\n SE QUIERE CAMBIAR EL NICKNAME A #{new_nickname}\n\n\n")
+
+    {status, extra} =
+      case User.change_nickname(state.user_id, contact_id, new_nickname) do
+        :ok ->
+          {:success, %{contact_id: contact_id, new_nickname: new_nickname}}
+
+        {:error, changeset} ->
+          {:failure, %{reason: changeset}}
+      end
+
+    payload = %{
+      type: "nickname_change_result",
       status: status,
       data: extra
     }

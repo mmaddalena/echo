@@ -121,7 +121,7 @@ function closeImage() {
 	display: flex;
 	flex-direction: column;
 	gap: 0.6rem;
-
+	min-height: 3rem;
 	max-width: 65%;
 	padding: 0.6rem 1rem 0.3rem 1.4rem;
 	border-radius: 15px;
@@ -167,7 +167,7 @@ function closeImage() {
 	padding-bottom: 0.3rem;
 	text-align: left;
 	font-size: 1.4rem;
-	line-height: 1.3;
+	line-height: 1.4;
 }
 .meta {
 	display: inline-flex;

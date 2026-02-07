@@ -288,6 +288,20 @@ defmodule Echo.Users.User do
     Map.merge(users, nicknames)
   end
 
+  def get_nickname(user_id, other_user_id) do
+    from(c in Contact,
+      where: c.user_id == ^user_id and c.contact_id == ^other_user_id,
+      select: c.nickname
+    )
+    |> Repo.one()
+    |> case do
+      nil ->
+        nil
+      nickname ->
+        nickname
+    end
+  end
+
   def update_avatar(user_id, avatar_url) do
     case Repo.get(UserSchema, user_id) do
       nil ->
@@ -497,6 +511,25 @@ defmodule Echo.Users.User do
         user
         |> UserSchema.name_changeset(%{name: new_name})
         |> Repo.update()
+    end
+  end
+
+  def change_nickname(user_id, contact_id, new_nickname) do
+    case Repo.get_by(Contact, user_id: user_id, contact_id: contact_id) do
+      nil ->
+        {:error, :contact_not_found}
+
+      contact ->
+        contact
+        |> Contact.changeset(%{nickname: new_nickname})
+        |> Repo.update()
+        |> case do
+          {:ok, _updated_contact} ->
+            :ok
+
+          {:error, changeset} ->
+            {:error, format_changeset_error(changeset)}
+        end
     end
   end
 
