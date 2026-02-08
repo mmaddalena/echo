@@ -2,30 +2,18 @@
 import { ref, computed, watch } from "vue";
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
-
-const props = defineProps({
-	open: {
-		type: Boolean,
-		required: true,
-	},
-});
+import PeopleSearchBar from "@/components/people/PeopleSearchBar.vue";
 
 const emit = defineEmits(["close"]);
 
 const socketStore = useSocketStore();
 const { contacts } = storeToRefs(socketStore);
-
+const { userInfo } = storeToRefs(socketStore);
+const { peopleSearchResults } = storeToRefs(socketStore);
 /* -----------------------
  * Step control
  * --------------------- */
 const step = ref(1); // 1: select members, 2: group info
-
-watch(
-	() => props.open,
-	(val) => {
-		if (val) reset();
-	},
-);
 
 /* -----------------------
  * Local state
@@ -35,6 +23,8 @@ const name = ref("");
 const description = ref("");
 const avatarFile = ref(null);
 const avatarPreview = ref(null);
+const searchText = ref(null);
+const selectedPeopleMap = ref(new Map());
 
 /* -----------------------
  * Computed
@@ -47,13 +37,16 @@ const canCreate = computed(() => name.value.trim().length > 0);
 /* -----------------------
  * Methods
  * --------------------- */
-function toggleMember(userId) {
-	if (selectedIds.value.includes(userId)) {
-		selectedIds.value = selectedIds.value.filter((id) => id !== userId);
+function toggleMember(person) {
+	const id = person.id;
+
+	if (selectedIds.value.includes(id)) {
+		selectedIds.value = selectedIds.value.filter((i) => i !== id);
+		selectedPeopleMap.value.delete(id);
 	} else {
-		selectedIds.value.push(userId);
+		selectedIds.value.push(id);
+		selectedPeopleMap.value.set(id, person);
 	}
-	console.log(`Selected IDs: ${selectedIds.value}`);
 }
 
 function onAvatarChange(e) {
@@ -100,6 +93,7 @@ async function createGroup() {
 }
 
 function close() {
+	reset();
 	emit("close");
 }
 
@@ -110,6 +104,9 @@ function reset() {
 	description.value = "";
 	avatarFile.value = null;
 	avatarPreview.value = null;
+	searchText.value = null;
+
+	socketStore.deletePeopleSearchResults();
 }
 
 async function uploadGroupAvatar(groupId, file) {
@@ -138,107 +135,166 @@ async function uploadGroupAvatar(groupId, file) {
 		console.error("Avatar upload failed", err);
 	}
 }
+
+function searchPeople(input) {
+	searchText.value = input;
+
+	if (input && input.trim()) {
+		socketStore.searchPeople(input);
+	} else {
+		socketStore.deletePeopleSearchResults();
+	}
+}
+
+const peopleToShow = computed(() => {
+	const q = searchText.value?.trim();
+
+	if (!q) return [];
+
+	return (peopleSearchResults.value || []).filter(
+		(p) => p.id !== userInfo.value?.id && !selectedIds.value.includes(p.id),
+	);
+});
+
+function getDisplayName(person) {
+	const contact = contacts.value.find((c) => c.id === person.id);
+
+	if (contact) {
+		// prefer nickname → name → username
+		return contact.contact_info?.nickname || contact.name || person.username;
+	}
+
+	return `@${person.username}`;
+}
+
+const selectedPeople = computed(() =>
+	Array.from(selectedPeopleMap.value.values()),
+);
+
+const unselectedContacts = computed(() =>
+	contacts.value.filter((p) => !selectedIds.value.includes(p.id)),
+);
 </script>
 
 <template>
-	<div v-if="open" class="modal-backdrop">
-		<div class="modal">
-			<!-- Header -->
-			<div class="modal-header">
-				<h3 v-if="step === 1">New group</h3>
-				<h3 v-else>Group info</h3>
+	<div class="panel-header">
+		<h3 v-if="step === 1">Nuevo grupo</h3>
+		<h3 v-else>Información del grupo</h3>
 
-				<button class="close-btn" @click="close">✕</button>
-			</div>
+		<button class="close-btn" @click="close">✕</button>
+	</div>
 
-			<!-- STEP 1: SELECT MEMBERS -->
-			<div v-if="step === 1" class="modal-body">
-				<p class="subtitle">Select at least 2 contacts</p>
+	<PeopleSearchBar v-if="step === 1" @search-people="searchPeople" />
 
-				<div class="contacts-list">
-					<label
-						v-for="contact in contacts"
-						:key="contact.id"
-						class="contact-item"
-					>
-						<input
-							type="checkbox"
-							:checked="selectedIds.includes(contact.id)"
-							@change="toggleMember(contact.id)"
-						/>
+	<!-- STEP 1: SELECT MEMBERS -->
+	<div v-if="step === 1" class="panel-body">
+		<p class="subtitle">Selecciona al menos 1 miembro</p>
+		<div class="contacts-list">
+			<!-- SELECTED (contacts + non-contacts) -->
+			<template v-if="step === 1 && !searchText && selectedPeople.length">
+				<p class="selected-label">Seleccionados</p>
+				<label
+					v-for="person in selectedPeople"
+					:key="`selected-${person.id}`"
+					class="contact-item selected"
+				>
+					<input type="checkbox" checked @change="toggleMember(person)" />
 
-						<img :src="contact.avatar_url" class="avatar" alt="avatar" />
+					<img :src="person.avatar_url" class="avatar" />
+					{{ getDisplayName(person) }}
+				</label>
+			</template>
 
-						<span>{{ contact.name }}</span>
-					</label>
-				</div>
-			</div>
-
-			<!-- STEP 2: GROUP INFO -->
-			<div v-else class="modal-body">
-				<div class="avatar-section">
-					<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
-					<div v-else class="group-avatar placeholder">👥</div>
-
-					<input type="file" accept="image/*" @change="onAvatarChange" />
-				</div>
-
+			<!-- SEARCH RESULTS -->
+			<label
+				v-if="searchText"
+				v-for="person in peopleToShow"
+				:key="person.id"
+				class="contact-item"
+			>
 				<input
-					v-model="name"
-					type="text"
-					placeholder="Group name"
-					class="input"
+					type="checkbox"
+					:checked="selectedIds.includes(person.id)"
+					@change="toggleMember(person)"
 				/>
 
-				<textarea
-					v-model="description"
-					placeholder="Description (optional)"
-					class="textarea"
-				/>
-			</div>
+				<img :src="person.avatar_url" class="avatar" />
+				{{ getDisplayName(person) }}
+			</label>
 
-			<!-- Footer -->
-			<div class="modal-footer">
-				<button v-if="step === 2" @click="prevStep">Back</button>
+			<!-- CONTACTS (when no search) -->
+			<template v-else>
+				<p v-if="unselectedContacts.length" class="selected-label">Contactos</p>
 
-				<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
-					Next
-				</button>
+				<label
+					v-for="person in unselectedContacts"
+					:key="person.id"
+					class="contact-item"
+				>
+					<input
+						type="checkbox"
+						:checked="selectedIds.includes(person.id)"
+						@change="toggleMember(person)"
+					/>
 
-				<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
-					Create group
-				</button>
-			</div>
+					<img :src="person.avatar_url" class="avatar" />
+					{{ getDisplayName(person) }}
+				</label>
+			</template>
 		</div>
+	</div>
+
+	<!-- STEP 2: GROUP INFO -->
+	<div v-else class="panel-body">
+		<div class="avatar-section">
+			<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
+			<div v-else class="group-avatar placeholder">👥</div>
+
+			<input type="file" accept="image/*" @change="onAvatarChange" />
+		</div>
+
+		<input v-model="name" type="text" placeholder="Group name" class="input" />
+
+		<textarea
+			v-model="description"
+			placeholder="Description (optional)"
+			class="textarea"
+		/>
+	</div>
+
+	<!-- Footer -->
+	<div class="panel-footer">
+		<button v-if="step === 2" @click="prevStep">Atras</button>
+
+		<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
+			Siguiente
+		</button>
+
+		<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
+			Crear grupo
+		</button>
 	</div>
 </template>
 
 <style scoped>
-.modal-backdrop {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.55);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 100;
-	backdrop-filter: blur(2px);
-}
+.panel {
+	width: 100%;
+	height: 100%;
 
-.modal {
-	width: 420px;
-	max-height: 80vh;
 	display: flex;
 	flex-direction: column;
-	background: var(--bg-chatlist-panel);
-	border-radius: 14px;
-	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+
+	background: var(--bg-peoplelist-panel);
+	border-radius: 0;
+	box-shadow: none;
 	overflow: hidden;
-	color: var(--text-primary, #fff);
+
+	color: var(--text-primary);
+	min-height: 0;
 }
 
 /* ---------- HEADER ---------- */
-.modal-header {
+.panel-header {
 	padding: 14px 18px;
 	display: flex;
 	justify-content: space-between;
@@ -246,7 +302,7 @@ async function uploadGroupAvatar(groupId, file) {
 	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.modal-header h3 {
+.panel-header h3 {
 	font-size: 16px;
 	font-weight: 600;
 	margin: 0;
@@ -265,9 +321,14 @@ async function uploadGroupAvatar(groupId, file) {
 }
 
 /* ---------- BODY ---------- */
-.modal-body {
+.panel-body {
+	flex: 1;
+	min-height: 0;
 	padding: 16px 18px;
 	overflow-y: auto;
+	min-width: 0;
+	overflow-x: hidden;
+	scrollbar-gutter: stable;
 }
 
 .subtitle {
@@ -367,7 +428,7 @@ async function uploadGroupAvatar(groupId, file) {
 }
 
 /* ---------- FOOTER ---------- */
-.modal-footer {
+.panel-footer {
 	padding: 12px 18px;
 	display: flex;
 	justify-content: space-between;
@@ -397,17 +458,36 @@ button:disabled {
 	cursor: not-allowed;
 }
 
-.modal-footer button {
+.panel-footer button {
 	background: var(--msg-out);
 	color: white;
 }
 
-.modal-footer button:first-child {
+.panel-footer button:first-child {
 	/* background: transparent; */
 	color: white;
 }
 
-.modal-footer button:first-child:hover {
+.panel-footer button:first-child:hover {
 	color: white;
+}
+
+.search {
+	margin: 0;
+	padding: 0.5rem 1rem;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.selected-label {
+	margin: 6px 0 4px;
+	font-size: 12px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.6);
+	text-transform: uppercase;
+}
+
+.contact-item.selected {
+	background: rgba(255, 255, 255, 0.08);
 }
 </style>
