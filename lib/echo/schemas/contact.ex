@@ -19,11 +19,8 @@ defmodule Echo.Schemas.Contact do
     contact
     |> cast(attrs, [:nickname, :user_id, :contact_id])
     |> validate_required([:user_id, :contact_id])
+    |> validate_length(:nickname, min: 1, max: 50)
     |> unique_constraint([:user_id, :contact_id], name: :contacts_user_id_contact_id_index)
-    |> check_constraint(:user_id,
-      name: :contact_cannot_be_self,
-      message: "Cannot add yourself as contact"
-    )
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:contact_id)
   end

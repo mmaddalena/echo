@@ -228,15 +228,28 @@ defmodule Echo.Chats.Chat do
 
     avatar_url = get_avatar_url(chat, other_user_id)
 
-    %{
-      id: chat_id,
-      messages: messages ,
-      name: name,
-      status: status,
-      type: chat.type,
-      avatar_url: avatar_url,
-      members: members
-    }
+    if(is_private?) do
+      %{
+        id: chat_id,
+        messages: messages ,
+        name: name,
+        status: status,
+        type: chat.type,
+        avatar_url: avatar_url,
+        members: members
+      }
+    else
+      %{
+        id: chat_id,
+        messages: messages ,
+        name: name,
+        description: chat.description,
+        status: status,
+        type: chat.type,
+        avatar_url: avatar_url,
+        members: members
+      }
+    end
   end
 
 

@@ -87,7 +87,7 @@ export const useSocketStore = defineStore("socket", () => {
 				dispatch_change_name(payload);
 			} else if (payload.type === "nickname_change_result") {
 				dispatch_change_nickname(payload);
-			} else if (payload.type === "group_created") {
+			} else if (payload.type === "group_chat_created") {
 				dispatch_group_created(payload);
 			}
 		};
