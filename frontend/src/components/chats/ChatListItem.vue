@@ -131,11 +131,12 @@ onMounted(() => {
 	text-overflow: ellipsis;
 	flex: 1;
 	min-width: 0;
+	color: var(--text-main);
 }
 .unread-messages {
 	height: 2.4rem;
 	width: 2.4rem;
-	background-color: var(--msg-out);
+	background-color: var(--main-app-color-2);
 	border-radius: 50%;
 	display: flex;
 	justify-content: center;
@@ -156,10 +157,11 @@ onMounted(() => {
 .icon {
 	height: 2.2rem;
 	margin-right: 0.5rem;
-	color: var(--msg-out);
+	color: var(--main-app-color-2);
 }
 .time {
 	font-size: 1.2rem;
+	color: var(--text-main);
 }
 
 .msg-state-enter-active,
@@ -186,6 +188,6 @@ onMounted(() => {
 }
 
 .muted {
-	color: var(--text-muted);
+	color: var(--text-muted) !important;
 }
 </style>

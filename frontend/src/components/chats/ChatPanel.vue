@@ -127,7 +127,7 @@ function closeCreateGroup() {
 	padding: 6px 14px;
 	border-radius: 20px;
 	border: none;
-	background-color: var(--msg-out);
+	background-color: var(--main-app-color-2);
 	color: white;
 	font-weight: 500;
 	cursor: pointer;

@@ -52,7 +52,7 @@ defineExpose({focusInput, clear});
 				@keydown.enter="send"
 			/>
 			<button @click="send">
-				<IconSend />
+				<IconSend class="icon"/>
 			</button>
 
 			<input
@@ -92,6 +92,9 @@ input {
 	margin-left: 1rem;
 }
 button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	background-color: var(--msg-out);
 	border: none;
 	border-radius: 50%;
@@ -101,9 +104,8 @@ button {
 	cursor: pointer;
 }
 .icon {
-	fill: none;
-	stroke: var(--text-main);
-	stroke-width: 0.15rem;
-	height: 2.5rem;
+	color: var(--text-main);
+	max-height: 2.5rem;
+	max-width: 2.5rem;
 }
 </style>

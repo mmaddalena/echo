@@ -17,6 +17,15 @@ import { useUIStore } from "@/stores/ui";
 import PeoplePanel from "@/components/people/PeoplePanel.vue";
 import ChatPanel from "@/components/chats/ChatPanel.vue";
 
+import { useThemeStore } from "@/stores/theme"
+import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
+import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
+
+
+const themeStore = useThemeStore()
+const theme = computed(() => themeStore.theme)
+
+
 const socketStore = useSocketStore();
 const uiStore = useUIStore();
 
@@ -156,7 +165,7 @@ watch(activeChatId, async (newVal) => {
 	<div class="chats-layout">
 		<div class="left">
 			<img
-				src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
+				:src="theme === 'dark' ? logoDark : logoLight"
 				class="logo"
 				alt="Echo logo"
 			/>

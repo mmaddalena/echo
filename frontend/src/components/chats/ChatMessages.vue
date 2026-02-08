@@ -152,6 +152,7 @@ watch(
 
 	font-size: 1.2rem;
 	opacity: 0.7;
-	background: rgba(0, 0, 0, 0.15);
+	background: var(--day-label);
+	color: var(--text-muted);
 }
 </style>
