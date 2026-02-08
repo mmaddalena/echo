@@ -155,4 +155,28 @@ watch(
 	background: var(--day-label);
 	color: var(--text-muted);
 }
+
+
+
+.chat-messages::-webkit-scrollbar {
+  width: 1rem;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent; /* rail invisible */
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--scroll-bar);
+  border-radius: 999px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-bar-hover);
+}
+
+.chat-messages::-webkit-scrollbar-button {
+  display: none; /* saca las flechitas */
+}
+
 </style>

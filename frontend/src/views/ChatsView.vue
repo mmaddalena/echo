@@ -217,6 +217,7 @@ watch(activeChatId, async (newVal) => {
 	flex-direction: row;
 	flex: 1;
 	width: 100%;
+	min-height: 0; 
 }
 .right {
 	display: flex;
