@@ -4,13 +4,6 @@ import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
 import PeopleSearchBar from "@/components/people/PeopleSearchBar.vue";
 
-// const props = defineProps({
-// 	open: {
-// 		type: Boolean,
-// 		required: true,
-// 	},
-// });
-
 const emit = defineEmits(["close"]);
 
 const socketStore = useSocketStore();
@@ -22,13 +15,6 @@ const { peopleSearchResults } = storeToRefs(socketStore);
  * --------------------- */
 const step = ref(1); // 1: select members, 2: group info
 
-// watch(
-// 	() => props.open,
-// 	(val) => {
-// 		if (val) reset();
-// 	},
-// );
-
 /* -----------------------
  * Local state
  * --------------------- */
@@ -38,6 +24,7 @@ const description = ref("");
 const avatarFile = ref(null);
 const avatarPreview = ref(null);
 const searchText = ref(null);
+const selectedPeopleMap = ref(new Map());
 
 /* -----------------------
  * Computed
@@ -50,13 +37,16 @@ const canCreate = computed(() => name.value.trim().length > 0);
 /* -----------------------
  * Methods
  * --------------------- */
-function toggleMember(userId) {
-	if (selectedIds.value.includes(userId)) {
-		selectedIds.value = selectedIds.value.filter((id) => id !== userId);
+function toggleMember(person) {
+	const id = person.id;
+
+	if (selectedIds.value.includes(id)) {
+		selectedIds.value = selectedIds.value.filter((i) => i !== id);
+		selectedPeopleMap.value.delete(id);
 	} else {
-		selectedIds.value.push(userId);
+		selectedIds.value.push(id);
+		selectedPeopleMap.value.set(id, person);
 	}
-	console.log(`Selected IDs: ${selectedIds.value}`);
 }
 
 function onAvatarChange(e) {
@@ -103,6 +93,7 @@ async function createGroup() {
 }
 
 function close() {
+	reset();
 	emit("close");
 }
 
@@ -113,6 +104,9 @@ function reset() {
 	description.value = "";
 	avatarFile.value = null;
 	avatarPreview.value = null;
+	searchText.value = null;
+
+	socketStore.deletePeopleSearchResults();
 }
 
 async function uploadGroupAvatar(groupId, file) {
@@ -155,14 +149,10 @@ function searchPeople(input) {
 const peopleToShow = computed(() => {
 	const q = searchText.value?.trim();
 
-	// NO search → show contacts
-	if (!q) {
-		return contacts.value;
-	}
+	if (!q) return [];
 
-	// WITH search → show ONLY search results (exclude myself)
 	return (peopleSearchResults.value || []).filter(
-		(p) => p.id !== userInfo.value?.id,
+		(p) => p.id !== userInfo.value?.id && !selectedIds.value.includes(p.id),
 	);
 });
 
@@ -176,12 +166,20 @@ function getDisplayName(person) {
 
 	return `@${person.username}`;
 }
+
+const selectedPeople = computed(() =>
+	Array.from(selectedPeopleMap.value.values()),
+);
+
+const unselectedContacts = computed(() =>
+	contacts.value.filter((p) => !selectedIds.value.includes(p.id)),
+);
 </script>
 
 <template>
 	<div class="panel-header">
-		<h3 v-if="step === 1">New group</h3>
-		<h3 v-else>Group info</h3>
+		<h3 v-if="step === 1">Nuevo grupo</h3>
+		<h3 v-else>Información del grupo</h3>
 
 		<button class="close-btn" @click="close">✕</button>
 	</div>
@@ -190,10 +188,26 @@ function getDisplayName(person) {
 
 	<!-- STEP 1: SELECT MEMBERS -->
 	<div v-if="step === 1" class="panel-body">
-		<p class="subtitle">Select at least 2 contacts</p>
-
+		<p class="subtitle">Selecciona al menos 1 miembro</p>
 		<div class="contacts-list">
+			<!-- SELECTED (contacts + non-contacts) -->
+			<template v-if="step === 1 && !searchText && selectedPeople.length">
+				<p class="selected-label">Seleccionados</p>
+				<label
+					v-for="person in selectedPeople"
+					:key="`selected-${person.id}`"
+					class="contact-item selected"
+				>
+					<input type="checkbox" checked @change="toggleMember(person)" />
+
+					<img :src="person.avatar_url" class="avatar" />
+					{{ getDisplayName(person) }}
+				</label>
+			</template>
+
+			<!-- SEARCH RESULTS -->
 			<label
+				v-if="searchText"
 				v-for="person in peopleToShow"
 				:key="person.id"
 				class="contact-item"
@@ -201,13 +215,32 @@ function getDisplayName(person) {
 				<input
 					type="checkbox"
 					:checked="selectedIds.includes(person.id)"
-					@change="toggleMember(person.id)"
+					@change="toggleMember(person)"
 				/>
 
-				<img :src="person.avatar_url" class="avatar" alt="avatar" />
-
+				<img :src="person.avatar_url" class="avatar" />
 				{{ getDisplayName(person) }}
 			</label>
+
+			<!-- CONTACTS (when no search) -->
+			<template v-else>
+				<p v-if="unselectedContacts.length" class="selected-label">Contactos</p>
+
+				<label
+					v-for="person in unselectedContacts"
+					:key="person.id"
+					class="contact-item"
+				>
+					<input
+						type="checkbox"
+						:checked="selectedIds.includes(person.id)"
+						@change="toggleMember(person)"
+					/>
+
+					<img :src="person.avatar_url" class="avatar" />
+					{{ getDisplayName(person) }}
+				</label>
+			</template>
 		</div>
 	</div>
 
@@ -231,14 +264,14 @@ function getDisplayName(person) {
 
 	<!-- Footer -->
 	<div class="panel-footer">
-		<button v-if="step === 2" @click="prevStep">Back</button>
+		<button v-if="step === 2" @click="prevStep">Atras</button>
 
 		<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
-			Next
+			Siguiente
 		</button>
 
 		<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
-			Create group
+			Crear grupo
 		</button>
 	</div>
 </template>
@@ -444,5 +477,17 @@ button:disabled {
 	padding: 0.5rem 1rem;
 	width: 100%;
 	box-sizing: border-box;
+}
+
+.selected-label {
+	margin: 6px 0 4px;
+	font-size: 12px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.6);
+	text-transform: uppercase;
+}
+
+.contact-item.selected {
+	background: rgba(255, 255, 255, 0.08);
 }
 </style>
