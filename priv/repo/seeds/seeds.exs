@@ -170,7 +170,15 @@ contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
   %{user_id: lucas.id, contact_id: manuel.id},
+  %{user_id: lucas.id, contact_id: persona1.id},
+  %{user_id: lucas.id, contact_id: persona2.id},
   %{user_id: lucas.id, contact_id: persona3.id, nickname: "Capo"},
+  %{user_id: lucas.id, contact_id: persona4.id},
+  %{user_id: lucas.id, contact_id: persona5.id},
+  %{user_id: lucas.id, contact_id: persona6.id},
+  %{user_id: lucas.id, contact_id: persona7.id},
+  %{user_id: lucas.id, contact_id: persona8.id},
+  %{user_id: lucas.id, contact_id: persona9.id},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
   %{user_id: martin.id, contact_id: manuel.id, nickname: nil},

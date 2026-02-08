@@ -40,6 +40,9 @@
   background: var(--bg-peoplelist-panel);
   flex-direction: column;
   padding: 0 1rem;
+
+  min-height: 0;
+	overflow-y: scroll;
 }
 
 .people-move {
@@ -55,6 +58,28 @@
 .people-enter-to {
   opacity: 1;
   transform: translateY(0);
+}
+
+
+.people-list::-webkit-scrollbar {
+  width: 0.8rem;
+}
+
+.people-list::-webkit-scrollbar-track {
+  background: transparent; /* rail invisible */
+}
+
+.people-list::-webkit-scrollbar-thumb {
+  background: var(--scroll-bar);
+  border-radius: 999px;
+}
+
+.people-list::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-bar-hover);
+}
+
+.people-list::-webkit-scrollbar-button {
+  display: none; /* saca las flechitas */
 }
 
 
