@@ -2,30 +2,32 @@
 import { ref, computed, watch } from "vue";
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
+import PeopleSearchBar from "@/components/people/PeopleSearchBar.vue";
 
-const props = defineProps({
-	open: {
-		type: Boolean,
-		required: true,
-	},
-});
+// const props = defineProps({
+// 	open: {
+// 		type: Boolean,
+// 		required: true,
+// 	},
+// });
 
 const emit = defineEmits(["close"]);
 
 const socketStore = useSocketStore();
 const { contacts } = storeToRefs(socketStore);
-
+const { userInfo } = storeToRefs(socketStore);
+const { peopleSearchResults } = storeToRefs(socketStore);
 /* -----------------------
  * Step control
  * --------------------- */
 const step = ref(1); // 1: select members, 2: group info
 
-watch(
-	() => props.open,
-	(val) => {
-		if (val) reset();
-	},
-);
+// watch(
+// 	() => props.open,
+// 	(val) => {
+// 		if (val) reset();
+// 	},
+// );
 
 /* -----------------------
  * Local state
@@ -35,6 +37,7 @@ const name = ref("");
 const description = ref("");
 const avatarFile = ref(null);
 const avatarPreview = ref(null);
+const searchText = ref(null);
 
 /* -----------------------
  * Computed
@@ -138,107 +141,127 @@ async function uploadGroupAvatar(groupId, file) {
 		console.error("Avatar upload failed", err);
 	}
 }
+
+function searchPeople(input) {
+	searchText.value = input;
+
+	if (input && input.trim()) {
+		socketStore.searchPeople(input);
+	} else {
+		socketStore.deletePeopleSearchResults();
+	}
+}
+
+const peopleToShow = computed(() => {
+	const q = searchText.value?.trim();
+
+	// NO search → show contacts
+	if (!q) {
+		return contacts.value;
+	}
+
+	// WITH search → show ONLY search results (exclude myself)
+	return (peopleSearchResults.value || []).filter(
+		(p) => p.id !== userInfo.value?.id,
+	);
+});
+
+function getDisplayName(person) {
+	const contact = contacts.value.find((c) => c.id === person.id);
+
+	if (contact) {
+		// prefer nickname → name → username
+		return contact.contact_info?.nickname || contact.name || person.username;
+	}
+
+	return `@${person.username}`;
+}
 </script>
 
 <template>
-	<div v-if="open" class="modal-backdrop">
-		<div class="modal">
-			<!-- Header -->
-			<div class="modal-header">
-				<h3 v-if="step === 1">New group</h3>
-				<h3 v-else>Group info</h3>
+	<div class="panel-header">
+		<h3 v-if="step === 1">New group</h3>
+		<h3 v-else>Group info</h3>
 
-				<button class="close-btn" @click="close">✕</button>
-			</div>
+		<button class="close-btn" @click="close">✕</button>
+	</div>
 
-			<!-- STEP 1: SELECT MEMBERS -->
-			<div v-if="step === 1" class="modal-body">
-				<p class="subtitle">Select at least 2 contacts</p>
+	<PeopleSearchBar v-if="step === 1" @search-people="searchPeople" />
 
-				<div class="contacts-list">
-					<label
-						v-for="contact in contacts"
-						:key="contact.id"
-						class="contact-item"
-					>
-						<input
-							type="checkbox"
-							:checked="selectedIds.includes(contact.id)"
-							@change="toggleMember(contact.id)"
-						/>
+	<!-- STEP 1: SELECT MEMBERS -->
+	<div v-if="step === 1" class="panel-body">
+		<p class="subtitle">Select at least 2 contacts</p>
 
-						<img :src="contact.avatar_url" class="avatar" alt="avatar" />
-
-						<span>{{ contact.name }}</span>
-					</label>
-				</div>
-			</div>
-
-			<!-- STEP 2: GROUP INFO -->
-			<div v-else class="modal-body">
-				<div class="avatar-section">
-					<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
-					<div v-else class="group-avatar placeholder">👥</div>
-
-					<input type="file" accept="image/*" @change="onAvatarChange" />
-				</div>
-
+		<div class="contacts-list">
+			<label
+				v-for="person in peopleToShow"
+				:key="person.id"
+				class="contact-item"
+			>
 				<input
-					v-model="name"
-					type="text"
-					placeholder="Group name"
-					class="input"
+					type="checkbox"
+					:checked="selectedIds.includes(person.id)"
+					@change="toggleMember(person.id)"
 				/>
 
-				<textarea
-					v-model="description"
-					placeholder="Description (optional)"
-					class="textarea"
-				/>
-			</div>
+				<img :src="person.avatar_url" class="avatar" alt="avatar" />
 
-			<!-- Footer -->
-			<div class="modal-footer">
-				<button v-if="step === 2" @click="prevStep">Back</button>
-
-				<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
-					Next
-				</button>
-
-				<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
-					Create group
-				</button>
-			</div>
+				{{ getDisplayName(person) }}
+			</label>
 		</div>
+	</div>
+
+	<!-- STEP 2: GROUP INFO -->
+	<div v-else class="panel-body">
+		<div class="avatar-section">
+			<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
+			<div v-else class="group-avatar placeholder">👥</div>
+
+			<input type="file" accept="image/*" @change="onAvatarChange" />
+		</div>
+
+		<input v-model="name" type="text" placeholder="Group name" class="input" />
+
+		<textarea
+			v-model="description"
+			placeholder="Description (optional)"
+			class="textarea"
+		/>
+	</div>
+
+	<!-- Footer -->
+	<div class="panel-footer">
+		<button v-if="step === 2" @click="prevStep">Back</button>
+
+		<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
+			Next
+		</button>
+
+		<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
+			Create group
+		</button>
 	</div>
 </template>
 
 <style scoped>
-.modal-backdrop {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.55);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 100;
-	backdrop-filter: blur(2px);
-}
+.panel {
+	width: 100%;
+	height: 100%;
 
-.modal {
-	width: 420px;
-	max-height: 80vh;
 	display: flex;
 	flex-direction: column;
-	background: var(--bg-chatlist-panel);
-	border-radius: 14px;
-	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+
+	background: var(--bg-peoplelist-panel);
+	border-radius: 0;
+	box-shadow: none;
 	overflow: hidden;
-	color: var(--text-primary, #fff);
+
+	color: var(--text-primary);
+	min-height: 0;
 }
 
 /* ---------- HEADER ---------- */
-.modal-header {
+.panel-header {
 	padding: 14px 18px;
 	display: flex;
 	justify-content: space-between;
@@ -246,7 +269,7 @@ async function uploadGroupAvatar(groupId, file) {
 	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.modal-header h3 {
+.panel-header h3 {
 	font-size: 16px;
 	font-weight: 600;
 	margin: 0;
@@ -265,9 +288,14 @@ async function uploadGroupAvatar(groupId, file) {
 }
 
 /* ---------- BODY ---------- */
-.modal-body {
+.panel-body {
+	flex: 1;
+	min-height: 0;
 	padding: 16px 18px;
 	overflow-y: auto;
+	min-width: 0;
+	overflow-x: hidden;
+	scrollbar-gutter: stable;
 }
 
 .subtitle {
@@ -367,7 +395,7 @@ async function uploadGroupAvatar(groupId, file) {
 }
 
 /* ---------- FOOTER ---------- */
-.modal-footer {
+.panel-footer {
 	padding: 12px 18px;
 	display: flex;
 	justify-content: space-between;
@@ -397,17 +425,24 @@ button:disabled {
 	cursor: not-allowed;
 }
 
-.modal-footer button {
+.panel-footer button {
 	background: var(--msg-out);
 	color: white;
 }
 
-.modal-footer button:first-child {
+.panel-footer button:first-child {
 	/* background: transparent; */
 	color: white;
 }
 
-.modal-footer button:first-child:hover {
+.panel-footer button:first-child:hover {
 	color: white;
+}
+
+.search {
+	margin: 0;
+	padding: 0.5rem 1rem;
+	width: 100%;
+	box-sizing: border-box;
 }
 </style>
