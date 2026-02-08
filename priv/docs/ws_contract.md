@@ -1,27 +1,39 @@
-# WebSocket Contract
+# 🗃️ WebSocket Contract
 
-## Front 🡲 Back
+- Version: 1.0.0
+
+This document defines the WebSocket message contract between
+the frontend client and the Elixir backend.
+
+## Front ➡️ Back
 
 ### open_chat
+
 Fields:
+
 - chat_id: uuid
 - content: string
 - format: text | image | file
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "open_chat",
-  "chat_id": "uuid",
+	"type": "open_chat",
+	"chat_id": "uuid",
+	"format": "text"
 }
 ```
+
 </details>
 
 ---
+
 ### send_message
+
 Fields:
+
 - chat_id: uuid
 - msg: Object
   - id: uuid,
@@ -36,169 +48,202 @@ Fields:
   - format: "text | image | video | audio | file"
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "send_message",
-  "chat_id": "uuid",
-  "msg": {
-    "id": "uuid",
-    "front_msg_id": "uuid",
-    "chat_id": null,
-    "content": "text",
-    "state": "sending",
-    "sender_user_id": "uuid",
-    "type": "outgoing",
-    "time": "2026-02-07T22:55:00Z",
-    "avatar_url": "url",
-    "format": "text | image | video | audio | file",
-  },
+	"type": "send_message",
+	"chat_id": "uuid",
+	"msg": {
+		"id": "uuid",
+		"front_msg_id": "uuid",
+		"chat_id": null,
+		"content": "text",
+		"state": "sending",
+		"sender_user_id": "uuid",
+		"type": "outgoing",
+		"time": "2026-02-07T22:55:00Z",
+		"avatar_url": "url",
+		"format": "text | image | video | audio | file"
+	}
 }
 ```
+
 </details>
 
 ---
+
 ### chat_messages_read
+
 Fields:
+
 - chat_id: uuid
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "chat_messages_read",
-  "chat_id": "uuid",
+	"type": "chat_messages_read",
+	"chat_id": "uuid"
 }
 ```
+
 </details>
 
 ---
+
 ### get_contacts
+
 Fields:
-  - none
+
+- none
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "get_contacts"
+	"type": "get_contacts"
 }
 ```
+
 </details>
 
 ---
+
 ### get_person_info
+
 Fields:
+
 - person_id: uuid
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "get_person_info",
-  "person_id": "uuid",
+	"type": "get_person_info",
+	"person_id": "uuid"
 }
 ```
+
 </details>
 
 ---
+
 ### search_people
+
 Fields:
+
 - input: string
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "search_people",
-  "input": "text",
+	"type": "search_people",
+	"input": "text"
 }
 ```
+
 </details>
 
-
 ---
+
 ### create_private_chat
+
 Fields:
+
 - user_id: uuid
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "create_private_chat",
-  "user_id": "uuid",
+	"type": "create_private_chat",
+	"user_id": "uuid"
 }
 ```
+
 </details>
 
 ---
+
 ### change_username
+
 Fields:
+
 - new_username: string
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "change_username",
-  "new_username": "text",
+	"type": "change_username",
+	"new_username": "text"
 }
 ```
+
 </details>
 
 ---
+
 ### change_name
+
 Fields:
+
 - new_username: string
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "change_name",
-  "new_name": "text",
+	"type": "change_name",
+	"new_name": "text"
 }
 ```
+
 </details>
 
 ---
+
 ### change_nickname
+
 Fields:
+
 - user_id: uuid
 - new_nickname: string
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "change_nickname",
-  "user_id": "uuid",
-  "new_nickname": "text",
+	"type": "change_nickname",
+	"user_id": "uuid",
+	"new_nickname": "text"
 }
 ```
+
 </details>
 
-
 ---
+
 ### create_group
+
 Fields:
+
 - name: string
 - description: string
 - avatar_url: url,
 - member_ids: uuid[ ]
 
-
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -214,31 +259,36 @@ Fields:
   ]
 }
 ```
+
 </details>
 
 ---
+
 ### logout
+
 Fields: none
 
-
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "logout"
+	"type": "logout"
 }
 ```
+
 </details>
 
+---
 
 ---
----
-## Back 🡲 Front
+
+## Back ➡️ Front
 
 ### user_info
 
 Fields:
+
 - user: Object
   - id: uuid,
   - username: string,
@@ -261,10 +311,8 @@ Fields:
     - format: "text | image | video | audio | file",
     - filename: string
 
-
-
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -298,12 +346,15 @@ Fields:
   ]
 }
 ```
+
 </details>
 
 ---
+
 ### chat_info
 
 Fields:
+
 - chat: Object
   - id: uuid
   - messages: Object[ ]
@@ -330,10 +381,8 @@ Fields:
     - last_read_at: ISOTimeString
     - nickname: string
 
-
-
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -374,13 +423,15 @@ Fields:
   }
 }
 ```
+
 </details>
 
-
 ---
+
 ### new_message
 
 Fields:
+
 - message: Object
   - id: uuid
   - content: string
@@ -397,63 +448,65 @@ Fields:
   - type: "incoming | outgoing"
   - sender_name: string
 
-
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "new_message",
-  "message": {
-    "id": "uuid",
-    "content": "text",
-    "user_id": "uuid",
-    "chat_id": "uuid",
-    "state": "sent | delivered | read",
-    "format": "text | image | video | audio | file",
-    "filename": "string",
-    "deleted_at": "ISOTimeString",
-    "updated_at": "ISOTimeString",
-    "time": "ISOTimeString",
-    "avatar_url": "url",
-    "front_msg_id": "uuid",
-    "type": "incoming | outgoing",
-    "sender_name": "text"
-  }
+	"type": "new_message",
+	"message": {
+		"id": "uuid",
+		"content": "text",
+		"user_id": "uuid",
+		"chat_id": "uuid",
+		"state": "sent | delivered | read",
+		"format": "text | image | video | audio | file",
+		"filename": "string",
+		"deleted_at": "ISOTimeString",
+		"updated_at": "ISOTimeString",
+		"time": "ISOTimeString",
+		"avatar_url": "url",
+		"front_msg_id": "uuid",
+		"type": "incoming | outgoing",
+		"sender_name": "text"
+	}
 }
-
 ```
+
 </details>
 
-
 ---
+
 ### chat_read
 
 Fields:
+
 - chat_id: uuid,
 - reader_user_id: uuid
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
-  "type": "chat_read",
-  "chat_id": "uuid",
-  "reader_user_id": "uuid"
+	"type": "chat_read",
+	"chat_id": "uuid",
+	"reader_user_id": "uuid"
 }
-
 ```
+
 </details>
 
 ---
+
 ### messages_delivered
 
 Fields:
+
 - message_ids: uuid [ ]
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -467,26 +520,28 @@ Fields:
 }
 
 ```
+
 </details>
 
-
 ---
+
 ### contacts
 
 Fields:
+
 - contacts: Object [ ]
-  -  id: uuid
-  -  username: string
-  -  name: string
-  -  avatar_url: url
-  -  last_seen_at: ISOTimeString
-  -  contact_info: Object
-  -  owner_user_id: uuid
-  -  nickname: string
-  -  added_at: ISOTimeString
+  - id: uuid
+  - username: string
+  - name: string
+  - avatar_url: url
+  - last_seen_at: ISOTimeString
+  - contact_info: Object
+  - owner_user_id: uuid
+  - nickname: string
+  - added_at: ISOTimeString
 
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -509,13 +564,15 @@ Fields:
 }
 
 ```
+
 </details>
 
-
 ---
+
 ### person_info
 
 Fields:
+
 - person_info: Object
   - id: uuid
   - username: string
@@ -528,9 +585,9 @@ Fields:
     - owner_user_id: uuid
     - nickname: string
     - added_at: ISOTimeString
-  
+
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -555,15 +612,17 @@ Fields:
 }
 
 ```
+
 </details>
 
 ---
+
 ### search_people_results
 
 Fields:
-  
+
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -582,13 +641,15 @@ Fields:
 }
 
 ```
+
 </details>
 
-
 ---
+
 ### private_chat_created
 
 Fields:
+
 - chat: Object (only sent to chat creator)
   - id: uuid
   - messages: Object [ ]
@@ -623,9 +684,8 @@ Fields:
   - unread_messages: integer
   - last_message: null
 
-  
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -676,16 +736,17 @@ Fields:
 }
 
 ```
+
 </details>
 
-
 ---
+
 ### username_change_result
 
 Fields:
-  
+
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -694,7 +755,7 @@ Fields:
   "data": {
     "new_username": "text"
   } || {
-    "reason": "not_found" || 
+    "reason": "not_found" ||
     {
       "username": "can't be blank" ||
                   "should be at least 3 character(s)" ||
@@ -708,16 +769,17 @@ Fields:
 }
 
 ```
+
 </details>
 
-
 ---
+
 ### name_change_result
 
 Fields:
-  
+
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -726,7 +788,7 @@ Fields:
   "data": {
     "new_name": "text"
   } || {
-    "reason": "not_found" || 
+    "reason": "not_found" ||
     {
       "name": "can't be blank" ||
               "should be at least 1 character(s)" ||
@@ -738,16 +800,17 @@ Fields:
 }
 
 ```
+
 </details>
 
-
 ---
+
 ### nickname_change_result
 
 Fields:
-  
+
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -757,7 +820,7 @@ Fields:
     "contact_id": "uuid",
     "new_name": "text"
   } || {
-    "reason": "not_found" || 
+    "reason": "not_found" ||
     {
       "name": "can't be blank" ||
               "should be at least 1 character(s)" ||
@@ -768,14 +831,15 @@ Fields:
 
 }
 ```
+
 </details>
 
-
-
 ---
+
 ### group_chat_created
 
 Fields:
+
 - chat: Object (only sent to chat creator)
   - id: uuid
   - messages: Object [ ]
@@ -810,9 +874,8 @@ Fields:
   - unread_messages: integer
   - last_message: null
 
-  
 <details>
-<summary>Ejemplo</summary>
+<summary>Example</summary>
 
 ```json
 {
@@ -864,4 +927,5 @@ Fields:
 }
 
 ```
+
 </details>

@@ -74,6 +74,24 @@ defmodule Echo.Http.Router do
     end
   end
 
+  defp route(conn, "GET", "/api/docs/ws") do
+    markdown_file = Path.join(:code.priv_dir(:echo), "docs/ws_contract.md")
+
+    case File.read(markdown_file) do
+      {:ok, md} ->
+        html = get_markdown_html(md)
+
+        conn
+        |> put_resp_content_type("text/html")
+        |> send_resp(200, html)
+
+      {:error, _} ->
+        conn
+        |> put_resp_content_type("text/plain")
+        |> send_resp(404, "Docs not found")
+    end
+  end
+
   defp route(conn, "POST", "/api/register") do
     opts =
       Plug.Parsers.init(
@@ -113,14 +131,14 @@ defmodule Echo.Http.Router do
   end
 
   defp route(conn, "POST", "/api/groups/" <> rest) do
-  case String.split(rest, "/") do
-    [group_id, "avatar"] ->
-      handle_group_avatar_upload(conn, group_id)
+    case String.split(rest, "/") do
+      [group_id, "avatar"] ->
+        handle_group_avatar_upload(conn, group_id)
 
-    _ ->
-      send_resp(conn, 404, Jason.encode!(%{error: "Not found"}))
+      _ ->
+        send_resp(conn, 404, Jason.encode!(%{error: "Not found"}))
+    end
   end
-end
 
   defp route(conn, "POST", "/api/chat/upload") do
     auth_header = List.first(get_req_header(conn, "authorization")) || ""
@@ -155,9 +173,9 @@ end
 
   ## -------- SPA fallback (Vue Router support) --------
 
-  defp route(conn, "GET", _path) do
-    send_file(conn, 200, "priv/static/index.html")
-  end
+  # defp route(conn, "GET", _path) do
+  #   send_file(conn, 200, "priv/static/index.html")
+  # end
 
   ## -------- Final fallback --------
 
@@ -228,19 +246,51 @@ end
     token = String.replace(auth_header, "Bearer ", "")
 
     with {:ok, _user_id} <- Echo.Auth.JWT.extract_user_id(token),
-        {:ok, upload, conn} <- parse_multipart(conn),
-        {:ok, url} <- Echo.Media.upload_group_avatar(group_id, upload) do
+         {:ok, upload, conn} <- parse_multipart(conn),
+         {:ok, url} <- Echo.Media.upload_group_avatar(group_id, upload) do
       send_resp(conn, 200, Jason.encode!(%{avatar_url: url}))
     else
       error ->
         IO.inspect(error, label: "GROUP AVATAR UPLOAD ERROR")
         send_resp(conn, 400, Jason.encode!(%{error: "Avatar upload failed"}))
     end
-end
+  end
 
   defp not_found(conn) do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(404, Jason.encode!(%{error: "Not found"}))
+  end
+
+  defp get_markdown_html(md) do
+    html = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>WebSocket Docs</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
+      <style>
+        body { background:#f6f8fa; padding:2rem; }
+        .markdown-body { max-width: 800px; margin: auto; }
+      </style>
+    </head>
+    <body class="markdown-body">
+      <pre id="md-content" style="display:none;">#{md}</pre>
+      <div id="md-rendered"></div>
+
+      <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+      <script>
+        const md = document.getElementById('md-content').innerText;
+        document.getElementById('md-rendered').innerHTML = marked.parse(md);
+      </script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    </body>
+    </html>
+    """
+
+    html
   end
 end
