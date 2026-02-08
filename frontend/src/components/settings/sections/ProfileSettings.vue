@@ -250,7 +250,7 @@ input:not([readonly]) {
 	height: 3rem;
 	width: 3rem;
 	border-radius: 50%;
-	background-color: var(--msg-out);
+	background-color: var(--main-app-color-2);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -260,7 +260,7 @@ input:not([readonly]) {
 	height: 3rem;
 	width: 3rem;
 	border-radius: 50%;
-	background-color: var(--msg-in);
+	background-color: var(--main-app-color-1);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -268,7 +268,8 @@ input:not([readonly]) {
 .icon {
 	max-height: 2.2rem;
 	max-width: 2.2rem;
-	color: var(--text-main);
+	color: var(--text-main-light);
+	padding: 0.1rem;
 }
 
 .mini-swap-enter-active,
@@ -298,14 +299,14 @@ input:not([readonly]) {
 	height: 72px;
 	border-radius: 50%;
 	object-fit: cover;
-	border: 2px solid #2f3e63;
+	border: 2px solid var(--avatar-border);
 }
 
 .avatar-block button {
 	padding: 0.6rem 1.2rem;
 	border-radius: 0.8rem;
 	border: none;
-	background: var(--msg-out);
+	background: var(--main-app-color-2);
 	cursor: pointer;
 }
 

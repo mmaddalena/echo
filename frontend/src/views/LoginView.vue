@@ -1,7 +1,13 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useSocketStore } from "@/stores/socket";
+import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
+import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
+
+import { useThemeStore } from "@/stores/theme"
+const themeStore = useThemeStore()
+const theme = computed(() => themeStore.theme)
 
 const username = ref("lucas"); //TODO CAMBIAR A VACIO ("")
 const password = ref("12345678"); //TODO CAMBIAR A VACIO ("")
@@ -46,7 +52,7 @@ async function handleLogin() {
 	<div class="body">
 		<div class="login-container">
 			<img
-				src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
+				:src="theme === 'dark' ? logoDark : logoLight"
 				class="logo"
 				alt="Echo logo"
 			/>

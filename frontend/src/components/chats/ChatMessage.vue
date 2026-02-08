@@ -157,6 +157,7 @@ function closeImage() {
 }
 .user-name {
 	font-size: 1.28rem;
+	color: var(--text-main);
 }
 
 .message-body {
@@ -171,6 +172,7 @@ function closeImage() {
 	text-align: left;
 	font-size: 1.4rem;
 	line-height: 1.4;
+	color: var(--text-main);
 }
 .meta {
 	display: inline-flex;
@@ -188,6 +190,7 @@ function closeImage() {
 	font-size: 1.1rem;
 	opacity: 0.6;
 	flex-shrink: 0;
+	color: var(--text-main);
 }
 
 .msg-state-enter-active,

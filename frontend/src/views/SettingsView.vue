@@ -8,6 +8,13 @@ import Sidebar from "@/components/layout/Sidebar.vue";
 import SettingsSectionsList from "../components/settings/SettingsSectionsList.vue";
 import SettingsPanel from "../components/settings/SettingsPanel.vue";
 
+import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
+import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
+
+import { useThemeStore } from "@/stores/theme"
+const themeStore = useThemeStore()
+const theme = computed(() => themeStore.theme)
+
 const router = useRouter();
 const socketStore = useSocketStore();
 const user = computed(() => socketStore.userInfo);
@@ -30,13 +37,13 @@ function logout() {
 	<div class="settings-layout">
 		<div class="left">
 			<img
-				src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
+				:src="theme === 'dark' ? logoDark : logoLight"
 				class="logo"
 				alt="Echo logo"
 			/>
 			<div class="main">
 				<Sidebar :avatarURL="user?.avatar_url" />
-				<SettingsSectionsList @logout="logout" />
+				<SettingsSectionsList class="sections-list" @logout="logout" />
 			</div>
 		</div>
 		<div class="right">
@@ -73,5 +80,10 @@ function logout() {
 	flex-direction: column;
 	flex: 1;
 	height: 100%;
+}
+
+.sections-list {
+	background-color: var(--bg-chatlist-panel);
+	border-radius: 1.5rem 1.5rem 0 0;
 }
 </style>

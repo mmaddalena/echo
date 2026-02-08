@@ -4,6 +4,8 @@ import IconOptsMenu from "../icons/IconOptsMenu.vue";
 import { computed, ref, watch } from "vue";
 import { formatAddedTime } from "@/utils/formatAddedTime";
 
+
+
 const emit = defineEmits(["scroll-to-message"]);
 
 const props = defineProps({
@@ -185,7 +187,6 @@ function toggleSearch(){
 	align-items: center;
 }
 .avatar {
-	background-color: aqua;
 	height: 5rem;
 	width: 5rem;
 	border-radius: 50%;
@@ -261,9 +262,6 @@ function toggleSearch(){
 	background-color: var(--bg-chatlist-hover);
 }
 
-.search-results {
-
-}
 .search-amount-results {
 	font-size: 1.6rem;
 	align-self: center;

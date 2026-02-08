@@ -7,6 +7,7 @@
   import { useRoute } from 'vue-router';
   import { useSocketStore } from "@/stores/socket";
   import { useUIStore } from "@/stores/ui"
+  import { useThemeStore } from "@/stores/theme"
 
   import IconContacts from '../icons/IconContacts.vue';
   import IconPeople from '../icons/IconPeople.vue';
@@ -39,7 +40,6 @@
   const isChatsView = computed(() => route.name === 'chats')
   const showingPeople = computed(() => uiStore.leftPanel === 'people')
 
-
   function openPeople() {
     uiStore.showPeople()
     socketStore.requestContactsIfNeeded()
@@ -48,6 +48,15 @@
   function openChats() {
     uiStore.showChats()
   }
+
+  
+  const themeStore = useThemeStore()
+  const theme = computed(() => themeStore.theme)
+
+  function setTheme(mode) {
+    themeStore.setTheme(mode)
+  }
+
 
   // Si vengo desde settings (u otra view), que se mande chats de primera
   watch(
@@ -78,12 +87,25 @@
       </button>
     </div>
     <div class="config_opts">
-      <button>
-        <IconThemeMode class="icon icon-light" variant="light"/>
+      <Transition name="theme-toggle" mode="out-in">
+      <button
+        v-if="theme === 'dark'"
+        key="dark"
+        @click="setTheme('light')"
+      >
+        <IconThemeMode class="icon icon-light" variant="light" />
       </button>
-      <button>
-        <IconThemeMode class="icon icon-dark" variant="dark"/>
+
+      <button
+        v-else
+        key="light"
+        @click="setTheme('dark')"
+      >
+        <IconThemeMode class="icon icon-dark" variant="dark" />
       </button>
+    </Transition>
+
+
 
       <button 
         v-if="route.name === 'chats'"
@@ -149,10 +171,10 @@ button {
   color: var(--text-main);
 }
 .icon-light {
-  color: var(--msg-in);
+  color: var(--main-app-color-1);
 }
 .icon-dark{
-  color: var(--msg-out);
+  color: var(--main-app-color-2);
 }
 .outline {
   stroke: var(--text-main);
@@ -193,4 +215,21 @@ button {
 .zoom-leave-to {
 	opacity: 0;
 }
+
+
+.theme-toggle-enter-active,
+.theme-toggle-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.theme-toggle-enter-from {
+  opacity: 0;
+  transform: scale(0.8) rotate(-80deg);
+}
+
+.theme-toggle-leave-to {
+  opacity: 0;
+  transform: scale(0.8) rotate(80deg);
+}
+
 </style>

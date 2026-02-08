@@ -10,11 +10,19 @@
   --bg-chat-header: #141E36;
   --bg-input: #233356;
 
-  --text-main: #f2f3f4;
+  --text-main-light: #f2f3f4;
+  --text-main-dark: #000000;
+  --text-main: var(--text-main-light);
   --text-muted: #9aa4bf;
 
-  --msg-in: #2D4CBA;
-  --msg-out: #742abf;
+  --avatar-border: #2f3e63;
+
+  --msg-in: var(--main-app-color-1);
+  --msg-out: var(--main-app-color-2);
+  --main-app-color-1: #2D4CBA;
+  --main-app-color-2: #742abf;
+
+  --day-label: #00000079;
 
   --msg-focused: #162446;
 
@@ -22,4 +30,31 @@
 
   --left-section-width: 30%;
   
+}
+
+/* Light theme */
+[data-theme="light"] {
+  --bg-main: #E6E6E6;
+  --bg-chatlist-panel: #D9D9D9;
+  --bg-chatlist-hover: #BCBCBC;
+  
+  --bg-peoplelist-panel: var(--bg-chatlist-panel);
+  --bg-peoplelist-muted: none;
+
+  --bg-chat: #E6E6E6;
+  --bg-chat-header: #CDCDCD;
+  --bg-input: #CDCDCD;
+
+  --text-main: var(--text-main-dark);
+  --text-muted: #5E5E5E;
+
+  --avatar-border: #999999;
+
+  --msg-in: #98DBFF;
+  --msg-out: #CD9EFD;
+  --day-label: #00000017;
+
+  --msg-focused: #b9b9b9;
+
+  --accent: #5b8cff;
 }

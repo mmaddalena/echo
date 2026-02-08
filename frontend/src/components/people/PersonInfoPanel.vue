@@ -155,6 +155,7 @@
   cursor: pointer;
 
   font-size: 2rem;
+  color: var(--text-main);
 }
 
 .avatar {
