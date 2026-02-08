@@ -3,7 +3,7 @@ import ChatTabs from "./ChatTabs.vue";
 import ChatList from "./ChatList.vue";
 import ChatInfoPanel from "./ChatInfoPanel.vue";
 // import ChatSearchBar from "./ChatSearchBar.vue";
-import CreateGroupModal from "../groups/CreateGroupModal.vue";
+import CreateGroupPanel from "../groups/CreateGroupPanel.vue";
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
 import { ref, computed } from "vue";
@@ -67,44 +67,48 @@ function handleOpenChat(chatId) {
 	socketStore.openChat(chatId);
 }
 
-const showCreateGroupModal = ref(false);
+const rightPanel = ref("list");
 
 function openCreateGroup() {
 	socketStore.requestContactsIfNeeded(); // important
-	showCreateGroupModal.value = true;
+	rightPanel.value = "create-group";
 }
 
 function closeCreateGroup() {
-	showCreateGroupModal.value = false;
+	rightPanel.value = "list";
 }
 </script>
 
 <template>
 	<div class="panel">
-		<ChatTabs :activeTab="activeTab" @change-to-tab="handleChangeTab" />
+		<ChatTabs
+			v-if="rightPanel === 'list'"
+			:activeTab="activeTab"
+			@change-to-tab="handleChangeTab"
+		/>
 
-		<!-- <ChatSearchBar v-if="activeChatId == null" @search-chat="searchChat" /> -->
-
-		<div class="chat-list-header" v-if="activeTab === 'groups'">
-			<button
-				class="create-group-btn"
-				v-if="activeTab === 'groups'"
-				@click="openCreateGroup"
-			>
+		<div
+			class="chat-list-header"
+			v-if="activeTab === 'groups' && rightPanel === 'list'"
+		>
+			<button class="create-group-btn" @click="openCreateGroup">
 				Crear grupo
 			</button>
 		</div>
 
-		<ChatList :chats="filteredChats" @open-chat="handleOpenChat" />
+		<!-- MAIN CONTENT AREA -->
+		<div class="panel-content">
+			<ChatList
+				v-if="rightPanel === 'list'"
+				:chats="filteredChats"
+				@open-chat="handleOpenChat"
+			/>
 
-		<CreateGroupModal :open="showCreateGroupModal" @close="closeCreateGroup" />
-
-		<!-- <PersonInfoPanel
-			v-if="activeChatId != null"
-			:personInfo="openedPersonInfo"
-			@close-person-info-panel="closePersonInfoPanel"
-			@open-chat="handleOpenChat"
-		/> -->
+			<CreateGroupPanel
+				v-else-if="rightPanel === 'create-group'"
+				@close="closeCreateGroup"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -114,6 +118,9 @@ function closeCreateGroup() {
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+
+	height: 100%;
+	min-height: 0;
 }
 
 .create-group-btn {
@@ -132,5 +139,12 @@ function closeCreateGroup() {
 	align-items: center;
 	padding: 10px 10px 0px 10px;
 	background: var(--bg-chatlist-panel);
+}
+
+.panel-content {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
 }
 </style>
