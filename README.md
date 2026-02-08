@@ -45,4 +45,3 @@ Windows ENV local:
 
 
 `$env:GOOGLE_APPLICATION_CREDENTIALS="/app/priv/gcp/service-account.json"`
-

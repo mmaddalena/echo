@@ -453,7 +453,7 @@ defmodule Echo.Users.UserSession do
 
     send(state.socket, {:send,
       %{
-        type: "group_created",
+        type: "group_chat_created",
         chat: chat_info,
         chat_item: chat_item
       }
@@ -466,7 +466,7 @@ defmodule Echo.Users.UserSession do
           chat_item_other = Chat.build_chat_list_item(chat_id, member_id)
 
           send_payload(us_pid, %{
-            type: "group_created",
+            type: "group_chat_created",
             chat_item: chat_item_other
           })
         end

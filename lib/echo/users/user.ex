@@ -505,14 +505,6 @@ defmodule Echo.Users.User do
         end
     end
   end
-  defp format_changeset_error(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
-    |> Enum.map(fn {field, [error | _]} ->
-      {field, error}
-    end)
-    |> Map.new()
-  end
-
 
   def change_name(user_id, new_name) do
     case Repo.get(UserSchema, user_id) do
@@ -523,7 +515,23 @@ defmodule Echo.Users.User do
         user
         |> UserSchema.name_changeset(%{name: new_name})
         |> Repo.update()
+        |> case do
+          {:ok, user} ->
+            {:ok, user}
+
+          {:error, changeset} ->
+            {:error, format_changeset_error(changeset)}
+        end
     end
+  end
+
+
+  defp format_changeset_error(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+    |> Enum.map(fn {field, [error | _]} ->
+      {field, error}
+    end)
+    |> Map.new()
   end
 
   def change_nickname(user_id, contact_id, new_nickname) do
