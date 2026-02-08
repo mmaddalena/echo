@@ -31,7 +31,8 @@ defmodule Echo.MixProject do
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
       {:goth, "~> 1.4"},
-      {:google_api_storage, "~> 0.34"}
+      {:google_api_storage, "~> 0.34"},
+      {:earmark, "~> 1.4"}
       # {:bcrypt_elixir, "~> 3.0"}
     ]
   end
