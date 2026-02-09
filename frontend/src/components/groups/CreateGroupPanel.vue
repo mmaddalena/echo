@@ -4,6 +4,7 @@ import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
 import PeopleSearchBar from "@/components/people/PeopleSearchBar.vue";
 import IconClose from '@/components/icons/IconClose.vue';
+import IconImage from '@/components/icons/IconImage.vue';
 
 const emit = defineEmits(["close"]);
 
@@ -267,8 +268,10 @@ const unselectedContacts = computed(() =>
 		<!-- STEP 2: GROUP INFO -->
 		<div v-else class="panel-body">
 			<div class="avatar-section">
-				<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
-				<div v-else class="group-avatar placeholder"></div>
+				<div v-if="avatarPreview" :src="avatarPreview" class="group-avatar"></div>
+				<div v-else class="group-avatar placeholder">
+					<IconImage class="group-avatar-icon"/>
+				</div>
 
 				<label class="file-picker">
 				<input
@@ -376,7 +379,7 @@ const unselectedContacts = computed(() =>
 
 .subtitle {
 	font-size: 13px;
-	color: rgba(255, 255, 255, 0.65);
+	color: var(--text-main);
 	margin-bottom: 10px;
 }
 
@@ -407,13 +410,51 @@ const unselectedContacts = computed(() =>
 }
 
 .contact-item:hover {
-	background: rgba(255, 255, 255, 0.05);
+	background: var(--bg-peoplelist-hover);
 }
 
-.contact-item input {
-	accent-color: var(--msg-out);
-	cursor: pointer;
+.contact-item.selected {
+	background: var(--bg-peoplelist-hover);
 }
+
+.contact-item input[type="checkbox"] {
+	appearance: none;
+	-webkit-appearance: none;
+	background-color: var(--text-muted);
+	border-radius: 0.5rem;
+	width: 1.6rem;
+	height: 1.6rem;
+	cursor: pointer;
+	filter: brightness(0.85);
+}
+
+.contact-item input[type="checkbox"]:checked {
+	background-color: var(--main-app-color-2);
+}
+.contact-item input[type="checkbox"]::after {
+	content: "";
+	width: 0.6rem;
+	height: 0.3rem;
+	border-left: 2px solid var(--text-main-light);
+	border-bottom: 2px solid var(--text-main-light);
+	transform: rotate(-45deg) scale(0);
+	display: block;
+	margin: 0.4rem auto 0;
+	transition: transform 0.12s ease;
+}
+.contact-item input[type="checkbox"]:checked::after {
+	transform: rotate(-45deg) scale(1);
+}
+
+
+/* hover sutil */
+.contact-item input[type="checkbox"]:hover {
+	filter: brightness(1);
+}
+
+
+
+
 
 .avatar {
 	width: 36px;
@@ -436,11 +477,14 @@ const unselectedContacts = computed(() =>
 }
 
 .group-avatar {
-	width: 64px;
-	height: 64px;
+	width: 6.4rem;
+	height: 6.4rem;
 	border-radius: 50%;
 	object-fit: cover;
-	background: rgba(255, 255, 255, 0.08);
+	background: var(--bg-chatlist-hover);
+}
+.group-avatar-icon {
+	height: 3rem;
 }
 
 .placeholder {
@@ -448,12 +492,12 @@ const unselectedContacts = computed(() =>
 	align-items: center;
 	justify-content: center;
 	font-size: 26px;
-	color: rgba(255, 255, 255, 0.6);
+	color: var(--text-muted);
 }
 
 .avatar-section input[type="file"] {
 	font-size: 12px;
-	color: rgba(255, 255, 255, 0.7);
+	color: var(--bg-chatlist-hover);
 }
 
 
@@ -465,15 +509,15 @@ const unselectedContacts = computed(() =>
 	margin-top: 10px;
 	border-radius: 10px;
 	border: none;
-	background: rgba(255, 255, 255, 0.06);
-	color: white;
+	background: var(--bg-chatlist-hover);
+	color: var(--text-main);
 	font-size: 14px;
 	font-family: inherit;
 }
 
 .input::placeholder,
 .textarea::placeholder {
-	color: rgba(255, 255, 255, 0.5);
+	color: var(--text-muted);
 }
 
 .textarea {
@@ -489,8 +533,8 @@ const unselectedContacts = computed(() =>
 }
 
 .file-btn {
-	background: var(--msg-out);
-	color: white;
+	background: var(--main-app-color-2);
+	color: var(--text-main-light);
 	padding: 6px 14px;
 	border-radius: 999px;
 	font-size: 13px;
@@ -509,7 +553,7 @@ const unselectedContacts = computed(() =>
 
 .file-name {
 	font-size: 12px;
-	color: rgba(255,255,255,.6);
+	color: var(--text-muted);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	max-width: 160px;
@@ -551,7 +595,7 @@ button:disabled {
 }
 
 .panel-footer button {
-	background: var(--msg-out);
+	background: var(--main-app-color-2);
 	color: white;
 }
 
@@ -575,13 +619,10 @@ button:disabled {
 	margin: 6px 0 4px;
 	font-size: 12px;
 	font-weight: 600;
-	color: rgba(255, 255, 255, 0.6);
+	color: var(--text-main);
 	text-transform: uppercase;
 }
 
-.contact-item.selected {
-	background: rgba(255, 255, 255, 0.08);
-}
 
 
 .panel-body::-webkit-scrollbar {
