@@ -115,6 +115,7 @@
     />
 
     <PeopleSearchBar
+      class="search-bar"
       v-if="openedPersonInfo == null"
       @search-people="searchPeople"
     />
@@ -142,5 +143,8 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+}
+.search-bar {
+  padding: 2rem 3rem;
 }
 </style>

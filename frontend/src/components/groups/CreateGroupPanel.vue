@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
 import PeopleSearchBar from "@/components/people/PeopleSearchBar.vue";
+import IconClose from '@/components/icons/IconClose.vue';
 
 const emit = defineEmits(["close"]);
 
@@ -158,13 +159,10 @@ const peopleToShow = computed(() => {
 
 function getDisplayName(person) {
 	const contact = contacts.value.find((c) => c.id === person.id);
-
 	if (contact) {
-		// prefer nickname → name → username
-		return contact.contact_info?.nickname || contact.name || person.username;
+		return contact.contact_info?.nickname || person.name || null
 	}
-
-	return `@${person.username}`;
+	return person.name || null;
 }
 
 const selectedPeople = computed(() =>
@@ -177,57 +175,50 @@ const unselectedContacts = computed(() =>
 </script>
 
 <template>
-	<div class="panel-header">
-		<h3 v-if="step === 1">Nuevo grupo</h3>
-		<h3 v-else>Información del grupo</h3>
+	<div class="all"> 
+		<div class="panel-header">
+			<h3 v-if="step === 1">Nuevo grupo</h3>
+			<h3 v-else>Información del grupo</h3>
 
-		<button class="close-btn" @click="close">✕</button>
-	</div>
+			<button class="close-btn" @click="close">
+				<IconClose class="close-icon"/>
+			</button>
+		</div>
 
-	<PeopleSearchBar v-if="step === 1" @search-people="searchPeople" />
+		<PeopleSearchBar 
+			v-if="step === 1" 
+			class="search-bar"
+			@search-people="searchPeople" 
+		/>
 
-	<!-- STEP 1: SELECT MEMBERS -->
-	<div v-if="step === 1" class="panel-body">
-		<p class="subtitle">Selecciona al menos 1 miembro</p>
-		<div class="contacts-list">
-			<!-- SELECTED (contacts + non-contacts) -->
-			<template v-if="step === 1 && !searchText && selectedPeople.length">
-				<p class="selected-label">Seleccionados</p>
+		<!-- STEP 1: SELECT MEMBERS -->
+		<div v-if="step === 1" class="panel-body">
+			<p class="subtitle">Selecciona al menos 1 miembro</p>
+			<div class="contacts-list">
+				<!-- SELECTED (contacts + non-contacts) -->
+				<template v-if="step === 1 && !searchText && selectedPeople.length">
+					<p class="selected-label">Seleccionados</p>
+					<label
+						v-for="person in selectedPeople"
+						:key="`selected-${person.id}`"
+						class="contact-item selected"
+					>
+						<input type="checkbox" checked @change="toggleMember(person)" />
+
+						<img :src="person.avatar_url" class="avatar" />
+						<span class="main-name">
+							{{ getDisplayName(person) }}
+						</span>
+						<span class="second-name">
+							{{ `~${person.username}` }}
+						</span>
+					</label>
+				</template>
+
+				<!-- SEARCH RESULTS -->
 				<label
-					v-for="person in selectedPeople"
-					:key="`selected-${person.id}`"
-					class="contact-item selected"
-				>
-					<input type="checkbox" checked @change="toggleMember(person)" />
-
-					<img :src="person.avatar_url" class="avatar" />
-					{{ getDisplayName(person) }}
-				</label>
-			</template>
-
-			<!-- SEARCH RESULTS -->
-			<label
-				v-if="searchText"
-				v-for="person in peopleToShow"
-				:key="person.id"
-				class="contact-item"
-			>
-				<input
-					type="checkbox"
-					:checked="selectedIds.includes(person.id)"
-					@change="toggleMember(person)"
-				/>
-
-				<img :src="person.avatar_url" class="avatar" />
-				{{ getDisplayName(person) }}
-			</label>
-
-			<!-- CONTACTS (when no search) -->
-			<template v-else>
-				<p v-if="unselectedContacts.length" class="selected-label">Contactos</p>
-
-				<label
-					v-for="person in unselectedContacts"
+					v-if="searchText"
+					v-for="person in peopleToShow"
 					:key="person.id"
 					class="contact-item"
 				>
@@ -238,61 +229,98 @@ const unselectedContacts = computed(() =>
 					/>
 
 					<img :src="person.avatar_url" class="avatar" />
-					{{ getDisplayName(person) }}
+					<span class="main-name">
+						{{ getDisplayName(person) }}
+					</span>
+					<span class="second-name">
+						{{ `~${person.username}` }}
+					</span>
 				</label>
-			</template>
+
+				<!-- CONTACTS (when no search) -->
+				<template v-else>
+					<p v-if="unselectedContacts.length" class="selected-label">Contactos</p>
+
+					<label
+						v-for="person in unselectedContacts"
+						:key="person.id"
+						class="contact-item"
+					>
+						<input
+							type="checkbox"
+							:checked="selectedIds.includes(person.id)"
+							@change="toggleMember(person)"
+						/>
+
+						<img :src="person.avatar_url" class="avatar" />
+						<span class="main-name">
+							{{ getDisplayName(person) }}
+						</span>
+						<span class="second-name">
+							{{ `~${person.username}` }}
+						</span>
+					</label>
+				</template>
+			</div>
 		</div>
-	</div>
 
-	<!-- STEP 2: GROUP INFO -->
-	<div v-else class="panel-body">
-		<div class="avatar-section">
-			<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
-			<div v-else class="group-avatar placeholder">👥</div>
+		<!-- STEP 2: GROUP INFO -->
+		<div v-else class="panel-body">
+			<div class="avatar-section">
+				<img v-if="avatarPreview" :src="avatarPreview" class="group-avatar" />
+				<div v-else class="group-avatar placeholder"></div>
 
-			<input type="file" accept="image/*" @change="onAvatarChange" />
+				<label class="file-picker">
+				<input
+					type="file"
+					accept="image/*"
+					@change="onAvatarChange"
+					hidden
+				/>
+				<span class="file-btn">Elegir imagen</span>
+				<span class="file-name">
+					{{ avatarFile ? avatarFile.name : "Ningún archivo seleccionado" }}
+				</span>
+			</label>
+
+			</div>
+
+			<input v-model="name" type="text" placeholder="Nombre del grupo" class="input" />
+
+			<textarea
+				v-model="description"
+				placeholder="Descripción (opcional)"
+				class="textarea"
+			/>
 		</div>
 
-		<input v-model="name" type="text" placeholder="Group name" class="input" />
+		<!-- Footer -->
+		<div class="panel-footer">
+			<button v-if="step === 2" @click="prevStep">Atrás</button>
 
-		<textarea
-			v-model="description"
-			placeholder="Description (optional)"
-			class="textarea"
-		/>
-	</div>
+			<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep" class="next-btn">
+				Siguiente
+			</button>
 
-	<!-- Footer -->
-	<div class="panel-footer">
-		<button v-if="step === 2" @click="prevStep">Atras</button>
-
-		<button v-if="step === 1" :disabled="!canGoNext" @click="nextStep">
-			Siguiente
-		</button>
-
-		<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
-			Crear grupo
-		</button>
+			<button v-if="step === 2" :disabled="!canCreate" @click="createGroup">
+				Crear grupo
+			</button>
+		</div>
 	</div>
 </template>
 
 <style scoped>
-.panel {
-	width: 100%;
-	height: 100%;
+.all {
+	background: var(--bg-peoplelist-panel);
+	border-radius: 1.5rem 1.5rem 0 0;
 
 	display: flex;
 	flex-direction: column;
-
-	background: var(--bg-peoplelist-panel);
-	border-radius: 0;
-	box-shadow: none;
-	overflow: hidden;
-
-	color: var(--text-primary);
+	
 	min-height: 0;
+	overflow: hidden;
+	flex: 1;
 }
-
 /* ---------- HEADER ---------- */
 .panel-header {
 	padding: 14px 18px;
@@ -300,29 +328,44 @@ const unselectedContacts = computed(() =>
 	justify-content: space-between;
 	align-items: center;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	position: relative;
 }
-
 .panel-header h3 {
 	font-size: 16px;
 	font-weight: 600;
 	margin: 0;
 }
-
 .close-btn {
-	background: transparent;
-	border: none;
-	color: #aaa;
-	font-size: 18px;
-	cursor: pointer;
-}
+	display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-main);
+  height: 3rem;
+  width: 3rem;
+  border-radius: 50%;
+  border: none;
 
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+
+  font-size: 2rem;
+  color: var(--text-main);
+	padding: 0.3rem;
+}
 .close-btn:hover {
 	color: #fff;
 }
 
+.search-bar {
+	flex: 0 0 auto;
+	margin: 2rem 3rem 1rem 3rem;
+}
+
 /* ---------- BODY ---------- */
 .panel-body {
-	flex: 1;
+	flex: 1 1 auto;
 	min-height: 0;
 	padding: 16px 18px;
 	overflow-y: auto;
@@ -338,6 +381,15 @@ const unselectedContacts = computed(() =>
 }
 
 /* ---------- CONTACT LIST ---------- */
+.main-name {
+	font-size: 1.6rem !important;
+	color: var(--text-main);
+}
+.second-name {
+	font-size: 1.4rem;
+	color: var(--text-muted);
+}
+
 .contacts-list {
 	display: flex;
 	flex-direction: column;
@@ -404,6 +456,7 @@ const unselectedContacts = computed(() =>
 	color: rgba(255, 255, 255, 0.7);
 }
 
+
 /* ---------- INPUTS ---------- */
 .input,
 .textarea {
@@ -415,6 +468,7 @@ const unselectedContacts = computed(() =>
 	background: rgba(255, 255, 255, 0.06);
 	color: white;
 	font-size: 14px;
+	font-family: inherit;
 }
 
 .input::placeholder,
@@ -427,6 +481,41 @@ const unselectedContacts = computed(() =>
 	min-height: 80px;
 }
 
+.file-picker {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	cursor: pointer;
+}
+
+.file-btn {
+	background: var(--msg-out);
+	color: white;
+	padding: 6px 14px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: 500;
+	transition: opacity .15s ease, transform .05s ease;
+	white-space: nowrap;
+}
+
+.file-btn:hover {
+	opacity: .9;
+}
+
+.file-btn:active {
+	transform: scale(.97);
+}
+
+.file-name {
+	font-size: 12px;
+	color: rgba(255,255,255,.6);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 160px;
+}
+
+
 /* ---------- FOOTER ---------- */
 .panel-footer {
 	padding: 12px 18px;
@@ -434,6 +523,9 @@ const unselectedContacts = computed(() =>
 	justify-content: space-between;
 	align-items: center;
 	border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.next-btn {
+	margin-left: auto;
 }
 
 /* ---------- BUTTONS ---------- */
@@ -490,4 +582,27 @@ button:disabled {
 .contact-item.selected {
 	background: rgba(255, 255, 255, 0.08);
 }
+
+
+.panel-body::-webkit-scrollbar {
+  width: 0.8rem;
+}
+
+.panel-body::-webkit-scrollbar-track {
+  background: transparent; /* rail invisible */
+}
+
+.panel-body::-webkit-scrollbar-thumb {
+  background: var(--scroll-bar);
+  border-radius: 999px;
+}
+
+.panel-body::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-bar-hover);
+}
+
+.panel-body::-webkit-scrollbar-button {
+  display: none; /* saca las flechitas */
+}
+
 </style>
