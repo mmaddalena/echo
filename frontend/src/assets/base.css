@@ -4,6 +4,7 @@
   --bg-chatlist-hover: #233356;
   
   --bg-peoplelist-panel: var(--bg-chatlist-panel);
+  --bg-peoplelist-hover: var(--bg-chatlist-hover);
   --bg-peoplelist-muted: none;
 
   --bg-chat: #0f172a;

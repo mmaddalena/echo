@@ -36,7 +36,7 @@
   cursor: pointer;
 }
 .person-item:hover {
-  background: var(--bg-chatlist-hover);
+  background: var(--bg-peoplelist-hover);
   border-radius: 1.5rem;
 }
 .avatar {

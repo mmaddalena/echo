@@ -14,6 +14,7 @@ const props = defineProps({
 		default: null,
 	},
 	last_seen_at: { type: String, default: null },
+	currentUserId: { type: [String, Number], default: null },
 });
 
 const zoomedImage = ref(null);
@@ -101,7 +102,18 @@ watch(
 
 
 const membersStr = computed(() => {
-	return props.chatInfo?.members?.map((m) => m.username).join(", ") ?? "";
+	return (
+		props.chatInfo?.members
+			?.map(m => {
+				console.log(`Id propio: ${props.currentUserId}`);
+				console.log(`Id del miembro: ${m.user_id}`);
+				
+				return String(m.user_id) === String(props.currentUserId)
+				? 'Tú'
+				: m.nickname || m.name || `~${m.username}`
+			})
+			.join(", ")
+	) ?? "";
 });
 
 

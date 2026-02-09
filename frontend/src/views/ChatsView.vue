@@ -179,6 +179,7 @@ watch(activeChatId, async (newVal) => {
 			<ChatHeader
 				:chatInfo="activeChat"
 				:last_seen_at="userInfo?.last_seen_at"
+				:currentUserId="userInfo?.id"
 				@scroll-to-message="scrollToMessage"
 			/>
 			<ChatMessages
