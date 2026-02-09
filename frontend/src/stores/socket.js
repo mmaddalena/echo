@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { generateId } from "@/utils/idGenerator";
+import { useThemeStore } from "@/stores/theme"
+
 
 export const useSocketStore = defineStore("socket", () => {
 	const socket = ref(null);
@@ -14,6 +16,7 @@ export const useSocketStore = defineStore("socket", () => {
 	const peopleSearchResults = ref(null);
 	const pendingPrivateChat = ref(null);
 	const pendingMessage = ref(null);
+	const themeStore = useThemeStore();
 
 	const creatingGroup = ref(false);
 	const selectedGroupMembers = ref([]);
@@ -89,6 +92,10 @@ export const useSocketStore = defineStore("socket", () => {
 				dispatch_change_nickname(payload);
 			} else if (payload.type === "group_chat_created") {
 				dispatch_group_created(payload);
+			} else if (payload.type === "contact_addition") {
+				dispatch_contact_addition(payload)
+			} else if (payload.type === "contact_deletion") {
+				dispatch_contact_deletion(payload)
 			}
 		};
 
@@ -366,6 +373,143 @@ export const useSocketStore = defineStore("socket", () => {
 		};
 	}
 
+	function dispatch_contact_addition(payload) {
+		if (payload.status !== "success") return;
+
+		const newContact = payload.data.contact;
+		const contact_id = newContact.id;
+		const nickname = newContact.contact_info.nickname ?? newContact.name;
+
+		// 1️⃣ contactos
+		contacts.value = [newContact, ...contacts.value];
+
+		// 2️⃣ panel abierto
+		if (openedPersonInfo.value?.id === contact_id) {
+			openedPersonInfo.value = {
+				...openedPersonInfo.value,
+				contact_info: newContact.contact_info,
+			};
+		}
+
+		// 3️⃣ buscar private chat
+		const private_chat_id = Object.values(chatsInfo.value).find((chat) => {
+			if (chat.type !== "private") return false;
+
+			const other = chat.members.find(
+				m => m.user_id !== userInfo.value.id
+			);
+
+			return other?.user_id === contact_id;
+		})?.id;
+
+		if (!private_chat_id) return;
+
+		// 4️⃣ actualizar chatsInfo (member + name)
+		const chat = chatsInfo.value[private_chat_id];
+
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[private_chat_id]: {
+				...chat,
+				name: nickname,
+				members: chat.members.map(m =>
+					m.user_id === contact_id
+						? { ...m, nickname }
+						: m
+				),
+			},
+		};
+
+		// 5️⃣ actualizar chats list
+		chats.value = chats.value.map(chat =>
+			chat.id === private_chat_id
+				? { ...chat, name: nickname }
+				: chat
+		);
+	}
+
+
+	function dispatch_contact_deletion(payload) {
+		if (payload.status !== "success") return;
+
+		const contact_id = payload.data.user_id;
+
+		// 1️⃣ eliminar de contactos
+		contacts.value = contacts.value.filter(
+			c => c.id !== contact_id
+		);
+
+		// 2️⃣ limpiar panel
+		if (openedPersonInfo.value?.id === contact_id) {
+			const { contact_info, ...rest } = openedPersonInfo.value;
+			openedPersonInfo.value = rest;
+		}
+
+		//Actualizamos el sender_name en los grupales
+		Object.entries(chatsInfo.value).forEach(([chatId, chat]) => {
+			if (chat.type !== "group") return;
+
+			// si no es miembro ni gastamos CPU
+			const member = chat.members.find((m) => m.user_id === contact_id);
+			if (!member) return;
+
+			const updatedMessages = chat.messages.map((msg) =>
+				msg.user_id === contact_id
+					? { ...msg, sender_name: member.name || member.username }
+					: msg,
+			);
+
+			chatsInfo.value = {
+				...chatsInfo.value,
+				[chatId]: {
+					...chat,
+					messages: updatedMessages,
+				},
+			};
+		})
+
+		// 3️⃣ buscar private chat
+		const private_chat_id = Object.values(chatsInfo.value).find((chat) => {
+			if (chat.type !== "private") return false;
+
+			const other = chat.members.find(
+				m => m.user_id !== userInfo.value.id
+			);
+
+			return other?.user_id === contact_id;
+		})?.id;
+
+		if (!private_chat_id) return;
+
+		const chat = chatsInfo.value[private_chat_id];
+
+		const realName = chat.members.find(
+			m => m.user_id === contact_id
+		)?.name;
+
+		// 4️⃣ actualizar chatsInfo
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[private_chat_id]: {
+				...chat,
+				name: realName,
+				members: chat.members.map(m =>
+					m.user_id === contact_id
+						? { ...m, nickname: null }
+						: m
+				),
+			},
+		};
+
+		// 5️⃣ actualizar chats list
+		chats.value = chats.value.map(chat =>
+			chat.id === private_chat_id
+				? { ...chat, name: realName }
+				: chat
+		);
+	}
+
+
 	function disconnect() {
 		if (socket.value) {
 			send({ type: "logout" });
@@ -382,6 +526,9 @@ export const useSocketStore = defineStore("socket", () => {
 		peopleSearchResults.value = null;
 		pendingPrivateChat.value = null;
 		pendingMessage.value = null;
+
+		themeStore.setTheme('dark');
+		
 		sessionStorage.clear();
 	}
 
@@ -602,6 +749,20 @@ export const useSocketStore = defineStore("socket", () => {
 		});
 	}
 
+	function addContact(person_id) {
+		send({
+			type: "add_contact",
+			user_id: person_id,
+		});
+	}
+
+	function deleteContact(person_id) {
+		send({
+			type: "delete_contact",
+			user_id: person_id,
+		});
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -634,5 +795,7 @@ export const useSocketStore = defineStore("socket", () => {
 		selectedGroupMembers,
 		newGroupInfo,
 		updateGroupAvatar,
+		addContact,
+		deleteContact
 	};
 });

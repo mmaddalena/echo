@@ -90,6 +90,14 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:create_group, group_payload})
   end
 
+  def add_contact(us_pid, user_id) do
+    GenServer.cast(us_pid, {:add_contact, user_id})
+  end
+
+  def delete_contact(us_pid, user_id) do
+    GenServer.cast(us_pid, {:delete_contact, user_id})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -476,6 +484,62 @@ defmodule Echo.Users.UserSession do
     {:noreply, state}
   end
 
+
+  @impl true
+  def handle_cast({:add_contact, user_id}, state) do
+    case Contacts.add_contact(state.user_id, user_id) do
+      {:ok, contact_info} ->
+        send(state.socket, {:send,
+          %{
+            type: "contact_addition",
+            status: "success",
+            data: %{
+              contact: serialize_contact_for_front(contact_info)
+            }
+          }}
+        )
+      {:error, changeset} ->
+        send(state.socket, {:send,
+          %{
+            type: "contact_addition",
+            status: "failure",
+            data: %{
+              reason: changeset
+            }
+          }}
+        )
+    end
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:delete_contact, user_id}, state) do
+    case Contacts.delete_contact(state.user_id, user_id) do
+      :ok ->
+        send(state.socket, {:send,
+          %{
+            type: "contact_deletion",
+            status: "success",
+            data: %{
+              user_id: user_id
+            }
+          }}
+        )
+      {:error, changeset} ->
+        send(state.socket, {:send,
+          %{
+            type: "contact_deletion",
+            status: "failure",
+            data: %{
+              reason: changeset
+            }
+          }}
+        )
+    end
+    {:noreply, state}
+  end
+
+
   @impl true
   def handle_cast({:send_payload, payload}, state) do
     send(state.socket, {:send, payload})
@@ -489,19 +553,23 @@ defmodule Echo.Users.UserSession do
   ################### Helpers
   defp serialize_contacts_for_front(contacts) do
     Enum.map(contacts, fn c ->
-      %{
-        id: c.contact.id,
-        username: c.contact.username,
-        name: c.contact.name,
-        avatar_url: c.contact.avatar_url,
-        last_seen_at: c.contact.last_seen_at,
-        contact_info: %{
-          owner_user_id: c.user_id,
-          nickname: c.nickname,
-          added_at: c.inserted_at
-        }
-      }
+      serialize_contact_for_front(c)
     end)
+  end
+
+  defp serialize_contact_for_front(c) do
+    %{
+      id: c.contact.id,
+      username: c.contact.username,
+      name: c.contact.name,
+      avatar_url: c.contact.avatar_url,
+      last_seen_at: c.contact.last_seen_at,
+      contact_info: %{
+        owner_user_id: c.user_id,
+        nickname: c.nickname,
+        added_at: c.inserted_at
+      }
+    }
   end
 
   defp serialize_users_for_search(users, asking_user_id) do

@@ -117,6 +117,16 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(%{"type" => "add_contact", "user_id" => user_id}, state) do
+    UserSession.add_contact(state.user_session, user_id)
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "delete_contact", "user_id" => user_id}, state) do
+    UserSession.delete_contact(state.user_session, user_id)
+    {:ok, state}
+  end
+
   defp dispatch(
        %{
          "type" => "create_group",

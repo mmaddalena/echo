@@ -95,6 +95,15 @@
     socketStore.changeNickname(personId, newNickname)
   }
 
+  function handleAddContact(personId) {
+    socketStore.addContact(personId)
+  }
+
+  function handleDeleteContact(personId) {
+    socketStore.deleteContact(personId)
+  }
+
+
 </script>
 
 <template>
@@ -122,6 +131,8 @@
       @close-person-info-panel="closePersonInfoPanel"
       @open-chat="handleOpenChat"
       @change-nickname="handleChangeNickname"
+      @add-contact="handleAddContact"
+      @delete-contact="handleDeleteContact"
     />
   </div>
 </template>

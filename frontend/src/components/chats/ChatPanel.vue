@@ -131,6 +131,7 @@ function closeCreateGroup() {
 	color: white;
 	font-weight: 500;
 	cursor: pointer;
+	margin: 1rem 2rem 0 auto
 }
 
 .chat-list-header {

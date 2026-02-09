@@ -136,11 +136,12 @@ onMounted(() => {
 .unread-messages {
 	height: 2.4rem;
 	width: 2.4rem;
-	background-color: var(--main-app-color-2);
 	border-radius: 50%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	background-color: var(--msg-out);
+	color: var(--text-main);
 }
 
 .down {
