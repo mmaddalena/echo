@@ -61,7 +61,6 @@
   border-radius: 2rem;
   padding: 0.5rem 0.5rem 0.5rem 1.5rem;
   align-items: center;
-  margin: 2rem 3rem;
 }
 .main {
   display: flex;
