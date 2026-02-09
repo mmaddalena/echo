@@ -136,7 +136,6 @@ function toggleSearch(){
 		</div>
 		<div class="opts_icons">
 			<IconSearch class="icon" @click="toggleSearch" />
-			<IconOptsMenu class="icon" />
 		</div>
 	</header>
 
@@ -171,7 +170,7 @@ function toggleSearch(){
 .chat-header {
 	background-color: var(--bg-chat-header);
 	height: 7rem;
-	padding: 1.5rem 1.6rem;
+	padding: 1.5rem 4rem 1.5rem 1.6rem;
 	display: flex;
 	box-sizing: content-box;
 	align-items: center;

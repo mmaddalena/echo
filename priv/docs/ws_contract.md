@@ -744,6 +744,19 @@ Fields:
 ### username_change_result
 
 Fields:
+- type: "username_change_result"
+- status: "success | failure"
+- data: Object (contiene new_username || reason)
+  - new_username: text
+  - reason:
+    - not_found
+    - username:
+      - can't be blank
+      - should be at least 3 character(s)
+      - should be at most 30 character(s)
+      - can only contain letters, numbers, and underscores
+      - has already been taken
+
 
 <details>
 <summary>Example</summary>
@@ -764,8 +777,6 @@ Fields:
                   "has already been taken"
     }
   }
-
-
 }
 
 ```
@@ -777,6 +788,18 @@ Fields:
 ### name_change_result
 
 Fields:
+- type: "name_change_result"
+- status: "success | failure"
+- data: Object (contiene new_name || reason)
+  - new_name: Object
+    - new_name: text
+  - reason:
+    - not_found
+    - name:
+      - can't be blank
+      - should be at least 1 character(s)
+      - should be at most 50 character(s)
+
 
 <details>
 <summary>Example</summary>
@@ -795,8 +818,6 @@ Fields:
               "should be at most 50 character(s)"
     }
   }
-
-
 }
 
 ```
@@ -808,6 +829,19 @@ Fields:
 ### nickname_change_result
 
 Fields:
+- type: "nickname_change_result"
+- status: "success | failure"
+- data: Object (contiene new_name || reason)
+  - new_name: Object
+    - contact_id: uuid
+    - new_name: text
+  - reason:
+    - not_found
+    - name:
+      - can't be blank
+      - should be at least 1 character(s)
+      - should be at most 50 character(s)
+
 
 <details>
 <summary>Example</summary>
@@ -926,6 +960,113 @@ Fields:
 
 }
 
+```
+
+</details>
+
+
+---
+
+### contact_addition
+
+Fields:
+- type: "contact_addition"
+- status: "success | failure"
+- data: Object (contiene contact_info || reason)
+  - contact_info: Object
+    - owner_user_id: uuid
+    - nickname: null
+    - added_at: ISOTimeString
+  - reason:
+    - user_id:
+      - can't be blank
+      - has already been taken
+      - does not exist
+    - contact_id:
+      - can't be blank
+      - does not exist
+
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+  "type": "contact_addition",
+  "status": "success | failure",
+  "data": {
+    "contact": {
+      "id": "uuid",
+      "username": "text",
+      "name": "text",
+      "avatar_url": "url",
+      "last_seen_at": "ISOTimeString",
+      "contact_info": {
+        "owner_user_id": "uuid",
+        "nickname": "text",
+        "added_at": "ISOTimeString"
+      }
+    }
+  } || {
+    "reason": {
+      "user_id": "can't be blank" || 
+                 "has already been taken" ||
+                 "does not exist",
+      "contact_id": "can't be blank" ||
+                    "does not exist"
+    }
+  }
+
+
+}
+```
+
+</details>
+
+
+---
+
+### contact_deletion
+
+Fields:
+- type: "contact_deletion"
+- status: "success | failure"
+- data: Object (contiene contact_info || reason)
+  - contact_info: Object
+    - owner_user_id: uuid
+    - nickname: null
+    - added_at: ISOTimeString
+  - reason: "not_found" ||
+    - user_id:
+      - can't be blank
+      - has already been taken
+      - does not exist
+    - contact_id:
+      - can't be blank
+      - does not exist
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+  "type": "contact_deletion",
+  "status": "success | failure",
+  "data": {
+    "user_id": "uuid"
+  } || {
+    "reason": "not_found" ||
+    {
+      "user_id": "can't be blank" || 
+                 "has already been taken" ||
+                 "does not exist",
+      "contact_id": "can't be blank" ||
+                    "does not exist"
+    }
+  }
+
+
+}
 ```
 
 </details>

@@ -5,6 +5,7 @@
   import IconEdit from '@/components/icons/IconEdit.vue';
   import IconConfirm from '@/components/icons/IconConfirm.vue';
   import IconAddContact from '@/components/icons/IconAddContact.vue';
+  import IconDeleteContact from '@/components/icons/IconDeleteContact.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
 
   const {personInfo} = defineProps({
@@ -14,7 +15,7 @@
     }
   })
 
-  const emit = defineEmits(["close-person-info-panel", "open-chat", "change-nickname"]);
+  const emit = defineEmits(["close-person-info-panel", "open-chat", "change-nickname", "add-contact", "delete-contact"]);
 
   function handleClosePanel(){
     emit("close-person-info-panel");
@@ -56,6 +57,14 @@
 		emit("change-nickname", personInfo.id, nickname.value)
 		editingNickname.value = false;
 	}
+
+  function handleAddContact() {
+    emit("add-contact", personInfo.id)
+  }
+
+  function handleDeleteContact(){
+    emit("delete-contact", personInfo.id)
+  }
 </script>
 
 <template>
@@ -88,6 +97,9 @@
           <IconConfirm class="icon"/>
         </button>
       </Transition>
+    </div>
+    <div v-else-if="personInfo.name" class="main-name" >
+      {{personInfo.name}}
     </div>
 
     <p class="second-name">
@@ -123,6 +135,18 @@
           Añadir Contacto
         </p>
       </button>
+
+      <button 
+        v-else
+        class="btn" 
+        @click="handleDeleteContact"
+      >
+        <IconDeleteContact class="btn-icon" />
+        <p class="btn-text">
+          Eliminar Contacto
+        </p>
+      </button>
+
 
      
     </div>
@@ -219,7 +243,6 @@ input {
 	border-radius: 0.8rem;
 	padding: 0.8rem;
 	color: var(--text-main);
-	width: 15rem;
 	font-size: 2.2rem;
   text-align: center;
 }
