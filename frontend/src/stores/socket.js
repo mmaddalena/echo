@@ -534,6 +534,8 @@ export const useSocketStore = defineStore("socket", () => {
 
 			chats.value = chats.value.filter((c) => c.id !== chat_id);
 		}
+
+		console.log("Updated members:", chatsInfo.value[chat_id].members);
 }
 
 	function disconnect() {
