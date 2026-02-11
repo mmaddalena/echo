@@ -10,6 +10,8 @@ import ChatList from "@/components/chats/ChatList.vue";
 import ChatHeader from "@/components/chats/ChatHeader.vue";
 import ChatMessages from "@/components/chats/ChatMessages.vue";
 import ChatInput from "@/components/chats/ChatInput.vue";
+import ChatInfoPanel from "@/components/chats/ChatInfoPanel.vue";
+import PersonInfoPanel from "@/components/people/PersonInfoPanel.vue";
 import { getCurrentISOTimeString } from "@/utils/formatChatTime";
 import { generateId } from "@/utils/idGenerator";
 
@@ -152,6 +154,9 @@ function scrollToMessage(messageId) {
 	chatMessagesRef.value?.scrollToMessage(messageId);
 }
 
+function handleOpenChatInfo(chatInfo) {
+	uiStore.showChatInfo(chatInfo);
+}
 
 watch(activeChatId, async (newVal) => {
 	if (!newVal) return;
@@ -159,6 +164,7 @@ watch(activeChatId, async (newVal) => {
 	chatInputRef.value?.clear();
 	chatInputRef.value?.focusInput();
 });
+
 </script>
 
 <template>
@@ -173,6 +179,17 @@ watch(activeChatId, async (newVal) => {
 				<Sidebar :avatarURL="userInfo?.avatar_url" />
 				<ChatPanel v-if="panel === 'chats'" />
 				<PeoplePanel v-if="panel === 'people'" />
+				<ChatInfoPanel
+					v-if="panel === 'chat-info'"
+					:chatInfo="uiStore.selectedChat"
+					@close-chat-info-panel="uiStore.showChats()"
+					@open-person-info="uiStore.showPersonInfo"
+				/>
+				<PersonInfoPanel
+					v-if="panel === 'person-info'"
+					:personInfo="uiStore.selectedPerson"
+					@close-person-info-panel="uiStore.showChatInfo(uiStore.selectedChat)"
+				/>
 			</div>
 		</div>
 		<div class="right">
@@ -181,6 +198,7 @@ watch(activeChatId, async (newVal) => {
 				:last_seen_at="userInfo?.last_seen_at"
 				:currentUserId="userInfo?.id"
 				@scroll-to-message="scrollToMessage"
+				@open-chat-info="handleOpenChatInfo"
 			/>
 			<ChatMessages
 				:messages="messages"

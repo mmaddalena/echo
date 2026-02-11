@@ -6,7 +6,7 @@ import { formatAddedTime } from "@/utils/formatAddedTime";
 
 
 
-const emit = defineEmits(["scroll-to-message"]);
+const emit = defineEmits(["scroll-to-message", "open-chat-info"]);
 
 const props = defineProps({
 	chatInfo: {
@@ -121,11 +121,16 @@ function toggleSearch(){
 	showSearch.value = !showSearch.value;
 	query.value = "";
 }
+
+function openChatInfo() {
+	props.chatInfo.last_seen_at = props.last_seen_at;
+	emit("open-chat-info", props.chatInfo);
+}
 </script>
 
 <template>
 	<header v-if="chatInfo" class="chat-header" :class="{'no-border': showSearch}">
-		<div class="user_info">
+		<div class="user_info" @click="openChatInfo">
 			<img
 				:src="chatInfo.avatar_url"
 				class="avatar content image clickable"
@@ -196,6 +201,7 @@ function toggleSearch(){
 	display: flex;
 	gap: 2rem;
 	align-items: center;
+	cursor: pointer;
 }
 .avatar {
 	height: 5rem;

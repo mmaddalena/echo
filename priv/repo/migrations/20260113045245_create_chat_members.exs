@@ -10,6 +10,7 @@ defmodule Echo.Repo.Migrations.CreateChatMembers do
       add :last_read_message_id, references(:messages, type: :binary_id, on_delete: :nilify_all),
           null: true
       add :last_read_at, :utc_datetime, null: true
+      add :role, :string, null: false, default: "member" # "member" o "admin"
       
       timestamps(type: :utc_datetime)
     end
@@ -20,5 +21,6 @@ defmodule Echo.Repo.Migrations.CreateChatMembers do
     
     # Índice útil para consultas de chats recientemente leídos
     create index(:chat_members, [:last_read_at])
+    create index(:chat_members, [:role])
   end
 end

@@ -170,15 +170,7 @@ contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
   %{user_id: lucas.id, contact_id: manuel.id},
-  %{user_id: lucas.id, contact_id: persona1.id},
-  %{user_id: lucas.id, contact_id: persona2.id},
   %{user_id: lucas.id, contact_id: persona3.id, nickname: "Capo"},
-  %{user_id: lucas.id, contact_id: persona4.id},
-  %{user_id: lucas.id, contact_id: persona5.id},
-  %{user_id: lucas.id, contact_id: persona6.id},
-  %{user_id: lucas.id, contact_id: persona7.id},
-  %{user_id: lucas.id, contact_id: persona8.id},
-  %{user_id: lucas.id, contact_id: persona9.id},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
   %{user_id: martin.id, contact_id: manuel.id, nickname: nil},
@@ -253,12 +245,12 @@ chat_members = [
   %{chat_id: lucas_manuel_chat.id, user_id: manuel.id},
 
   # Group chat: TP FINAL Taller (Lucas, Martin, Manuel)
-  %{chat_id: tp_final_taller_chat.id, user_id: lucas.id},
+  %{chat_id: tp_final_taller_chat.id, user_id: lucas.id, role: "admin"},
   %{chat_id: tp_final_taller_chat.id, user_id: martin.id},
   %{chat_id: tp_final_taller_chat.id, user_id: manuel.id},
 
   # Group chat: CS (Lucas, Martin, Manu, Mati)
-  %{chat_id: cs2_chat.id, user_id: lucas.id},
+  %{chat_id: cs2_chat.id, user_id: lucas.id, role: "admin"},
   %{chat_id: cs2_chat.id, user_id: martin.id},
   %{chat_id: cs2_chat.id, user_id: manuel.id},
   %{chat_id: cs2_chat.id, user_id: matias.id}

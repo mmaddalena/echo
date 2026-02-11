@@ -1,25 +1,68 @@
 <script setup>
-  import { computed } from 'vue';
+  import { computed, onMounted} from 'vue';
   import IconClose from '../icons/IconClose.vue';
   import IconChats from '../icons/IconChats.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
+  import { useSocketStore } from "@/stores/socket";
+  import { storeToRefs } from "pinia";
 
-  const {chatInfo} = defineProps({
+
+  const props = defineProps({
     chatInfo: {
       type: Object,
       required: true
     }
   })
 
-  const emit = defineEmits(["close-chat-info-panel", "open-chat"]);
+  const socketStore = useSocketStore();
+  const { userInfo } = storeToRefs(socketStore);
+
+  const isPrivate = computed(() => props.chatInfo?.type === 'private')
+  const isGroup = computed(() => props.chatInfo?.type === "group");
+  const members = computed(() => props.chatInfo?.members ?? []);
+  const isCurrentUserAdmin = computed(() => {
+  return members.value.some(
+    (m) => m.user_id === userInfo.value.id && m.role === "admin");});
+
+  const emit = defineEmits(["close-chat-info-panel", "open-chat", "open-person-info"]);
 
   function handleClosePanel(){
     emit("close-chat-info-panel");
   }
 
   function handleSendMsg(){
-    emit("open-chat", chatInfo.private_chat_id);
+    emit("open-chat", props.chatInfo?.private_chat_id);
   }
+
+  function isYou(member) {
+    return member.user_id === userInfo.value.id;
+  }
+
+  function canRemove(member) {
+  if (!isCurrentUserAdmin.value) return false;
+  if (isYou(member)) return false;
+
+  return true;
+  }
+
+  async function removeMember(member) {
+  const token = sessionStorage.getItem("token");
+
+  await fetch(
+    `/api/chats/${props.chatInfo?.id}/members/${member.user_id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+}
+
+onMounted(() => {
+  console.log("ChatInfoPanel mounted with chatInfo:", props.chatInfo);
+  console.log("Current userInfo:", userInfo.value);
+})
 </script>
 
 <template>
@@ -27,32 +70,72 @@
     <button class="close-btn" @click="handleClosePanel">
       <IconClose />
     </button>
-    <img class="avatar" :src="chatInfo.avatar_url"></img>
-    <p class="main-name">{{ chatInfo.name}}</p>
+    <img class="avatar" :src="props.chatInfo?.avatar_url"></img>
+    <p class="main-name">{{ props.chatInfo?.name}}</p>
 
-    <!-- <p v-if="isContact" class="second-name">{{ personInfo.username}}</p>
-    <p v-else class="second-name">{{personInfo.name }}</p> -->
-
-    <p v-if="isContact" class="added-date">
+    <p v-if="isGroup">{{props.chatInfo?.description}}</p>
+    <p v-if="isPrivate" class="added-date">
       <!-- Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }} -->
-       <p v-if="chatInfo.status == 'Offline' && last_seen_at">
-							- Ultima vez activo
-							{{ formatAddedTime(last_seen_at) }}
-       </p>
-       <p v-else>
-         Estado: {{ chatInfo.status }}
-         </p>
+      <p v-if="props.chatInfo?.status == 'Offline' && props.chatInfo?.last_seen_at">
+              Ultima vez activo:
+              {{ formatAddedTime(props.chatInfo?.last_seen_at) }}
+      </p>
+      <p v-else>
+        Estado: {{ props.chatInfo.status }}
+      </p>
     </p>
 
-    <div class="buttons">
-      <button class="btn" @click="handleSendMsg">
-        <IconChats class="btn-icon" />
-        <p class="btn-text">
-          Enviar Mensaje
-        </p>
-      </button>
-    </div>
+    <!-- GROUP MEMBERS -->
+    <div v-if="isGroup" class="members-section">
+      <p class="members-title">
+        Miembros ({{ members.length }})
+      </p>
 
+      <ul class="members-list">
+        <li
+          v-for="member in members"
+          :key="member.user_id"
+          class="member-item clickable"
+          @click="!isYou(member) && emit('open-person-info', member)"
+        >
+          <!-- LEFT -->
+          <div class="member-left">
+            <img
+              :src="member.avatar_url"
+              class="member-avatar"
+              loading="lazy"
+            />
+
+            <div class="member-info">
+              <div class="member-name-row">
+                <p class="member-name">{{ member.username }}</p>
+
+                <span
+                  v-if="isYou(member)"
+                  class="you-badge"
+                >
+                  Tú
+                </span>
+                <span v-if="member.role === 'admin'" class="admin-badge">Admin</span>
+              </div>
+
+              <span class="member-status">
+                {{ member.status }}
+              </span>
+            </div>
+        </div>
+
+          <!-- RIGHT -->
+          <button
+            v-if="canRemove(member)"
+            class="remove-btn"
+            @click.stop="removeMember(member)"
+          >
+            ⛌
+          </button>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -123,6 +206,101 @@
 }
 .btn-text {
   font-size: 1.4rem;
+}
 
+.members-section {
+  width: 100%;
+  margin-top: 2rem;
+  padding: 0 1.5rem;
+}
+
+.members-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+}
+
+.members-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.member-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.remove-btn {
+  border: none;
+  background: transparent;
+  color: tomato;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+}
+
+.remove-btn:hover {
+  background-color: rgba(255, 99, 71, 0.15);
+}
+
+.member-item:hover {
+  background-color: var(--bg-chatlist-hover);
+  border-radius: 0.8rem;
+}
+
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.you-badge {
+  font-size: 1.1rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 1rem;
+  background-color: var(--accent);
+  color: white;
+}
+
+.admin-badge {
+  font-size: 1.1rem;
+  padding: 0.1rem 0.6rem;
+  border-radius: 1rem;
+  background-color: #f59e0b;
+  color: white;
+}
+
+.member-avatar {
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name {
+  font-size: 1.5rem;
+}
+
+.member-status {
+  font-size: 1.3rem;
+  color: var(--text-muted);
 }
 </style>
