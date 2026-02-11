@@ -171,6 +171,16 @@ defmodule Echo.Http.Router do
     end
   end
 
+  defp route(conn, "DELETE", "/api/chats/" <> rest) do
+    case String.split(rest, "/") do
+      [chat_id, "members", member_user_id] ->
+        handle_remove_chat_member(conn, chat_id, member_user_id)
+
+      _ ->
+        not_found(conn)
+    end
+  end
+
   ## -------- SPA fallback (Vue Router support) --------
 
   # defp route(conn, "GET", _path) do
@@ -260,6 +270,30 @@ defmodule Echo.Http.Router do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(404, Jason.encode!(%{error: "Not found"}))
+  end
+
+  defp handle_remove_chat_member(conn, chat_id, member_user_id) do
+    auth_header = List.first(get_req_header(conn, "authorization")) || ""
+    token = String.replace(auth_header, "Bearer ", "")
+
+    with {:ok, requester_id} <- Echo.Auth.JWT.extract_user_id(token),
+         {:ok, :removed} <-
+           Echo.Chats.Chat.remove_member(
+             chat_id,
+             requester_id,
+             member_user_id
+           ) do
+      send_resp(conn, 204, "")
+    else
+      {:error, :unauthorized} ->
+        send_resp(conn, 403, Jason.encode!(%{error: "Not allowed"}))
+
+      {:error, :not_found} ->
+        send_resp(conn, 404, Jason.encode!(%{error: "Member not found"}))
+
+      {:error, reason} ->
+        send_resp(conn, 400, Jason.encode!(%{error: inspect(reason)}))
+    end
   end
 
   defp get_markdown_html(md) do

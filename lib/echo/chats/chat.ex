@@ -66,7 +66,8 @@ defmodule Echo.Chats.Chat do
         username: u.username,
         name: u.name,
         avatar_url: u.avatar_url,
-        last_read_at: cm.last_read_at
+        last_read_at: cm.last_read_at,
+        role: cm.role
       }
     )
     |> Repo.all()
@@ -336,4 +337,71 @@ defmodule Echo.Chats.Chat do
       chat.id
     end)
   end
+
+  def remove_member(chat_id, requester_id, member_user_id) do
+    Repo.transaction(fn ->
+      with {:ok, chat} <- get_chat(chat_id),
+           :ok <- ensure_admin(chat, requester_id),
+           :ok <- ensure_not_self(requester_id, member_user_id),
+           {:ok, member} <- get_member(chat_id, member_user_id) do
+        Repo.delete!(member)
+
+        Echo.Chats.ChatSession.broadcast(chat_id, %{
+          type: "chat_member_removed",
+          chat_id: chat_id,
+          user_id: member_user_id
+        })
+
+        {:ok, :removed}
+      else
+        error -> Repo.rollback(error)
+      end
+    end)
+    |> unwrap_tx()
+  end
+
+  defp get_chat(chat_id) do
+    case Repo.get(Chat, chat_id) do
+      nil -> {:error, :not_found}
+      chat -> {:ok, chat}
+    end
+  end
+
+  defp ensure_admin(chat, user_id) do
+    query =
+      from cm in ChatMember,
+        where:
+          cm.chat_id == ^chat.id and
+            cm.user_id == ^user_id and
+            cm.role == "admin"
+
+    case Repo.exists?(query) do
+      true -> :ok
+      false -> {:error, :unauthorized}
+    end
+  end
+
+  defp ensure_not_self(requester_id, member_user_id) do
+    if requester_id == member_user_id do
+      {:error, :unauthorized}
+    else
+      :ok
+    end
+  end
+
+  defp get_member(chat_id, member_user_id) do
+    query =
+      from cm in ChatMember,
+        where:
+          cm.chat_id == ^chat_id and
+            cm.user_id == ^member_user_id
+
+    case Repo.one(query) do
+      nil -> {:error, :not_found}
+      member -> {:ok, member}
+    end
+  end
+
+  defp unwrap_tx({:ok, result}), do: result
+  defp unwrap_tx({:error, reason}), do: {:error, reason}
 end

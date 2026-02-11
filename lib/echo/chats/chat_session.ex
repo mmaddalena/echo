@@ -239,4 +239,14 @@ defmodule Echo.Chats.ChatSession do
     {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
   end
 
+  @doc """
+  Broadcast a message to all processes subscribed to a chat
+  """
+  def broadcast(chat_id, payload) do
+    Registry.dispatch(ProcessRegistry, {:chat, chat_id}, fn entries ->
+      for {pid, _meta} <- entries do
+        send(pid, {:chat_event, payload})
+      end
+    end)
+  end
 end

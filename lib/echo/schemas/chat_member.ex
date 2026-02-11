@@ -13,12 +13,14 @@ defmodule Echo.Schemas.ChatMember do
 
     belongs_to :last_read_message, Echo.Schemas.Message
     field :last_read_at, :utc_datetime
+    # "member" o "admin"
+    field :role, :string, default: "member"
   end
 
   def changeset(chat_member, attrs) do
     chat_member
-    |> cast(attrs, [:chat_id, :user_id, :last_read_message_id])
-    |> validate_required([:chat_id, :user_id])
+    |> cast(attrs, [:chat_id, :user_id, :last_read_message_id, :role])
+    |> validate_required([:chat_id, :user_id, :role])
     |> foreign_key_constraint(:chat_id)
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:last_read_message_id)

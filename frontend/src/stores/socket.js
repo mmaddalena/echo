@@ -96,6 +96,8 @@ export const useSocketStore = defineStore("socket", () => {
 				dispatch_contact_addition(payload)
 			} else if (payload.type === "contact_deletion") {
 				dispatch_contact_deletion(payload)
+			} else if (payload.type === "chat_member_removed") {
+				dispatch_chat_member_removed(payload);
 			}
 		};
 
@@ -509,6 +511,30 @@ export const useSocketStore = defineStore("socket", () => {
 		);
 	}
 
+	function dispatch_chat_member_removed({ chat_id, user_id }) {
+		const chat = chatsInfo.value[chat_id];
+		if (!chat) return;
+
+		// Remove member reactively
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chat_id]: {
+				...chat,
+				members: chat.members.filter((m) => m.user_id !== user_id),
+			},
+		};
+
+		// If I was removed → kick me out
+		if (user_id === userInfo.value.id) {
+			activeChatId.value = null;
+
+			// Remove chat reactively
+			const { [chat_id]: _, ...rest } = chatsInfo.value;
+			chatsInfo.value = rest;
+
+			chats.value = chats.value.filter((c) => c.id !== chat_id);
+		}
+}
 
 	function disconnect() {
 		if (socket.value) {
