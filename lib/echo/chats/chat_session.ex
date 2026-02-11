@@ -34,6 +34,10 @@ defmodule Echo.Chats.ChatSession do
     GenServer.cast(cs_pid, {:chat_messages_read, chat_id, user_id})
   end
 
+  def chat_event(cs_pid, payload) do
+    GenServer.cast(cs_pid, {:chat_event, payload})
+  end
+
   ##### Callbacks
 
   @impl true
@@ -239,13 +243,43 @@ defmodule Echo.Chats.ChatSession do
     {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
   end
 
+  @impl true
+def handle_cast({:chat_event, payload}, state) do
+  case payload.type do
+    "chat_member_removed" ->
+      removed_user_id = payload.user_id
+
+      new_members =
+        Enum.reject(state.members, fn m ->
+          m.user_id == removed_user_id
+        end)
+
+      # notify remaining members
+      Enum.each(new_members, fn member ->
+        if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+          UserSession.send_payload(us_pid, payload)
+        end
+      end)
+
+      # notify removed user
+      if us_pid = ProcessRegistry.whereis_user_session(removed_user_id) do
+        UserSession.send_payload(us_pid, payload)
+      end
+
+      {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
+
+    _ ->
+      {:noreply, state}
+  end
+end
+
   @doc """
   Broadcast a message to all processes subscribed to a chat
   """
   def broadcast(chat_id, payload) do
     Registry.dispatch(ProcessRegistry, {:chat, chat_id}, fn entries ->
       for {pid, _meta} <- entries do
-        send(pid, {:chat_event, payload})
+        chat_event(pid, payload)
       end
     end)
   end

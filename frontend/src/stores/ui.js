@@ -3,20 +3,20 @@ import { defineStore } from "pinia"
 export const useUIStore = defineStore("ui", {
   state: () => ({
     leftPanel: "chats",
-    selectedChat: null,
+    selectedChatId: null,
     selectedPerson: null,
   }),
   actions: {
     showChats() {
       this.leftPanel = "chats"
-      this.selectedChat = null
+      this.selectedChatId = null
       this.selectedPerson = null
     },
     showPeople() {
       this.leftPanel = "people"
     },
     showChatInfo(chat) {
-      this.selectedChat = chat
+      this.selectedChatId = chat.id
       this.leftPanel = "chat-info"
     },
     showPersonInfo(member) {

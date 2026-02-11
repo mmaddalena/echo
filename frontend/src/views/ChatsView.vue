@@ -181,7 +181,7 @@ watch(activeChatId, async (newVal) => {
 				<PeoplePanel v-if="panel === 'people'" />
 				<ChatInfoPanel
 					v-if="panel === 'chat-info'"
-					:chatInfo="uiStore.selectedChat"
+					:chatId="activeChatId"
 					@close-chat-info-panel="uiStore.showChats()"
 					@open-person-info="uiStore.showPersonInfo"
 				/>

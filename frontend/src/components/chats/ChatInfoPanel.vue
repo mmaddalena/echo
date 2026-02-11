@@ -8,18 +8,20 @@
 
 
   const props = defineProps({
-    chatInfo: {
-      type: Object,
+    chatId: {
+      type: String,
       required: true
     }
   })
 
   const socketStore = useSocketStore();
   const { userInfo } = storeToRefs(socketStore);
-
-  const isPrivate = computed(() => props.chatInfo?.type === 'private')
-  const isGroup = computed(() => props.chatInfo?.type === "group");
-  const members = computed(() => props.chatInfo?.members ?? []);
+  const chatInfo = computed(() =>
+  socketStore.chatsInfo[props.chatId]
+)
+  const isPrivate = computed(() => chatInfo.value?.type === 'private')
+  const isGroup = computed(() => chatInfo.value?.type === "group");
+  const members = computed(() => chatInfo.value?.members ?? []);
   const isCurrentUserAdmin = computed(() => {
   return members.value.some(
     (m) => m.user_id === userInfo.value.id && m.role === "admin");});
@@ -31,7 +33,7 @@
   }
 
   function handleSendMsg(){
-    emit("open-chat", props.chatInfo?.private_chat_id);
+    emit("open-chat", chatInfo.value?.private_chat_id);
   }
 
   function isYou(member) {
@@ -49,7 +51,7 @@
   const token = sessionStorage.getItem("token");
 
   await fetch(
-    `/api/chats/${props.chatInfo?.id}/members/${member.user_id}`,
+    `/api/chats/${chatInfo.value?.id}/members/${member.user_id}`,
     {
       method: "DELETE",
       headers: {
@@ -60,7 +62,7 @@
 }
 
 onMounted(() => {
-  console.log("ChatInfoPanel mounted with chatInfo:", props.chatInfo);
+  console.log("ChatInfoPanel mounted with chatInfo:", chatInfo.value);
   console.log("Current userInfo:", userInfo.value);
 })
 </script>
@@ -70,18 +72,18 @@ onMounted(() => {
     <button class="close-btn" @click="handleClosePanel">
       <IconClose />
     </button>
-    <img class="avatar" :src="props.chatInfo?.avatar_url"></img>
-    <p class="main-name">{{ props.chatInfo?.name}}</p>
+    <img class="avatar" :src="chatInfo?.avatar_url"></img>
+    <p class="main-name">{{ chatInfo?.name}}</p>
 
-    <p v-if="isGroup">{{props.chatInfo?.description}}</p>
+    <p v-if="isGroup">{{chatInfo?.description}}</p>
     <p v-if="isPrivate" class="added-date">
       <!-- Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }} -->
-      <p v-if="props.chatInfo?.status == 'Offline' && props.chatInfo?.last_seen_at">
+      <p v-if="chatInfo?.status == 'Offline' && chatInfo?.last_seen_at">
               Ultima vez activo:
-              {{ formatAddedTime(props.chatInfo?.last_seen_at) }}
+              {{ formatAddedTime(chatInfo?.last_seen_at) }}
       </p>
       <p v-else>
-        Estado: {{ props.chatInfo.status }}
+        Estado: {{ chatInfo.status }}
       </p>
     </p>
 
