@@ -112,6 +112,8 @@ export const useSocketStore = defineStore("socket", () => {
 
 				const { [payload.chat_id]: _, ...rest } = chatsInfo.value;
 				chatsInfo.value = rest;
+			} else if (payload.type === "chat_admin_changed") {
+				dispatch_chat_admin_changed(payload);
 			}
 		};
 
@@ -564,6 +566,35 @@ export const useSocketStore = defineStore("socket", () => {
 			},
 		};
 	}
+
+	function dispatch_chat_admin_changed(payload) {
+		const chat_id = payload.chat_id;
+		const new_admin_id = payload.new_admin_id;
+
+		const chat = chatsInfo.value[chat_id];
+		if (!chat) return;
+
+		// Update the members list reactively
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chat_id]: {
+			...chat,
+			members: chat.members.map((m) =>
+				m.user_id === new_admin_id ? { ...m, role: "admin" } : { ...m, role: "member" }
+			),
+			},
+		};
+
+		// Optionally, update the chat list if you show admin info there
+		chats.value = chats.value.map((c) =>
+			c.id === chat_id
+			? {
+				...c,
+				members: chatsInfo.value[chat_id].members,
+				}
+			: c
+		);
+		}
 
 	function disconnect() {
 		if (socket.value) {

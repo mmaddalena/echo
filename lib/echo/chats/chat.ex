@@ -341,11 +341,31 @@ defmodule Echo.Chats.Chat do
   def remove_member(chat_id, requester_id, member_user_id) do
     Repo.transaction(fn ->
       with {:ok, chat} <- get_chat(chat_id),
-           :ok <- ensure_admin(chat, requester_id),
-           :ok <- ensure_not_self(requester_id, member_user_id),
-           {:ok, member} <- get_member(chat_id, member_user_id) do
+          {:ok, member} <- get_member(chat_id, member_user_id),
+          {:ok, requester} <- get_member(chat_id, requester_id),
+          true <- can_remove_member?(requester, member, requester_id) do
+
+        # Get all remaining members (excluding the one leaving)
+        remaining_members = Echo.ChatMembers.ChatMembers.get_all_members(chat_id)
+                            |> Enum.reject(&(&1.user_id == member_user_id))
+
+        # If leaving member is admin, assign admin to oldest member
+        if member.role == "admin" && length(remaining_members) > 0 do
+          oldest_member = Enum.min_by(remaining_members, & &1.inserted_at)
+          Repo.update!(Ecto.Changeset.change(oldest_member, role: "admin"))
+
+          # Broadcast the new admin
+          Echo.Chats.ChatSession.broadcast(chat_id, %{
+            type: "chat_admin_changed",
+            chat_id: chat_id,
+            new_admin_id: oldest_member.user_id
+          })
+        end
+
+        # Remove the member
         Repo.delete!(member)
 
+        # Broadcast member removal
         Echo.Chats.ChatSession.broadcast(chat_id, %{
           type: "chat_member_removed",
           chat_id: chat_id,
@@ -354,11 +374,17 @@ defmodule Echo.Chats.Chat do
 
         {:ok, :removed}
       else
+        false -> Repo.rollback({:error, :unauthorized})
         error -> Repo.rollback(error)
       end
     end)
     |> unwrap_tx()
   end
+
+defp can_remove_member?(%{role: "admin"}, _member, _requester_id), do: true
+defp can_remove_member?(%{role: _}, %{user_id: member_id}, requester_id) do
+  member_id == requester_id  # regular user can only remove themselves
+end
 
   defp get_chat(chat_id) do
     case Repo.get(Chat, chat_id) do

@@ -295,6 +295,27 @@ def handle_cast({:chat_event, payload}, state) do
       end)
 
       {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
+
+    "chat_admin_changed" ->
+      new_admin_id = payload.new_admin_id
+
+      new_members =
+        Enum.map(state.members, fn m ->
+          if m.user_id == new_admin_id do
+            %{m | role: "admin"}
+          else
+            m
+          end
+        end)
+
+      # Notify all members about the new admin
+      Enum.each(new_members, fn member ->
+        if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+          UserSession.send_payload(us_pid, payload)
+        end
+      end)
+
+      {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
   end
 end
 
