@@ -1,31 +1,22 @@
 <script setup>
   import { computed, onMounted, ref} from 'vue';
   import IconClose from '../icons/IconClose.vue';
-  import IconChats from '../icons/IconChats.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
-  import { useSocketStore } from "@/stores/socket";
-  import { storeToRefs } from "pinia";
   import GroupMemberSelector from "@/components/groups/GroupMemberSelector.vue";
 
 
-  const props = defineProps({
-    chatId: {
-      type: String,
-      required: true
-    }
-  })
+ const { chatInfo, currentUserId } = defineProps({
+    chatInfo: Object,
+    currentUserId: Number,
+  });
 
-  const socketStore = useSocketStore();
-  const { userInfo } = storeToRefs(socketStore);
-  const chatInfo = computed(() =>
-  socketStore.chatsInfo[props.chatId]
-)
-  const isPrivate = computed(() => chatInfo.value?.type === 'private')
-  const isGroup = computed(() => chatInfo.value?.type === "group");
-  const members = computed(() => chatInfo.value?.members ?? []);
+  const isPrivate = computed(() => chatInfo?.type === 'private')
+  const isGroup = computed(() => chatInfo?.type === 'group');
+  const members = computed(() => chatInfo?.members ?? []);
+
   const isCurrentUserAdmin = computed(() => {
   return members.value.some(
-    (m) => m.user_id === userInfo.value.id && m.role === "admin");});
+    (m) => m.user_id === currentUserId && m.role === "admin");});
 
   const emit = defineEmits(["close-chat-info-panel", "open-chat", "open-person-info"]);
 
@@ -43,41 +34,37 @@
     emit("close-chat-info-panel");
   }
 
-  function handleSendMsg(){
-    emit("open-chat", chatInfo.value?.private_chat_id);
+  function isYou(member_id) {
+    return member_id === currentUserId;
   }
 
-  function isYou(member) {
-    return member.user_id === userInfo.value.id;
+  function canRemove(member_id) {
+    if (!isCurrentUserAdmin.value) return false;
+    if (isYou(member_id)) return false;
+
+    return true;
   }
 
-  function canRemove(member) {
-  if (!isCurrentUserAdmin.value) return false;
-  if (isYou(member)) return false;
+  async function removeMember(member_id) {
+    const token = sessionStorage.getItem("token");
 
-  return true;
+    await fetch(
+      `/api/chats/${chatInfo.id}/members/${member_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
   }
-
-  async function removeMember(member) {
-  const token = sessionStorage.getItem("token");
-
-  await fetch(
-    `/api/chats/${chatInfo.value?.id}/members/${member.user_id}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-}
 
 async function addMembers() {
   if (!newMemberIds.value.length) return;
 
   const token = sessionStorage.getItem("token");
 
-  await fetch(`/api/chats/${chatInfo.value.id}/members`, {
+  await fetch(`/api/chats/${chatInfo.id}/members`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -107,7 +94,7 @@ async function leaveGroup() {
 
   try {
     const res = await fetch(
-      `/api/chats/${chatInfo.value?.id}/members/${userInfo.value.id}`,
+      `/api/chats/${chatInfo.id}/members/${currentUserId}`,
       {
         method: "DELETE",
         headers: {
@@ -135,10 +122,9 @@ async function leaveGroup() {
   }
 }
 
-onMounted(() => {
-  console.log("ChatInfoPanel mounted with chatInfo:", chatInfo.value);
-  console.log("Current userInfo:", userInfo.value);
-})
+function handleOpenPersonInfo(member_id) {
+  emit('open-person-info', member_id)
+}
 </script>
 
 <template>
@@ -194,10 +180,7 @@ onMounted(() => {
           v-for="member in members"
           :key="member.user_id"
           class="member-item clickable"
-          @click="
-            !isYou(member) &&
-            emit('open-person-info', member)
-          "
+          @click="handleOpenPersonInfo(member.user_id)"
         >
           <!-- LEFT -->
           <div class="member-left">
@@ -210,11 +193,11 @@ onMounted(() => {
             <div class="member-info">
               <div class="member-name-row">
                 <p class="member-name">
-                  {{ member.username }}
+                  {{ member.nickname ?? member.name ?? member.username }}
                 </p>
 
                 <span
-                  v-if="isYou(member)"
+                  v-if="isYou(member.user_id)"
                   class="you-badge"
                 >
                   Tú
@@ -236,9 +219,9 @@ onMounted(() => {
 
           <!-- RIGHT -->
           <button
-            v-if="canRemove(member)"
+            v-if="canRemove(member.user_id)"
             class="remove-btn"
-            @click.stop="removeMember(member)"
+            @click.stop="removeMember(member.user_id)"
           >
             ⛌
           </button>

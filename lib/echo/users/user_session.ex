@@ -198,13 +198,9 @@ defmodule Echo.Users.UserSession do
         {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
         ChatSession.get_chat_info(cs_pid, state.user_id, self())
 
-        IO.puts("\nChat #{chat_id} opened correctly\n")
-
         {:noreply, %{state | last_activity: DateTime.utc_now()}}
 
       false ->
-        IO.puts("\n\n\nI'M CAAAAAN'T TO OPEN THE CHAT")
-
         # User is no longer member → reject
         send(state.socket, {:send,
           %{
@@ -317,7 +313,7 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast({:get_person_info, person_id}, state) do
-    IO.puts("\n\n SE PIDIÓ LA INFO DEL USUARIO #{person_id}\n")
+    IO.puts("\n\n SE PIDIÓ LA INFO DEL USUARIO #{inspect(person_id)}\n")
     info = User.get_person_info(person_id, state.user_id)
     send(state.socket, {:send,
       %{

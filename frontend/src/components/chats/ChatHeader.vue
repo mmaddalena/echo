@@ -202,6 +202,8 @@ function openChatInfo() {
 	gap: 2rem;
 	align-items: center;
 	cursor: pointer;
+	flex: 1;
+	margin-right: 2rem;
 }
 .avatar {
 	height: 5rem;
@@ -225,6 +227,8 @@ function openChatInfo() {
 	height: 2.5rem;
 	color: var(--text-main);
 	fill: var(--text-main);
+	cursor: pointer;
+	padding: 0 1rem;
 }
 
 .clickable {

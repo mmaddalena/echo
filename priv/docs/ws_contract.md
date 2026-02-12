@@ -368,6 +368,8 @@ Fields:
     - avatar_url: url
     - format: "text | image | video | audio | file"
     - filename: string
+    - type: "outgoing | incoming"
+    - sender_name: string
   - name: string
   - description: string (only if group chat)
   - status: "Online | Offline"
@@ -400,7 +402,9 @@ Fields:
         "deleted_at": "ISOTimeString" | null,
         "avatar_url": "url",
         "format": "text | image | video | audio | file",
-        "filename": "string" | null
+        "filename": "string" | null,
+        "type": "outgoing | incoming",
+        "sender_name": "string"
       },
       ...
     ],

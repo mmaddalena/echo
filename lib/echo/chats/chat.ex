@@ -199,16 +199,6 @@ defmodule Echo.Chats.Chat do
         Map.put(m, :nickname, User.get_nickname(user_id, m.user_id))
       end)
 
-
-    senders =
-      members
-      |> Enum.map(fn m ->
-        sender_name = m.nickname || m.name || m.username
-        {m.user_id, sender_name}
-      end)
-      |> Map.new()
-
-
     messages =
       chat_id
       |> get_last_messages()
@@ -218,7 +208,7 @@ defmodule Echo.Chats.Chat do
             do: Constants.outgoing(),
             else: Constants.incoming()
 
-        sender_name = Map.get(senders, message.user_id)
+        sender_name = User.get_usable_name(user_id, message.user_id, nil)
 
         message
         |> Map.put(:type, type)
@@ -252,7 +242,6 @@ defmodule Echo.Chats.Chat do
       }
     end
   end
-
 
   def build_chat_list_item(chat_id, user_id) do
     chat = get(chat_id)

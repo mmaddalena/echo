@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { generateId } from "@/utils/idGenerator";
 import { useThemeStore } from "@/stores/theme"
+import { useUIStore } from "@/stores/ui";
 
 
 export const useSocketStore = defineStore("socket", () => {
@@ -17,6 +18,7 @@ export const useSocketStore = defineStore("socket", () => {
 	const pendingPrivateChat = ref(null);
 	const pendingMessage = ref(null);
 	const themeStore = useThemeStore();
+	const uiStore = useUIStore();
 
 	const creatingGroup = ref(false);
 	const selectedGroupMembers = ref([]);
@@ -67,6 +69,7 @@ export const useSocketStore = defineStore("socket", () => {
 				contactsLoaded.value = true;
 			} else if (payload.type === "person_info") {
 				openedPersonInfo.value = payload.person_info;
+				uiStore.showPeople();
 			} else if (payload.type === "search_people_results") {
 				peopleSearchResults.value = payload.search_people_results;
 			} else if (payload.type === "private_chat_created") {
@@ -323,32 +326,41 @@ export const useSocketStore = defineStore("socket", () => {
 
 				// Actualizamos chats
 				chats.value = chats.value.map((chat) =>
-					chat.id === private_chat_id ? { ...chat, name: new_nickname } : chat,
+					chat.id === private_chat_id 
+						? { ...chat, name: new_nickname } 
+						: chat,
+				);
+			}
+
+			//Actualizamos el sender_name en los grupales
+			Object.entries(chatsInfo.value).forEach(([chatId, chat]) => {
+				if (chat.type !== "group") return;
+
+				// si no es miembro ni gastamos CPU
+				const isMember = chat.members.some((m) => m.user_id === contact_id);
+				if (!isMember) return;
+
+				const updatedMessages = chat.messages.map(msg =>
+					msg.user_id === contact_id
+						? { ...msg, sender_name: new_nickname }
+						: msg,
 				);
 
-				//Actualizamos el sender_name en los grupales
-				Object.entries(chatsInfo.value).forEach(([chatId, chat]) => {
-					if (chat.type !== "group") return;
+				const updatedMembers = chat.members.map((m) =>
+					m.user_id === contact_id
+						? { ...m, nickname: new_nickname }
+						: m,
+				);
 
-					// si no es miembro ni gastamos CPU
-					const isMember = chat.members.some((m) => m.user_id === contact_id);
-					if (!isMember) return;
-
-					const updatedMessages = chat.messages.map((msg) =>
-						msg.user_id === contact_id
-							? { ...msg, sender_name: new_nickname }
-							: msg,
-					);
-
-					chatsInfo.value = {
-						...chatsInfo.value,
-						[chatId]: {
-							...chat,
-							messages: updatedMessages,
-						},
-					};
-				});
-			}
+				chatsInfo.value = {
+					...chatsInfo.value,
+					[chatId]: {
+						...chat,
+						messages: updatedMessages,
+						members: updatedMembers
+					},
+				};
+			});
 		} else {
 			// TODO Notificar que salio mal
 		}
