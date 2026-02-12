@@ -1,6 +1,5 @@
 <script setup>
-import { computed, onMounted, watch, nextTick } from "vue";
-import { ref } from "vue";
+import { computed, onMounted, watch, nextTick, ref} from "vue";
 
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
@@ -158,6 +157,11 @@ function handleOpenChatInfo(chatInfo) {
 	uiStore.showChatInfo(chatInfo);
 }
 
+function handleOpenPersonInfo(person_id) {
+	console.log(`person id a abrir: ${person_id}`)
+	socketStore.getPersonInfo(person_id);
+}
+
 watch(activeChatId, async (newVal) => {
 	if (!newVal) return;
 	await nextTick();
@@ -165,6 +169,12 @@ watch(activeChatId, async (newVal) => {
 	chatInputRef.value?.focusInput();
 });
 
+watch(
+	panel,
+	(pan) => {
+		console.log(`El panel activo es: ${pan}`);
+	},
+);
 </script>
 
 <template>
@@ -181,14 +191,10 @@ watch(activeChatId, async (newVal) => {
 				<PeoplePanel v-if="panel === 'people'" />
 				<ChatInfoPanel
 					v-if="panel === 'chat-info'"
-					:chatId="activeChatId"
+					:chatInfo="activeChat"
+					:currentUserId="userInfo.id"
 					@close-chat-info-panel="uiStore.showChats()"
-					@open-person-info="uiStore.showPersonInfo"
-				/>
-				<PersonInfoPanel
-					v-if="panel === 'person-info'"
-					:personInfo="uiStore.selectedPerson"
-					@close-person-info-panel="uiStore.showChatInfo(uiStore.selectedChat)"
+					@open-person-info="handleOpenPersonInfo"
 				/>
 			</div>
 		</div>

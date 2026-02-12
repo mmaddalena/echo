@@ -4,11 +4,13 @@
 
 
 TP FINAL - Taller de Programación - Universidad de Buenos Aires<br>
-__Profesor:__ Manuel Camejo. <br>
+__Profesores:__ 
+- Manuel Camejo
+- Matías Onorato
+
 __Alumnos:__ 
 - Lucas Facundo Couttulenc (109726)
 - Martín Maddalena (107610)
-- Rocío Mariana Gallo (97490)
 
 ## Compilación, Empaquetación y Ejecución
 	Instalar previamente (TODO ESTO DEBERÍA HACERSE DENTRO DE UN DOCKER, PARA NO TENER QUE INSTALAR TODO ESTO, ES UN QUILOMBO SINO):

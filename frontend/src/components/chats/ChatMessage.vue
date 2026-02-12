@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
-defineProps({
+const {message, chatType} = defineProps({
 	message: Object,
 	chatType: String,
 });
@@ -25,6 +25,14 @@ function openImage(src) {
 function closeImage() {
 	zoomedImage.value = null;
 }
+
+
+watch(
+	() => message,
+	(msg) => {
+		console.log(`cambio el msg: ${msg}`)
+	}
+)
 </script>
 
 <template>
