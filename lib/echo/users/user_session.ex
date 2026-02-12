@@ -23,6 +23,7 @@ defmodule Echo.Users.UserSession do
   alias Echo.Chats.ChatSessionSup
   alias Echo.Chats.Chat
   alias Echo.Constants
+  alias Echo.ChatMembers.ChatMembers
 
   def start_link(user_id) do
     GenServer.start_link(
@@ -192,14 +193,34 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_cast({:open_chat, chat_id}, state) do
-    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+    case ChatMembers.member?(chat_id, state.user_id) do
+      true ->
+        IO.puts("\n\n\nI'M TRYING TO OPEN THE CHAT")
+        {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+        ChatSession.get_chat_info(cs_pid, state.user_id, self())
 
-    ChatSession.get_chat_info(cs_pid, state.user_id, self())
+        IO.puts("\nChat #{chat_id} opened correctly\n")
 
-    IO.puts("\n\n\nSE PIDIO LA INFO DEL CHAT #{chat_id}\n")
+        {:noreply, %{state | last_activity: DateTime.utc_now()}}
 
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+      false ->
+        IO.puts("\n\n\nI'M CAAAAAN'T TO OPEN THE CHAT")
+
+        # User is no longer member → reject
+        send(state.socket, {:send,
+          %{
+            type: "chat_forbidden",
+            chat_id: chat_id
+          }
+        })
+
+        IO.puts("\nUser tried to open forbidden chat #{chat_id}\n")
+
+        {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    end
   end
+
+
   @impl true
   def handle_cast({:send_chat_info, chat_info}, state) do
     msg = %{

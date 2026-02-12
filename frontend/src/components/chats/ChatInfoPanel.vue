@@ -1,10 +1,11 @@
 <script setup>
-  import { computed, onMounted} from 'vue';
+  import { computed, onMounted, ref} from 'vue';
   import IconClose from '../icons/IconClose.vue';
   import IconChats from '../icons/IconChats.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
   import { useSocketStore } from "@/stores/socket";
   import { storeToRefs } from "pinia";
+  import GroupMemberSelector from "@/components/groups/GroupMemberSelector.vue";
 
 
   const props = defineProps({
@@ -27,6 +28,16 @@
     (m) => m.user_id === userInfo.value.id && m.role === "admin");});
 
   const emit = defineEmits(["close-chat-info-panel", "open-chat", "open-person-info"]);
+
+  /* -----------------------
+  * Add members state
+  * --------------------- */
+  const showAddMembers = ref(false);
+  const newMemberIds = ref([]);
+
+  const existingMemberIds = computed(() =>
+    members.value.map((m) => m.user_id)
+  );
 
   function handleClosePanel(){
     emit("close-chat-info-panel");
@@ -61,6 +72,31 @@
   );
 }
 
+async function addMembers() {
+  if (!newMemberIds.value.length) return;
+
+  const token = sessionStorage.getItem("token");
+
+  await fetch(`/api/chats/${chatInfo.value.id}/members`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      member_ids: newMemberIds.value,
+    }),
+  });
+
+  showAddMembers.value = false;
+  newMemberIds.value = [];
+}
+
+function cancelAddMembers() {
+  showAddMembers.value = false;
+  newMemberIds.value = [];
+}
+
 onMounted(() => {
   console.log("ChatInfoPanel mounted with chatInfo:", chatInfo.value);
   console.log("Current userInfo:", userInfo.value);
@@ -72,33 +108,58 @@ onMounted(() => {
     <button class="close-btn" @click="handleClosePanel">
       <IconClose />
     </button>
-    <img class="avatar" :src="chatInfo?.avatar_url"></img>
-    <p class="main-name">{{ chatInfo?.name}}</p>
 
-    <p v-if="isGroup">{{chatInfo?.description}}</p>
-    <p v-if="isPrivate" class="added-date">
-      <!-- Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }} -->
-      <p v-if="chatInfo?.status == 'Offline' && chatInfo?.last_seen_at">
-              Ultima vez activo:
-              {{ formatAddedTime(chatInfo?.last_seen_at) }}
+    <img class="avatar" :src="chatInfo?.avatar_url" />
+    <p class="main-name">{{ chatInfo?.name }}</p>
+
+    <p v-if="isGroup">
+      {{ chatInfo?.description }}
+    </p>
+
+    <div v-if="isPrivate" class="added-date">
+      <p
+        v-if="
+          chatInfo?.status == 'Offline' &&
+          chatInfo?.last_seen_at
+        "
+      >
+        Ultima vez activo:
+        {{ formatAddedTime(chatInfo?.last_seen_at) }}
       </p>
       <p v-else>
         Estado: {{ chatInfo.status }}
       </p>
-    </p>
+    </div>
 
     <!-- GROUP MEMBERS -->
     <div v-if="isGroup" class="members-section">
-      <p class="members-title">
-        Miembros ({{ members.length }})
-      </p>
+      <div class="members-header">
+        <p class="members-title">
+          Miembros ({{ members.length }})
+        </p>
 
-      <ul class="members-list">
+        <button
+          v-if="isCurrentUserAdmin && !showAddMembers"
+          class="add-member-btn"
+          @click="showAddMembers = true"
+        >
+          Agregar
+        </button>
+      </div>
+
+      <!-- MEMBER LIST -->
+      <ul
+        v-if="!showAddMembers"
+        class="members-list"
+      >
         <li
           v-for="member in members"
           :key="member.user_id"
           class="member-item clickable"
-          @click="!isYou(member) && emit('open-person-info', member)"
+          @click="
+            !isYou(member) &&
+            emit('open-person-info', member)
+          "
         >
           <!-- LEFT -->
           <div class="member-left">
@@ -110,7 +171,9 @@ onMounted(() => {
 
             <div class="member-info">
               <div class="member-name-row">
-                <p class="member-name">{{ member.username }}</p>
+                <p class="member-name">
+                  {{ member.username }}
+                </p>
 
                 <span
                   v-if="isYou(member)"
@@ -118,14 +181,20 @@ onMounted(() => {
                 >
                   Tú
                 </span>
-                <span v-if="member.role === 'admin'" class="admin-badge">Admin</span>
+
+                <span
+                  v-if="member.role === 'admin'"
+                  class="admin-badge"
+                >
+                  Admin
+                </span>
               </div>
 
               <span class="member-status">
                 {{ member.status }}
               </span>
             </div>
-        </div>
+          </div>
 
           <!-- RIGHT -->
           <button
@@ -137,6 +206,31 @@ onMounted(() => {
           </button>
         </li>
       </ul>
+
+      <!-- ADD MEMBERS UI -->
+      <div v-else class="add-members-panel">
+        <GroupMemberSelector
+          v-model="newMemberIds"
+          :existing-member-ids="existingMemberIds"
+        />
+
+        <div class="add-members-actions">
+          <button
+            class="cancel-btn"
+            @click="cancelAddMembers"
+          >
+            Cancelar
+          </button>
+
+          <button
+            class="confirm-btn"
+            :disabled="!newMemberIds.length"
+            @click="addMembers"
+          >
+            Agregar
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -190,6 +284,16 @@ onMounted(() => {
 .buttons {
   margin-top: 2rem;
 }
+
+button {
+  border: none;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: var(--msg-out);
+}
+
 .btn {
   all: unset;
   width: auto;
@@ -304,5 +408,21 @@ onMounted(() => {
 .member-status {
   font-size: 1.3rem;
   color: var(--text-muted);
+}
+
+.members-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-members-actions {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+
+.cancel-btn {
+  margin: 1rem;
 }
 </style>

@@ -404,4 +404,44 @@ defmodule Echo.Chats.Chat do
 
   defp unwrap_tx({:ok, result}), do: result
   defp unwrap_tx({:error, reason}), do: {:error, reason}
+
+  def add_members(chat_id, requester_id, member_ids) do
+    result =
+      Repo.transaction(fn ->
+        with {:ok, chat} <- get_chat(chat_id),
+            :ok <- ensure_admin(chat, requester_id) do
+          Enum.each(member_ids, fn user_id ->
+            add_member_to_chat(chat_id, user_id)
+          end)
+
+          {:ok, :added}
+        else
+          error -> Repo.rollback(error)
+        end
+      end)
+
+    case unwrap_tx(result) do
+      {:ok, :added} = ok ->
+        Echo.Chats.ChatSession.broadcast(chat_id, %{
+          type: "chat_members_added",
+          chat_id: chat_id,
+          added_user_ids: member_ids
+        })
+
+        ok
+
+      error ->
+        error
+    end
+  end
+
+  defp add_member_to_chat(chat_id, user_id) do
+    %ChatMember{}
+    |> ChatMember.changeset(%{
+      chat_id: chat_id,
+      user_id: user_id,
+      role: "member"
+    })
+    |> Repo.insert(on_conflict: :nothing)
+  end
 end

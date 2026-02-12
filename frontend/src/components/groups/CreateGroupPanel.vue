@@ -2,16 +2,14 @@
 import { ref, computed, watch } from "vue";
 import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
-import PeopleSearchBar from "@/components/people/PeopleSearchBar.vue";
+
+import GroupMemberSelector from "@/components/groups/GroupMemberSelector.vue";
 import IconClose from '@/components/icons/IconClose.vue';
 import IconImage from '@/components/icons/IconImage.vue';
 
 const emit = defineEmits(["close"]);
 
 const socketStore = useSocketStore();
-const { contacts } = storeToRefs(socketStore);
-const { userInfo } = storeToRefs(socketStore);
-const { peopleSearchResults } = storeToRefs(socketStore);
 /* -----------------------
  * Step control
  * --------------------- */
@@ -25,32 +23,17 @@ const name = ref("");
 const description = ref("");
 const avatarFile = ref(null);
 const avatarPreview = ref(null);
-const searchText = ref(null);
-const selectedPeopleMap = ref(new Map());
 
 /* -----------------------
  * Computed
  * --------------------- */
 
 const canGoNext = computed(() => selectedIds.value.length >= 1);
-
 const canCreate = computed(() => name.value.trim().length > 0);
 
 /* -----------------------
  * Methods
  * --------------------- */
-function toggleMember(person) {
-	const id = person.id;
-
-	if (selectedIds.value.includes(id)) {
-		selectedIds.value = selectedIds.value.filter((i) => i !== id);
-		selectedPeopleMap.value.delete(id);
-	} else {
-		selectedIds.value.push(id);
-		selectedPeopleMap.value.set(id, person);
-	}
-}
-
 function onAvatarChange(e) {
 	const file = e.target.files[0];
 	if (!file) return;
@@ -106,9 +89,6 @@ function reset() {
 	description.value = "";
 	avatarFile.value = null;
 	avatarPreview.value = null;
-	searchText.value = null;
-
-	socketStore.deletePeopleSearchResults();
 }
 
 async function uploadGroupAvatar(groupId, file) {
@@ -137,42 +117,6 @@ async function uploadGroupAvatar(groupId, file) {
 		console.error("Avatar upload failed", err);
 	}
 }
-
-function searchPeople(input) {
-	searchText.value = input;
-
-	if (input && input.trim()) {
-		socketStore.searchPeople(input);
-	} else {
-		socketStore.deletePeopleSearchResults();
-	}
-}
-
-const peopleToShow = computed(() => {
-	const q = searchText.value?.trim();
-
-	if (!q) return [];
-
-	return (peopleSearchResults.value || []).filter(
-		(p) => p.id !== userInfo.value?.id && !selectedIds.value.includes(p.id),
-	);
-});
-
-function getDisplayName(person) {
-	const contact = contacts.value.find((c) => c.id === person.id);
-	if (contact) {
-		return contact.contact_info?.nickname || person.name || null
-	}
-	return person.name || null;
-}
-
-const selectedPeople = computed(() =>
-	Array.from(selectedPeopleMap.value.values()),
-);
-
-const unselectedContacts = computed(() =>
-	contacts.value.filter((p) => !selectedIds.value.includes(p.id)),
-);
 </script>
 
 <template>
@@ -186,83 +130,10 @@ const unselectedContacts = computed(() =>
 			</button>
 		</div>
 
-		<PeopleSearchBar 
-			v-if="step === 1" 
-			class="search-bar"
-			@search-people="searchPeople" 
-		/>
-
 		<!-- STEP 1: SELECT MEMBERS -->
 		<div v-if="step === 1" class="panel-body">
 			<p class="subtitle">Selecciona al menos 1 miembro</p>
-			<div class="contacts-list">
-				<!-- SELECTED (contacts + non-contacts) -->
-				<template v-if="step === 1 && !searchText && selectedPeople.length">
-					<p class="selected-label">Seleccionados</p>
-					<label
-						v-for="person in selectedPeople"
-						:key="`selected-${person.id}`"
-						class="contact-item selected"
-					>
-						<input type="checkbox" checked @change="toggleMember(person)" />
-
-						<img :src="person.avatar_url" class="avatar" />
-						<span class="main-name">
-							{{ getDisplayName(person) }}
-						</span>
-						<span class="second-name">
-							{{ `~${person.username}` }}
-						</span>
-					</label>
-				</template>
-
-				<!-- SEARCH RESULTS -->
-				<label
-					v-if="searchText"
-					v-for="person in peopleToShow"
-					:key="person.id"
-					class="contact-item"
-				>
-					<input
-						type="checkbox"
-						:checked="selectedIds.includes(person.id)"
-						@change="toggleMember(person)"
-					/>
-
-					<img :src="person.avatar_url" class="avatar" />
-					<span class="main-name">
-						{{ getDisplayName(person) }}
-					</span>
-					<span class="second-name">
-						{{ `~${person.username}` }}
-					</span>
-				</label>
-
-				<!-- CONTACTS (when no search) -->
-				<template v-else>
-					<p v-if="unselectedContacts.length" class="selected-label">Contactos</p>
-
-					<label
-						v-for="person in unselectedContacts"
-						:key="person.id"
-						class="contact-item"
-					>
-						<input
-							type="checkbox"
-							:checked="selectedIds.includes(person.id)"
-							@change="toggleMember(person)"
-						/>
-
-						<img :src="person.avatar_url" class="avatar" />
-						<span class="main-name">
-							{{ getDisplayName(person) }}
-						</span>
-						<span class="second-name">
-							{{ `~${person.username}` }}
-						</span>
-					</label>
-				</template>
-			</div>
+			<GroupMemberSelector v-model="selectedIds" />
 		</div>
 
 		<!-- STEP 2: GROUP INFO -->
@@ -451,10 +322,6 @@ const unselectedContacts = computed(() =>
 .contact-item input[type="checkbox"]:hover {
 	filter: brightness(1);
 }
-
-
-
-
 
 .avatar {
 	width: 36px;

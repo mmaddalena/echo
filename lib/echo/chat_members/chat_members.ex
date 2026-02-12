@@ -9,4 +9,12 @@ defmodule Echo.ChatMembers.ChatMembers do
     )
     |> Repo.update_all(set: [last_read_at: DateTime.utc_now()])
   end
+
+  def member?(chat_id, user_id) do
+    Repo.exists?(
+      from cm in Echo.Schemas.ChatMember,
+        where: cm.chat_id == ^chat_id and cm.user_id == ^user_id
+    )
+  end
+
 end
