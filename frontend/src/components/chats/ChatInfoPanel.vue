@@ -97,6 +97,44 @@ function cancelAddMembers() {
   newMemberIds.value = [];
 }
 
+async function leaveGroup() {
+  const confirmLeave = confirm(
+    "¿Seguro que quieres abandonar el grupo?"
+  );
+  if (!confirmLeave) return;
+
+  const token = sessionStorage.getItem("token");
+
+  try {
+    const res = await fetch(
+      `/api/chats/${chatInfo.value?.id}/members/${userInfo.value.id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Status:", res.status);
+    console.log("Body:", await res.text());
+
+    if (res.status === 204) {
+      // Successfully left the group
+      alert("Has abandonado el grupo");
+      emit("close-chat-info-panel");
+      // Optionally, you can emit a custom event to refresh the chat list
+      // emit("left-group", chatInfo.value.id);
+    } else {
+      const data = await res.json();
+      alert(`Error al abandonar el grupo: ${data.error}`);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error de red al intentar abandonar el grupo");
+  }
+}
+
 onMounted(() => {
   console.log("ChatInfoPanel mounted with chatInfo:", chatInfo.value);
   console.log("Current userInfo:", userInfo.value);
@@ -231,6 +269,13 @@ onMounted(() => {
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- ABANDON GROUP BUTTON -->
+    <div v-if="isGroup" class="leave-group-section">
+      <button class="leave-group-btn" @click="leaveGroup">
+        Abandonar grupo
+      </button>
     </div>
   </div>
 </template>
@@ -424,5 +469,12 @@ button {
 
 .cancel-btn {
   margin: 1rem;
+}
+
+.leave-group-section {
+  margin-top: 3rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 </style>

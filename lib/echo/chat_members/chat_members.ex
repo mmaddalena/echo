@@ -17,4 +17,15 @@ defmodule Echo.ChatMembers.ChatMembers do
     )
   end
 
+  @doc """
+  Returns all members of a chat as a list of ChatMember structs,
+  ordered by `inserted_at` ascending (oldest first).
+  """
+  def get_all_members(chat_id) do
+    from(cm in ChatMember,
+      where: cm.chat_id == ^chat_id,
+      order_by: [asc: cm.inserted_at]
+    )
+    |> Repo.all()
+  end
 end

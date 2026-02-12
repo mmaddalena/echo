@@ -195,7 +195,6 @@ defmodule Echo.Users.UserSession do
   def handle_cast({:open_chat, chat_id}, state) do
     case ChatMembers.member?(chat_id, state.user_id) do
       true ->
-        IO.puts("\n\n\nI'M TRYING TO OPEN THE CHAT")
         {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
         ChatSession.get_chat_info(cs_pid, state.user_id, self())
 
@@ -562,14 +561,15 @@ defmodule Echo.Users.UserSession do
 
 
   @impl true
-  def handle_cast({:send_payload, payload}, state) do
-    send(state.socket, {:send, payload})
-    {:noreply, state}
-  end
+def handle_cast({:send_payload, payload}, %{socket: nil} = state) do
+  # Socket is not alive, just ignore
+  {:noreply, state}
+end
 
-
-
-
+def handle_cast({:send_payload, payload}, state) do
+  send(state.socket, {:send, payload})
+  {:noreply, %{state | last_activity: DateTime.utc_now()}}
+end
 
   ################### Helpers
   defp serialize_contacts_for_front(contacts) do
