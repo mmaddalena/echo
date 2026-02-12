@@ -243,7 +243,7 @@ defmodule Echo.Chats.ChatSession do
     {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
   end
 
-  @impl true
+@impl true
 def handle_cast({:chat_event, payload}, state) do
   case payload.type do
     "chat_member_removed" ->
@@ -266,10 +266,35 @@ def handle_cast({:chat_event, payload}, state) do
         UserSession.send_payload(us_pid, payload)
       end
 
-      {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
+      {:noreply,
+       %{state | members: new_members, last_activity: DateTime.utc_now()}}
 
-    _ ->
-      {:noreply, state}
+    "chat_members_added" ->
+      new_members = Chat.get_members(state.chat_id)
+      added_user_ids = payload.added_user_ids
+
+      Enum.each(new_members, fn member ->
+        if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+          if member.user_id in added_user_ids do
+            # Newly added user → must receive chat_item
+            chat_item = Chat.build_chat_info(state.chat_id, member.user_id)
+
+            UserSession.send_payload(us_pid, %{
+              type: "chat_added",
+              chat_item: chat_item
+            })
+          else
+            # Existing member → only update members
+            UserSession.send_payload(us_pid, %{
+              type: "chat_members_added",
+              chat_id: state.chat_id,
+              members: new_members
+            })
+          end
+        end
+      end)
+
+      {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
   end
 end
 

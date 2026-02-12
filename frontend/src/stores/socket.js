@@ -98,6 +98,20 @@ export const useSocketStore = defineStore("socket", () => {
 				dispatch_contact_deletion(payload)
 			} else if (payload.type === "chat_member_removed") {
 				dispatch_chat_member_removed(payload);
+			} else if (payload.type === "chat_members_added") {
+				dispatch_chat_member_added(payload);
+			} else if (payload.type === "chat_added") {
+				chats.value = [payload.chat_item, ...chats.value];
+			} else if (payload.type === "chat_forbidden") {
+				if (activeChatId.value === payload.chat_id) {
+					activeChatId.value = null;
+					sessionStorage.removeItem("activeChatId");
+				}
+
+				chats.value = chats.value.filter(c => c.id !== payload.chat_id);
+
+				const { [payload.chat_id]: _, ...rest } = chatsInfo.value;
+				chatsInfo.value = rest;
 			}
 		};
 
@@ -534,9 +548,22 @@ export const useSocketStore = defineStore("socket", () => {
 
 			chats.value = chats.value.filter((c) => c.id !== chat_id);
 		}
-
-		console.log("Updated members:", chatsInfo.value[chat_id].members);
 }
+
+	function dispatch_chat_member_added(payload) {
+		const chat_id = payload.chat_id;
+		const chat = chatsInfo.value[chat_id];
+		if (!chat) return;
+
+		// Replace members list reactively
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chat_id]: {
+				...chat,
+				members: payload.members,
+			},
+		};
+	}
 
 	function disconnect() {
 		if (socket.value) {
