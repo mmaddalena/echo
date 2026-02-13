@@ -1120,16 +1120,15 @@ Fields:
 Fields:
 - type: "group_name_change_result"
 - status: "success | failure"
-- data: Object (contiene new_name || reason)
-  - new_name: Object
-    - contact_id: uuid
-    - new_name: text
-  - reason:
-    - not_found
-    - name:
-      - can't be blank
-      - should be at least 1 character(s)
-      - should be at most 50 character(s)
+- new_name: Object (solo si status es success)
+  - contact_id: uuid
+  - new_name: text
+- reason: (solo si status es failure)
+  - not_found
+  - name:
+    - can't be blank
+    - should be at least 1 character(s)
+    - should be at most 50 character(s)
 
 <details>
 <summary>Example</summary>

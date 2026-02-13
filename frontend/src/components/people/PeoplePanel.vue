@@ -59,7 +59,8 @@
     }
   )
 
-  function getPersonInfo(person_id){ 
+  function getPersonInfo(person_id){
+    uiStore.showPersonInfo()
     socketStore.getPersonInfo(person_id)
   }
 

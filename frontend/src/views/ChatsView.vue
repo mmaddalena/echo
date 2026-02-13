@@ -164,6 +164,7 @@ function handleOpenChatInfo(chatInfo) {
 
 
 function handleOpenPersonInfo(person_id) {
+	uiStore.showPersonInfo()
 	socketStore.getPersonInfo(person_id);
 }
 
@@ -222,10 +223,6 @@ function handleCloseChatInfo() {
     socketStore.deleteContact(personId)
   }
 
-	watch(openedPersonInfo, info => {
-    if (info) uiStore.showPersonInfo()
-  })
-
 </script>
 
 <template>
@@ -252,6 +249,7 @@ function handleCloseChatInfo() {
 				<PersonInfoPanel
 					v-if="panel === 'person-info' && openedPersonInfo != null"
 					:personInfo="openedPersonInfo"
+					:currentUserId="userInfo.id"
 					@close-person-info-panel="closePersonInfoPanel"
 					@open-chat="handleOpenChat"
 					@change-nickname="handleChangeNickname"

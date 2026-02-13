@@ -39,7 +39,7 @@
             v-else
             @click="clearText"
           >
-            <IconClose class="icon" />
+            <IconClose class="icon close-btn" />
           </button>
         </Transition>
       </div>
@@ -84,6 +84,9 @@ button {
 }
 .icon {
   height: 1.75rem;
+}
+.close-btn {
+  padding: 0.2rem;
 }
 
 .fade-enter-active,
