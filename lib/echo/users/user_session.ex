@@ -99,6 +99,18 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:delete_contact, user_id})
   end
 
+  def change_group_name(us_pid, chat_id, new_name) do
+    GenServer.cast(us_pid, {:change_group_name, chat_id, new_name})
+  end
+
+  def change_group_description(us_pid, chat_id, new_description) do
+    GenServer.cast(us_pid, {:change_group_description, chat_id, new_description})
+  end
+
+  def give_admin(us_pid, user_id) do
+    GenServer.cast(us_pid, {:give_admin, user_id})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -451,7 +463,8 @@ defmodule Echo.Users.UserSession do
           member_ids: member_ids
         }},
         state
-      ) do
+      )
+  do
     creator_id = state.user_id
 
     members =
@@ -556,8 +569,32 @@ defmodule Echo.Users.UserSession do
   end
 
 
+  def handle_cast({:change_group_name, chat_id, new_name}, state) do
+    IO.puts("\n\n\n SE QUIERE CAMBIAR EL GROUP NAME A #{new_name}\n\n\n")
+
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+
+    ChatSession.change_group_name(cs_pid, chat_id, new_name, state.user_id)
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:change_group_description, chat_id, new_description}, state) do
+    IO.puts("\n\n\n SE QUIERE CAMBIAR EL GROUP DESCRIPTION A #{new_description}\n\n\n")
+
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+
+    ChatSession.change_group_description(cs_pid, chat_id, new_description, state.user_id)
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:give_admin, user_id}, state) do
+
+  end
+
   @impl true
-def handle_cast({:send_payload, payload}, %{socket: nil} = state) do
+def handle_cast({:send_payload, _payload}, %{socket: nil} = state) do
   # Socket is not alive, just ignore
   {:noreply, state}
 end

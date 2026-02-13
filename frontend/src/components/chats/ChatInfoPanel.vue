@@ -5,6 +5,7 @@
   import GroupMemberSelector from "@/components/groups/GroupMemberSelector.vue";
   import IconEdit from '@/components/icons/IconEdit.vue'
   import IconConfirm from '@/components/icons/IconConfirm.vue'
+  import IconAdmin from '../icons/IconAdmin.vue';
 
 
 
@@ -26,7 +27,8 @@
     "open-chat", 
     "open-person-info",
     "change-group-name",
-    "change-group-description"
+    "change-group-description",
+    "give-admin"
   ]);
 
   /* -----------------------
@@ -54,6 +56,13 @@
     return true;
   }
 
+  function canGiveAdmin(member_id) {
+    if (!isCurrentUserAdmin.value) return false;
+    if (isYou(member_id)) return false;
+
+    return true;
+  }
+
   async function removeMember(member_id) {
     const token = sessionStorage.getItem("token");
 
@@ -66,6 +75,10 @@
         },
       }
     );
+  }
+
+  function giveAdmin(member_id) {
+    emit('give-admin', member_id)  
   }
 
   async function addMembers() {
@@ -332,13 +345,22 @@
           </div>
 
           <!-- RIGHT -->
-          <button
-            v-if="canRemove(member.user_id)"
-            class="remove-btn"
-            @click.stop="removeMember(member.user_id)"
-          >
-            ⛌
-          </button>
+          <div class="member-buttons">
+            <button
+              v-if="canGiveAdmin(member.user_id)"
+              class="give-admin-btn"
+              @click.stop="giveAdmin(member.user_id)"
+            >
+              <IconAdmin class="admin-icon" />
+            </button>
+            <button
+              v-if="canRemove(member.user_id)"
+              class="remove-btn"
+              @click.stop="removeMember(member.user_id)"
+            >
+              <IconClose class="remove-icon"/>
+            </button>
+          </div>
         </li>
       </ul>
 
@@ -430,11 +452,26 @@
   text-align: center !important;
   padding-top: 0.6rem !important;
   padding-bottom: 0.6rem !important;
+
+  display: flex;
+  width: calc(100% - 7rem - 7rem);
+	gap: 1rem;
+  align-items: center;
+  margin-left: 7rem;
+  margin-right: 7rem;
+  margin-bottom: 2rem;
 }
 .description {
   font-size: 1.6rem !important;
   color: var(--text-muted) !important;
   text-align: start !important;
+
+  display: flex;
+  width: calc(100% - 7rem - 7rem);
+	gap: 1rem;
+  align-items: center;
+  margin-left: 7rem;
+  margin-right: 7rem;
 }
 .added-date {
   margin-top: 1rem;
@@ -576,6 +613,27 @@ button {
   min-width: 0;
 }
 
+
+.member-buttons {
+  display: flex;
+  gap: 0.8rem;
+}
+.give-admin-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+}
+.give-admin-btn:hover {
+  background-color: var(--accent-hover);
+}
+.admin-icon {
+  height: 1.8rem;
+}
+
 .remove-btn {
   border: none;
   background: transparent;
@@ -585,10 +643,13 @@ button {
   padding: 0.4rem;
   border-radius: 0.5rem;
 }
-
 .remove-btn:hover {
   background-color: rgba(255, 99, 71, 0.15);
 }
+.remove-icon {
+  height: 1.8rem;
+}
+
 
 .member-item:hover {
   background-color: var(--bg-chatlist-hover);
