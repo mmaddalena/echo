@@ -417,8 +417,11 @@
 
 .avatar {
   width: 15rem;
+  height: 15rem;
   border-radius: 50%;
   margin: 4rem auto 2rem auto;
+  object-fit: cover;
+  object-position: center;
 }
 .main-name {
   color: var(--text-main) !important;

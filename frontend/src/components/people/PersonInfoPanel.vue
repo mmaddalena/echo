@@ -8,10 +8,13 @@
   import IconDeleteContact from '@/components/icons/IconDeleteContact.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
 
-  const {personInfo} = defineProps({
+  const {personInfo, currentUserId} = defineProps({
     personInfo: {
       type: Object,
       required: true
+    },
+    currentUserId: {
+      type: Number
     }
   })
 
@@ -65,6 +68,10 @@
   function handleDeleteContact(){
     emit("delete-contact", personInfo.id)
   }
+
+  const isYou = computed(() => {
+    return personInfo.id == currentUserId
+  })
 </script>
 
 <template>
@@ -126,7 +133,7 @@
       </button>
 
       <button 
-        v-if="!isContact"
+        v-if="!isYou && !isContact"
         class="btn" 
         @click="handleAddContact"
       >
@@ -137,7 +144,7 @@
       </button>
 
       <button 
-        v-else
+        v-else-if="!isYou"
         class="btn" 
         @click="handleDeleteContact"
       >
@@ -162,6 +169,7 @@
   flex-direction: column;
   align-items: center;
   background-color: var(--bg-peoplelist-panel);
+  width: 100%;
 }
 .close-btn {
   display: flex;

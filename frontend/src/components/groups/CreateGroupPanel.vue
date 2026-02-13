@@ -139,7 +139,11 @@ async function uploadGroupAvatar(groupId, file) {
 		<!-- STEP 2: GROUP INFO -->
 		<div v-else class="panel-body">
 			<div class="avatar-section">
-				<div v-if="avatarPreview" :src="avatarPreview" class="group-avatar"></div>
+				<img 
+					v-if="avatarPreview" 
+					:src="avatarPreview" 
+					class="group-avatar" 
+				/>
 				<div v-else class="group-avatar placeholder">
 					<IconImage class="group-avatar-icon"/>
 				</div>
@@ -226,7 +230,7 @@ async function uploadGroupAvatar(groupId, file) {
 
   font-size: 2rem;
   color: var(--text-main);
-	padding: 0.3rem;
+	padding: 0.8rem;
 }
 .close-btn:hover {
 	color: #fff;
