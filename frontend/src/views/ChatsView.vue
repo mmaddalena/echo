@@ -34,6 +34,7 @@ const { userInfo } = storeToRefs(socketStore);
 const { chatsInfo } = storeToRefs(socketStore);
 const { activeChatId } = storeToRefs(socketStore);
 const { pendingPrivateChat } = storeToRefs(socketStore);
+const { openedPersonInfo } = storeToRefs(socketStore);
 
 const chatMessagesRef = ref(null);
 
@@ -154,11 +155,15 @@ function scrollToMessage(messageId) {
 }
 
 function handleOpenChatInfo(chatInfo) {
-	uiStore.showChatInfo(chatInfo);
+	if (chatInfo.type === 'private') {
+		handleOpenPersonInfo(socketStore.getOtherMemberId(chatInfo))
+	} if (chatInfo.type === 'group') {
+		uiStore.showChatInfo();
+	}
 }
 
+
 function handleOpenPersonInfo(person_id) {
-	console.log(`person id a abrir: ${person_id}`)
 	socketStore.getPersonInfo(person_id);
 }
 
@@ -175,6 +180,52 @@ watch(
 		console.log(`El panel activo es: ${pan}`);
 	},
 );
+
+
+function handleChangeGroupName(chat_id, new_name) {
+	socketStore.changeGroupName(chat_id, new_name)
+}
+
+function handleChangeGroupDescription(chat_id, new_description) {
+	socketStore.changeGroupDescription(chat_id, new_description)
+}
+
+function handleCloseChatInfo() {
+	uiStore.closePanel()
+}
+
+
+  function closePersonInfoPanel() {
+    //contactSearchText.value = null;
+    socketStore.deletePersonInfo();
+    //socketStore.deletePeopleSearchResults();
+    uiStore.closePanel();
+  }
+
+  function handleOpenChat(chatId) {
+    if (chatId) {
+      socketStore.openChat(chatId)
+    } else {
+      socketStore.openPendingPrivateChat(openedPersonInfo)
+    }
+  }
+
+  function handleChangeNickname(personId, newNickname) {
+    socketStore.changeNickname(personId, newNickname)
+  }
+
+  function handleAddContact(personId) {
+    socketStore.addContact(personId)
+  }
+
+  function handleDeleteContact(personId) {
+    socketStore.deleteContact(personId)
+  }
+
+	watch(openedPersonInfo, info => {
+    if (info) uiStore.showPersonInfo()
+  })
+
 </script>
 
 <template>
@@ -193,8 +244,19 @@ watch(
 					v-if="panel === 'chat-info'"
 					:chatInfo="activeChat"
 					:currentUserId="userInfo.id"
-					@close-chat-info-panel="uiStore.showChats()"
+					@close-chat-info-panel="handleCloseChatInfo"
 					@open-person-info="handleOpenPersonInfo"
+					@change-group-name="handleChangeGroupName"
+					@change-group-description="handleChangeGroupDescription"
+				/>
+				<PersonInfoPanel
+					v-if="panel === 'person-info' && openedPersonInfo != null"
+					:personInfo="openedPersonInfo"
+					@close-person-info-panel="closePersonInfoPanel"
+					@open-chat="handleOpenChat"
+					@change-nickname="handleChangeNickname"
+					@add-contact="handleAddContact"
+					@delete-contact="handleDeleteContact"
 				/>
 			</div>
 		</div>

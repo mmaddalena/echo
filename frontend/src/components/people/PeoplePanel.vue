@@ -4,12 +4,14 @@
   import PersonInfoPanel from "./PersonInfoPanel.vue";
   import PeopleSearchBar from "./PeopleSearchBar.vue";
   import { useSocketStore } from "@/stores/socket"
+  import { useUIStore } from "@/stores/ui"
   import { storeToRefs } from "pinia";
   import { ref, computed } from "vue";
   import { onUnmounted } from "vue";
   import { watch } from "vue";
 
   const socketStore = useSocketStore();
+  const uiStore = useUIStore();
   
   const activeTab = ref("contacts");
   const { openedPersonInfo } = storeToRefs(socketStore);
@@ -61,26 +63,10 @@
     socketStore.getPersonInfo(person_id)
   }
 
-  function closePersonInfoPanel() {
-    socketStore.deletePersonInfo();
-    contactSearchText.value = null;
-    socketStore.deletePeopleSearchResults();
-  }
-
-  onUnmounted(() => {
-    closePersonInfoPanel()
-  });
 
 
 
 
-  function handleOpenChat(chatId) {
-    if (chatId) {
-      socketStore.openChat(chatId)
-    } else {
-      socketStore.openPendingPrivateChat(openedPersonInfo)
-    }
-  }
 
 
   function searchPeople(input){
@@ -90,19 +76,34 @@
       contactSearchText.value = input;
   }
 
+  // function closePersonInfoPanel() {
+  //   socketStore.deletePersonInfo();
+  //   contactSearchText.value = null;
+  //   socketStore.deletePeopleSearchResults();
+  //   uiStore.closePanel();
+  // }
 
-  function handleChangeNickname(personId, newNickname) {
-    socketStore.changeNickname(personId, newNickname)
-  }
+  // function handleOpenChat(chatId) {
+  //   if (chatId) {
+  //     socketStore.openChat(chatId)
+  //   } else {
+  //     socketStore.openPendingPrivateChat(openedPersonInfo)
+  //   }
+  // }
 
-  function handleAddContact(personId) {
-    socketStore.addContact(personId)
-  }
+  // function handleChangeNickname(personId, newNickname) {
+  //   socketStore.changeNickname(personId, newNickname)
+  // }
 
-  function handleDeleteContact(personId) {
-    socketStore.deleteContact(personId)
-  }
+  // function handleAddContact(personId) {
+  //   socketStore.addContact(personId)
+  // }
 
+  // function handleDeleteContact(personId) {
+  //   socketStore.deleteContact(personId)
+  // }
+
+  
 
 </script>
 
@@ -126,7 +127,7 @@
       @open-person="getPersonInfo"
     />
 
-    <PersonInfoPanel
+    <!-- <PersonInfoPanel
       v-if="openedPersonInfo != null"
       :personInfo="openedPersonInfo"
       @close-person-info-panel="closePersonInfoPanel"
@@ -134,7 +135,7 @@
       @change-nickname="handleChangeNickname"
       @add-contact="handleAddContact"
       @delete-contact="handleDeleteContact"
-    />
+    /> -->
   </div>
 </template>
 

@@ -2,7 +2,6 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { generateId } from "@/utils/idGenerator";
 import { useThemeStore } from "@/stores/theme"
-import { useUIStore } from "@/stores/ui";
 
 
 export const useSocketStore = defineStore("socket", () => {
@@ -18,7 +17,6 @@ export const useSocketStore = defineStore("socket", () => {
 	const pendingPrivateChat = ref(null);
 	const pendingMessage = ref(null);
 	const themeStore = useThemeStore();
-	const uiStore = useUIStore();
 
 	const creatingGroup = ref(false);
 	const selectedGroupMembers = ref([]);
@@ -69,7 +67,6 @@ export const useSocketStore = defineStore("socket", () => {
 				contactsLoaded.value = true;
 			} else if (payload.type === "person_info") {
 				openedPersonInfo.value = payload.person_info;
-				uiStore.showPeople();
 			} else if (payload.type === "search_people_results") {
 				peopleSearchResults.value = payload.search_people_results;
 			} else if (payload.type === "private_chat_created") {
@@ -861,6 +858,30 @@ export const useSocketStore = defineStore("socket", () => {
 		});
 	}
 
+	function changeGroupName(chat_id, new_name) {
+		send({
+			type: "change_group_name",
+			chat_id: chat_id,
+			new_name: new_name
+		});
+	}
+
+	function changeGroupDescription(chat_id, new_description) {
+		send({
+			type: "change_group_description",
+			chat_id: chat_id,
+			new_description: new_description
+		});
+	}
+
+	function getOtherMemberId(chatInfo) {
+		if (!chatInfo?.members) return null
+
+		return chatInfo.members.find(
+			m => String(m.user_id) !== String(userInfo.value.id)
+		)?.user_id
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -894,6 +915,10 @@ export const useSocketStore = defineStore("socket", () => {
 		newGroupInfo,
 		updateGroupAvatar,
 		addContact,
-		deleteContact
+		deleteContact,
+		changeGroupName,
+		changeGroupDescription,
+
+		getOtherMemberId
 	};
 });

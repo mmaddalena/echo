@@ -1,16 +1,19 @@
 <script setup>
-  import { computed, onMounted, ref} from 'vue';
+  import { computed, onMounted, ref, nextTick, watch} from 'vue';
   import IconClose from '../icons/IconClose.vue';
   import { formatAddedTime } from "@/utils/formatAddedTime";
   import GroupMemberSelector from "@/components/groups/GroupMemberSelector.vue";
+  import IconEdit from '@/components/icons/IconEdit.vue'
+  import IconConfirm from '@/components/icons/IconConfirm.vue'
 
 
- const { chatInfo, currentUserId } = defineProps({
+
+
+  const { chatInfo, currentUserId } = defineProps({
     chatInfo: Object,
-    currentUserId: Number,
+    currentUserId: String,
   });
 
-  const isPrivate = computed(() => chatInfo?.type === 'private')
   const isGroup = computed(() => chatInfo?.type === 'group');
   const members = computed(() => chatInfo?.members ?? []);
 
@@ -18,7 +21,13 @@
   return members.value.some(
     (m) => m.user_id === currentUserId && m.role === "admin");});
 
-  const emit = defineEmits(["close-chat-info-panel", "open-chat", "open-person-info"]);
+  const emit = defineEmits([
+    "close-chat-info-panel", 
+    "open-chat", 
+    "open-person-info",
+    "change-group-name",
+    "change-group-description"
+  ]);
 
   /* -----------------------
   * Add members state
@@ -59,72 +68,130 @@
     );
   }
 
-async function addMembers() {
-  if (!newMemberIds.value.length) return;
+  async function addMembers() {
+    if (!newMemberIds.value.length) return;
 
-  const token = sessionStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
-  await fetch(`/api/chats/${chatInfo.id}/members`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      member_ids: newMemberIds.value,
-    }),
-  });
+    await fetch(`/api/chats/${chatInfo.id}/members`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        member_ids: newMemberIds.value,
+      }),
+    });
 
-  showAddMembers.value = false;
-  newMemberIds.value = [];
-}
-
-function cancelAddMembers() {
-  showAddMembers.value = false;
-  newMemberIds.value = [];
-}
-
-async function leaveGroup() {
-  const confirmLeave = confirm(
-    "¿Seguro que quieres abandonar el grupo?"
-  );
-  if (!confirmLeave) return;
-
-  const token = sessionStorage.getItem("token");
-
-  try {
-    const res = await fetch(
-      `/api/chats/${chatInfo.id}/members/${currentUserId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("Status:", res.status);
-    console.log("Body:", await res.text());
-
-    if (res.status === 204) {
-      // Successfully left the group
-      alert("Has abandonado el grupo");
-      emit("close-chat-info-panel");
-      // Optionally, you can emit a custom event to refresh the chat list
-      // emit("left-group", chatInfo.value.id);
-    } else {
-      const data = await res.json();
-      alert(`Error al abandonar el grupo: ${data.error}`);
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Error de red al intentar abandonar el grupo");
+    showAddMembers.value = false;
+    newMemberIds.value = [];
   }
-}
 
-function handleOpenPersonInfo(member_id) {
-  emit('open-person-info', member_id)
-}
+  function cancelAddMembers() {
+    showAddMembers.value = false;
+    newMemberIds.value = [];
+  }
+
+  async function leaveGroup() {
+    const confirmLeave = confirm(
+      "¿Seguro que quieres abandonar el grupo?"
+    );
+    if (!confirmLeave) return;
+
+    const token = sessionStorage.getItem("token");
+
+    try {
+      const res = await fetch(
+        `/api/chats/${chatInfo.id}/members/${currentUserId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Status:", res.status);
+      console.log("Body:", await res.text());
+
+      if (res.status === 204) {
+        // Successfully left the group
+        alert("Has abandonado el grupo");
+        emit("close-chat-info-panel");
+        // Optionally, you can emit a custom event to refresh the chat list
+        // emit("left-group", chatInfo.value.id);
+      } else {
+        const data = await res.json();
+        alert(`Error al abandonar el grupo: ${data.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de red al intentar abandonar el grupo");
+    }
+  }
+
+  function handleOpenPersonInfo(member_id) {
+    emit('open-person-info', member_id)
+  }
+
+
+  const editingGroupName = ref(false)
+  const editingGroupDescription = ref(false)
+
+  const groupName = ref("")
+  const groupDescription = ref("")
+
+  const groupNameInput = ref(null)
+  const groupDescriptionInput = ref(null)
+
+  watch(
+    () => chatInfo,
+    (info) => {
+      if (!info) return
+      groupName.value = info.name
+      groupDescription.value = info.description ?? ""
+    },
+    { immediate: true }
+  )
+
+
+  function editGroupName() {
+    editingGroupName.value = true
+    nextTick(() => groupNameInput.value.focus())
+  }
+
+  function confirmGroupName() {
+    emit('change-group-name', chatInfo.id, groupName.value)
+    editingGroupName.value = false
+  }
+
+  function editGroupDescription() {
+    editingGroupDescription.value = true
+    nextTick(() => {
+      groupDescriptionInput.value.focus();
+      autoResize(groupDescriptionInput.value);
+    })
+  }
+
+  function confirmGroupDescription() {
+    emit('change-group-description', chatInfo.id, groupDescription.value)
+    editingGroupDescription.value = false
+  }
+
+  function autoResize(el) {
+    if (!el) return
+    el.style.height = "1px"
+    el.style.height = el.scrollHeight + "px"
+  }
+
+  onMounted(() => {
+		editingGroupName.value = false;
+    editingGroupDescription.value = false;
+    autoResize(groupDescriptionInput.value);
+	});
+
+
 </script>
 
 <template>
@@ -134,26 +201,73 @@ function handleOpenPersonInfo(member_id) {
     </button>
 
     <img class="avatar" :src="chatInfo?.avatar_url" />
-    <p class="main-name">{{ chatInfo?.name }}</p>
+    <div class="editable-field" v-if="isGroup && isCurrentUserAdmin">
+      <textarea
+        ref="groupNameInput"
+        class="main-name textarea-edit"
+        v-model="groupName"
+        :readonly="!editingGroupName"
+        @input="autoResize($event.target)"
+        rows="1"
+      />
 
-    <p v-if="isGroup">
+      <Transition name="mini-swap" mode="out-in">
+        <button
+          v-if="!editingGroupName"
+          class="edit-button"
+          @click="editGroupName"
+        >
+          <IconEdit class="icon icon-light" />
+        </button>
+
+        <button
+          v-else
+          class="confirm-button"
+          @click="confirmGroupName"
+        >
+          <IconConfirm class="icon" />
+        </button>
+      </Transition>
+    </div>
+
+    <p v-else-if="isGroup" class="main-name">
+      {{ chatInfo?.name }}
+    </p>
+
+
+    <div class="editable-field" v-if="isGroup && isCurrentUserAdmin">
+      <textarea
+        ref="groupDescriptionInput"
+        class="description textarea-edit"
+        v-model="groupDescription"
+        :readonly="!editingGroupDescription"
+        @input="autoResize($event.target)"
+        rows="1"
+      />
+
+      <Transition name="mini-swap" mode="out-in">
+        <button
+          v-if="!editingGroupDescription"
+          class="edit-button"
+          @click="editGroupDescription"
+        >
+          <IconEdit class="icon icon-light" />
+        </button>
+
+        <button
+          v-else
+          class="confirm-button"
+          @click="confirmGroupDescription"
+        >
+          <IconConfirm class="icon" />
+        </button>
+      </Transition>
+    </div>
+
+    <p v-else-if="isGroup" class="description">
       {{ chatInfo?.description }}
     </p>
 
-    <div v-if="isPrivate" class="added-date">
-      <p
-        v-if="
-          chatInfo?.status == 'Offline' &&
-          chatInfo?.last_seen_at
-        "
-      >
-        Ultima vez activo:
-        {{ formatAddedTime(chatInfo?.last_seen_at) }}
-      </p>
-      <p v-else>
-        Estado: {{ chatInfo.status }}
-      </p>
-    </div>
 
     <!-- GROUP MEMBERS -->
     <div v-if="isGroup" class="members-section">
@@ -260,6 +374,7 @@ function handleOpenPersonInfo(member_id) {
         Abandonar grupo
       </button>
     </div>
+    
   </div>
 </template>
 
@@ -271,8 +386,13 @@ function handleOpenPersonInfo(member_id) {
   flex-direction: column;
   align-items: center;
   background-color: var(--bg-peoplelist-panel);
+  width: 100%;
+
+  height: 100%;
+  overflow-y: auto;
 }
 .close-btn {
+  all: unset;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -282,26 +402,36 @@ function handleOpenPersonInfo(member_id) {
   border-radius: 50%;
   border: none;
 
+  padding: 1rem;
+  box-sizing: border-box;
+
   position: absolute;
   top: 1rem;
   right: 1rem;
   cursor: pointer;
 
   font-size: 2rem;
+  color: var(--text-main);
 }
 
+
 .avatar {
-  width: 50%;
+  width: 15rem;
   border-radius: 50%;
   margin: 4rem auto 2rem auto;
 }
 .main-name {
-  font-size: 3rem;
-  font-weight: bold;
+  color: var(--text-main) !important;
+  font-size: 2.2rem !important;
+  font-weight: bold !important;
+  text-align: center !important;
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
 }
-.second-name {
-  font-size: 1.8rem;
-  color: var(--text-muted);
+.description {
+  font-size: 1.6rem !important;
+  color: var(--text-muted) !important;
+  text-align: start !important;
 }
 .added-date {
   margin-top: 1rem;
@@ -309,9 +439,87 @@ function handleOpenPersonInfo(member_id) {
   color: var(--text-muted);
 }
 
-.buttons {
-  margin-top: 2rem;
+
+.editable-field {
+	display: flex;
+  width: calc(100% - 4rem - 4rem);
+	gap: 1rem;
+  align-items: center;
+  margin-left: 4rem;
 }
+
+.textarea-edit {
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+
+  line-height: 1.4;
+  color: var(--text-main);
+
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.8rem;
+
+  border: 1px solid #2f3e63;
+
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+.textarea-edit[readonly] {
+  background: none;
+  border: 1px solid rgba(255, 0, 0, 0);
+  padding: 0.6rem 0.8rem;
+}
+
+
+.edit-button {
+	all: unset;
+	height: 3rem;
+	width: 3rem;
+	border-radius: 50%;
+	background-color: var(--main-app-color-2);
+  color: var(--text-main-light);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.confirm-button {
+	all: unset;
+	height: 3rem;
+	width: 3rem;
+	border-radius: 50%;
+	background-color: var(--main-app-color-1);
+  color: var(--text-main-light);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.icon {
+	max-height: 2.2rem;
+	max-width: 2.2rem;
+	color: var(--text-main);
+}
+.icon-light {
+ color: var(--text-main-light) !important; 
+}
+
+.mini-swap-enter-active,
+.mini-swap-leave-active {
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.mini-swap-enter-from {
+	opacity: 0;
+	transform: scale(0.85);
+}
+.mini-swap-leave-to {
+	opacity: 0;
+	transform: scale(0.85);
+}
+
+
+
 
 button {
   border: none;
@@ -319,33 +527,21 @@ button {
   padding: 6px 16px;
   font-size: 14px;
   cursor: pointer;
-  background-color: var(--msg-out);
-}
-
-.btn {
-  all: unset;
-  width: auto;
-  height: fit-content;
-  background-color: var(--msg-out);
-  border-radius: 1rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.btn-icon {
-  height: 3.5rem;
-}
-.btn-text {
-  font-size: 1.4rem;
+  background-color: var(--main-app-color-2);
 }
 
 .members-section {
   width: 100%;
   margin-top: 2rem;
   padding: 0 1.5rem;
+  
+  max-height: 30vh;
+  /* min-height: 0; */
+  /* flex: 1; */
+  min-height: 0;
+  overflow-y: auto;
+
+  flex-shrink: 0;
 }
 
 .members-title {
@@ -442,6 +638,7 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
 .add-members-actions {
@@ -460,4 +657,39 @@ button {
   display: flex;
   justify-content: center;
 }
+.leave-group-btn {
+  background-color: var(--main-app-color-2);
+  color: var(--text-main-light) !important;
+}
+
+
+
+/* SCROLLS */
+/* PANEL SCROLL */
+.panel::-webkit-scrollbar,
+.members-section::-webkit-scrollbar {
+  width: 0.8rem;
+}
+
+.panel::-webkit-scrollbar-track,
+.members-section::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel::-webkit-scrollbar-thumb,
+.members-section::-webkit-scrollbar-thumb {
+  background: var(--scroll-bar);
+  border-radius: 999px;
+}
+
+.panel::-webkit-scrollbar-thumb:hover,
+.members-section::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-bar-hover);
+}
+
+.panel::-webkit-scrollbar-button,
+.members-section::-webkit-scrollbar-button {
+  display: none;
+}
+
 </style>
