@@ -128,27 +128,42 @@ defmodule Echo.WS.UserSocket do
   end
 
   defp dispatch(
-       %{
-         "type" => "create_group",
-         "name" => name,
-         "description" => description,
-         "avatar_url" => avatar_url,
-         "member_ids" => member_ids
-       },
-       state
-     ) do
-  UserSession.create_group(
-    state.user_session,
     %{
-      name: name,
-      description: description,
-      avatar_url: avatar_url,
-      member_ids: member_ids
-    }
-  )
+      "type" => "create_group",
+      "name" => name,
+      "description" => description,
+      "avatar_url" => avatar_url,
+      "member_ids" => member_ids
+    },
+    state
+  ) do
+    UserSession.create_group(
+      state.user_session,
+      %{
+        name: name,
+        description: description,
+        avatar_url: avatar_url,
+        member_ids: member_ids
+      }
+    )
 
-  {:ok, state}
-end
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "change_group_name", "chat_id" => chat_id, "new_name" => new_name}, state) do
+    UserSession.change_group_name(state.user_session, chat_id, new_name)
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "change_group_description", "chat_id" => chat_id, "new_description" => new_description}, state) do
+    UserSession.change_group_description(state.user_session, chat_id, new_description)
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "give_admin", "user_id" => user_id}, state) do
+    UserSession.give_admin(state.user_session, user_id)
+    {:ok, state}
+  end
 
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)

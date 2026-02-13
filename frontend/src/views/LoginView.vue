@@ -30,7 +30,6 @@ async function handleLogin() {
 				password: password.value,
 			}),
 		});
-
 		if (!res.ok) throw new Error("Credenciales incorrectas");
 
 		const data = await res.json();
@@ -42,7 +41,7 @@ async function handleLogin() {
 		socketStore.connect(token);
 		router.push("/chats");
 	} catch (err) {
-		console.error(err);
+		console.log(`Error: ${err}`);
 		alert("Login fallido");
 	}
 }

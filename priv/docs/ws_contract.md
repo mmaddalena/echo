@@ -316,6 +316,23 @@ Fields:
 ```
 </details>
 
+---
+### give_admin
+
+Fields: 
+- user_id: uuid
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+	"type": "give_admin",
+  "user_id": "uuid"
+}
+```
+</details>
+
 
 
 
@@ -1120,11 +1137,12 @@ Fields:
 Fields:
 - type: "group_name_change_result"
 - status: "success | failure"
-- new_name: Object (solo si status es success)
-  - contact_id: uuid
-  - new_name: text
+- chat_id: uuid
+- new_name: string (solo si status es success)
+- changer_user_id: uuid (solo si status es success)
 - reason: (solo si status es failure)
-  - not_found
+  - "not_found"
+  - "unauthorized"
   - name:
     - can't be blank
     - should be at least 1 character(s)
@@ -1133,11 +1151,79 @@ Fields:
 <details>
 <summary>Example</summary>
 
+caso `status == "success`
 ```json
 {
-  "type": "contact_deletion",
-
-
+  "type": "group_name_change_result",
+  "status": "success",
+  "chat_id": "uuid",
+  "new_name": "text",
+  "changer_user_id": "uuid"
 }
+```
+caso `status == "failure`
+```json
+{
+  "type": "group_name_change_result",
+  "status": "failure",
+  "chat_id": "uuid",
+  "reason": "not_found" | "unauthorized" |
+  {
+    "name": 
+      "can't be blank" ||
+      "should be at least 1 character(s)" ||
+      "should be at most 50 character(s)"
+  }
+}
+
+```
+</details>
+
+
+---
+### group_description_change_result
+
+Fields:
+- type: "group_description_change_result"
+- status: "success | failure"
+- chat_id: uuid
+- new_description: string (solo si status es success)
+- changer_user_id: uuid (solo si status es success)
+- reason: (solo si status es failure)
+  - "not_found"
+  - "unauthorized"
+  - description:
+    - can't be blank
+    - should be at least 1 character(s)
+    - should be at most 50 character(s)
+
+<details>
+<summary>Example</summary>
+
+caso `status == "success`
+```json
+{
+  "type": "group_description_change_result",
+  "status": "success",
+  "chat_id": "uuid",
+  "new_description": "text",
+  "changer_user_id": "uuid"
+}
+```
+caso `status == "failure`
+```json
+{
+  "type": "group_description_change_result",
+  "status": "failure",
+  "chat_id": "uuid",
+  "reason": "not_found" | "unauthorized" | 
+  {
+    "description": 
+      "can't be blank" ||
+      "should be at least 1 character(s)" ||
+      "should be at most 50 character(s)"
+  }
+}
+
 ```
 </details>

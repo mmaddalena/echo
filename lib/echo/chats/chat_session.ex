@@ -38,6 +38,14 @@ defmodule Echo.Chats.ChatSession do
     GenServer.cast(cs_pid, {:chat_event, payload})
   end
 
+  def change_group_name(cs_pid, chat_id, new_name, changer_user_id) do
+    GenServer.cast(cs_pid, {:change_group_name, chat_id, new_name, changer_user_id})
+  end
+
+  def change_group_description(cs_pid, chat_id, new_description, changer_user_id) do
+    GenServer.cast(cs_pid, {:change_group_description, chat_id, new_description, changer_user_id})
+  end
+
   ##### Callbacks
 
   @impl true
@@ -243,81 +251,166 @@ defmodule Echo.Chats.ChatSession do
     {:noreply, %{state | last_messages: new_last_messages, last_activity: DateTime.utc_now()}}
   end
 
-@impl true
-def handle_cast({:chat_event, payload}, state) do
-  case payload.type do
-    "chat_member_removed" ->
-      removed_user_id = payload.user_id
+  @impl true
+  def handle_cast({:chat_event, payload}, state) do
+    case payload.type do
+      "chat_member_removed" ->
+        removed_user_id = payload.user_id
 
-      new_members =
-        Enum.reject(state.members, fn m ->
-          m.user_id == removed_user_id
+        new_members =
+          Enum.reject(state.members, fn m ->
+            m.user_id == removed_user_id
+          end)
+
+        # notify remaining members
+        Enum.each(new_members, fn member ->
+          if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+            UserSession.send_payload(us_pid, payload)
+          end
         end)
 
-      # notify remaining members
-      Enum.each(new_members, fn member ->
+        # notify removed user
+        if us_pid = ProcessRegistry.whereis_user_session(removed_user_id) do
+          UserSession.send_payload(us_pid, payload)
+        end
+
+        {:noreply,
+        %{state | members: new_members, last_activity: DateTime.utc_now()}}
+
+      "chat_members_added" ->
+        new_members = Chat.get_members(state.chat_id)
+        added_user_ids = payload.added_user_ids
+
+        Enum.each(new_members, fn member ->
+          if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+            if member.user_id in added_user_ids do
+              # Newly added user → must receive chat_item
+              chat_item = Chat.build_chat_info(state.chat_id, member.user_id)
+
+              UserSession.send_payload(us_pid, %{
+                type: "chat_added",
+                chat_item: chat_item
+              })
+            else
+              # Existing member → only update members
+              UserSession.send_payload(us_pid, %{
+                type: "chat_members_added",
+                chat_id: state.chat_id,
+                members: new_members
+              })
+            end
+          end
+        end)
+
+        {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
+
+      "chat_admin_changed" ->
+        new_admin_id = payload.new_admin_id
+
+        new_members =
+          Enum.map(state.members, fn m ->
+            if m.user_id == new_admin_id do
+              %{m | role: "admin"}
+            else
+              m
+            end
+          end)
+
+        # Notify all members about the new admin
+        Enum.each(new_members, fn member ->
+          if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+            UserSession.send_payload(us_pid, payload)
+          end
+        end)
+
+        {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
+    end
+  end
+
+
+
+  def handle_cast({:change_group_name, chat_id, new_name, changer_user_id}, state) do
+    payload = case Chat.change_group_name(chat_id, new_name, changer_user_id) do
+      :ok ->
+        %{
+          type: "group_name_change_result",
+          status: "success",
+          chat_id: chat_id,
+          new_name: new_name,
+          changer_user_id: changer_user_id
+        }
+
+      {:error, reason} ->
+        %{
+          type: "group_name_change_result",
+          status: "failure",
+          chat_id: chat_id,
+          reason: reason
+        }
+    end
+
+    if (payload.status == "success") do
+      # Notificamos a los miembros del cambio
+      Enum.each(state.members, fn member ->
         if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
           UserSession.send_payload(us_pid, payload)
         end
       end)
-
-      # notify removed user
-      if us_pid = ProcessRegistry.whereis_user_session(removed_user_id) do
+    else
+      # Notificamos sólo al que quiso hacer el cambio
+      if us_pid = ProcessRegistry.whereis_user_session(changer_user_id) do
         UserSession.send_payload(us_pid, payload)
       end
+    end
 
-      {:noreply,
-       %{state | members: new_members, last_activity: DateTime.utc_now()}}
+    {:noreply, state}
+  end
 
-    "chat_members_added" ->
-      new_members = Chat.get_members(state.chat_id)
-      added_user_ids = payload.added_user_ids
+  def handle_cast({:change_group_description, chat_id, new_description, changer_user_id}, state) do
+    payload = case Chat.change_group_description(chat_id, new_description, changer_user_id) do
+      :ok ->
+        %{
+          type: "group_description_change_result",
+          status: "success",
+          chat_id: chat_id,
+          new_description: new_description,
+          changer_user_id: changer_user_id
+        }
 
-      Enum.each(new_members, fn member ->
-        if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
-          if member.user_id in added_user_ids do
-            # Newly added user → must receive chat_item
-            chat_item = Chat.build_chat_info(state.chat_id, member.user_id)
+      {:error, reason} ->
+        %{
+          type: "group_description_change_result",
+          status: "failure",
+          chat_id: chat_id,
+          changer_user_id: changer_user_id,
+          reason: reason
+        }
+    end
 
-            UserSession.send_payload(us_pid, %{
-              type: "chat_added",
-              chat_item: chat_item
-            })
-          else
-            # Existing member → only update members
-            UserSession.send_payload(us_pid, %{
-              type: "chat_members_added",
-              chat_id: state.chat_id,
-              members: new_members
-            })
-          end
-        end
-      end)
-
-      {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
-
-    "chat_admin_changed" ->
-      new_admin_id = payload.new_admin_id
-
-      new_members =
-        Enum.map(state.members, fn m ->
-          if m.user_id == new_admin_id do
-            %{m | role: "admin"}
-          else
-            m
-          end
-        end)
-
-      # Notify all members about the new admin
-      Enum.each(new_members, fn member ->
+    if (payload.status == "success") do
+      # Notificamos a los miembros del cambio
+      Enum.each(state.members, fn member ->
         if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
           UserSession.send_payload(us_pid, payload)
         end
       end)
+    else
+      # Notificamos sólo al que quiso hacer el cambio
+      if us_pid = ProcessRegistry.whereis_user_session(changer_user_id) do
+        UserSession.send_payload(us_pid, payload)
+      end
+    end
 
-      {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
-end
+
+
+
+
+
+
+
+
 
   @doc """
   Broadcast a message to all processes subscribed to a chat
