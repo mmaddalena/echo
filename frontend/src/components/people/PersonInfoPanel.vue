@@ -173,6 +173,8 @@
   border-radius: 50%;
   border: none;
 
+  padding: 1rem;
+
   position: absolute;
   top: 1rem;
   right: 1rem;

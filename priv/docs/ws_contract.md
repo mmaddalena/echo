@@ -263,7 +263,6 @@ Fields:
 </details>
 
 ---
-
 ### logout
 
 Fields: none
@@ -276,8 +275,49 @@ Fields: none
 	"type": "logout"
 }
 ```
-
 </details>
+
+
+---
+### change_group_name
+
+Fields: 
+- chat_id: uuid,
+- new_name: string
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+	"type": "change_group_name",
+  "chat_id": "uuid",
+  "new_name": "string"
+}
+```
+</details>
+
+---
+### change_group_description
+
+Fields: 
+- chat_id: uuid,
+- new_description: string
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+	"type": "change_group_description",
+  "chat_id": "uuid",
+  "new_description": "string"
+}
+```
+</details>
+
+
+
 
 ---
 
@@ -1029,7 +1069,6 @@ Fields:
 
 
 ---
-
 ### contact_deletion
 
 Fields:
@@ -1072,5 +1111,34 @@ Fields:
 
 }
 ```
+</details>
 
+
+---
+### group_name_change_result
+
+Fields:
+- type: "group_name_change_result"
+- status: "success | failure"
+- data: Object (contiene new_name || reason)
+  - new_name: Object
+    - contact_id: uuid
+    - new_name: text
+  - reason:
+    - not_found
+    - name:
+      - can't be blank
+      - should be at least 1 character(s)
+      - should be at most 50 character(s)
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+  "type": "contact_deletion",
+
+
+}
+```
 </details>
