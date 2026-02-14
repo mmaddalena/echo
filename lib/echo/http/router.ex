@@ -61,15 +61,19 @@ defmodule Echo.Http.Router do
     with {:ok, body, conn} <- read_body(conn),
          {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
          {:ok, token} <- Echo.Auth.Accounts.login(u, p) do
+      IO.puts("\n\n\nLOGIN CORRECTO: token: #{inspect(token)}\n\n\n")
       send_resp(conn, 200, Jason.encode!(%{token: token}))
     else
       {:error, :user_not_found} ->
+        IO.puts("\n\n\nLOGIN FALLIDO: User not found\n\n\n")
         send_resp(conn, 401, Jason.encode!(%{error: "User not found"}))
 
       {:error, :invalid_password} ->
+        IO.puts("\n\n\nLOGIN FALLIDO: Invalid password\n\n\n")
         send_resp(conn, 401, Jason.encode!(%{error: "Invalid password"}))
 
       _ ->
+        IO.puts("\n\n\nLOGIN FALLIDO: Invalid credentials\n\n\n")
         send_resp(conn, 401, Jason.encode!(%{error: "Invalid credentials"}))
     end
   end

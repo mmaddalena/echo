@@ -22,12 +22,15 @@
   --msg-out: var(--main-app-color-2);
   --main-app-color-1: #2D4CBA;
   --main-app-color-2: #742abf;
+  --second-main-app-color-1: #98DBFF;
+  --second-main-app-color-2: #CD9EFD;
 
   --day-label: #00000079;
 
   --msg-focused: #162446;
 
   --accent: #5b8cff;
+  --accent-hover: rgb(44, 75, 147);
 
   --left-section-width: 30%;
 
@@ -54,8 +57,8 @@
 
   --avatar-border: #999999;
 
-  --msg-in: #98DBFF;
-  --msg-out: #CD9EFD;
+  --msg-in: var(--second-main-app-color-1);
+  --msg-out: var(--second-main-app-color-2);
   --day-label: #00000017;
 
   --msg-focused: #b9b9b9;

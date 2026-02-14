@@ -396,14 +396,6 @@ end
     end
   end
 
-  defp ensure_not_self(requester_id, member_user_id) do
-    if requester_id == member_user_id do
-      {:error, :unauthorized}
-    else
-      :ok
-    end
-  end
-
   defp get_member(chat_id, member_user_id) do
     query =
       from cm in ChatMember,
@@ -459,4 +451,53 @@ end
     })
     |> Repo.insert(on_conflict: :nothing)
   end
+
+
+  def change_group_name(chat_id, new_name, changer_user_id) do
+    Repo.transaction(fn ->
+      with {:ok, chat} <- get_chat(chat_id),
+          "group" <- chat.type || {:error, :not_a_group},
+          :ok <- ensure_admin(chat, changer_user_id) do
+
+        chat
+        |> Chat.changeset(%{name: new_name})
+        |> Repo.update()
+      else
+        {:error, reason} -> Repo.rollback(reason)
+        {:error, _} = err -> Repo.rollback(err)
+        _ -> Repo.rollback(:invalid_chat_type)
+      end
+    end)
+    |> unwrap_tx_result()
+  end
+
+  def change_group_description(chat_id, new_description, changer_user_id) do
+    Repo.transaction(fn ->
+      with {:ok, chat} <- get_chat(chat_id),
+          "group" <- chat.type || {:error, :not_a_group},
+          :ok <- ensure_admin(chat, changer_user_id) do
+
+        chat
+        |> Chat.changeset(%{description: new_description})
+        |> Repo.update()
+      else
+        {:error, reason} -> Repo.rollback(reason)
+        {:error, _} = err -> Repo.rollback(err)
+        _ -> Repo.rollback(:invalid_chat_type)
+      end
+    end)
+    |> unwrap_tx_result()
+  end
+
+  defp unwrap_tx_result({:ok, {:ok, _chat}}), do: :ok
+
+defp unwrap_tx_result({:ok, {:error, changeset}}),
+  do: {:error, %{name: User.format_changeset_error(changeset)}}
+defp unwrap_tx_result({:error, :not_found}),
+  do: {:error, :not_found}
+defp unwrap_tx_result({:error, :not_a_group}),
+  do: {:error, :not_found}
+defp unwrap_tx_result({:error, :invalid_chat_type}),
+  do: {:error, :not_found}
+
 end
