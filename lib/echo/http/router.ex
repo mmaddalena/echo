@@ -92,6 +92,24 @@ defmodule Echo.Http.Router do
     end
   end
 
+  defp route(conn, "GET", "/api/docs") do
+    markdown_file = Path.join(:code.priv_dir(:echo), "docs/http_contract.md")
+
+    case File.read(markdown_file) do
+      {:ok, md} ->
+        html = get_markdown_html(md)
+
+        conn
+        |> put_resp_content_type("text/html")
+        |> send_resp(200, html)
+
+      {:error, _} ->
+        conn
+        |> put_resp_content_type("text/plain")
+        |> send_resp(404, "Docs not found")
+    end
+  end
+
   defp route(conn, "POST", "/api/register") do
     opts =
       Plug.Parsers.init(
