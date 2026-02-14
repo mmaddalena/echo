@@ -191,8 +191,8 @@ function handleChangeGroupDescription(chat_id, new_description) {
 	socketStore.changeGroupDescription(chat_id, new_description)
 }
 
-function handleGiveAdmin(member_id) {
-	socketStore.giveAdmin(member_id)
+function handleGiveAdmin(chat_id, member_id) {
+	socketStore.giveAdmin(chat_id, member_id)
 }
 
 function handleCloseChatInfo() {

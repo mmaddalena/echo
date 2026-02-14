@@ -317,6 +317,7 @@ Fields:
 ### give_admin
 
 Fields: 
+- chat_id: uuid
 - user_id: uuid
 
 <details>
@@ -325,6 +326,7 @@ Fields:
 ```json
 {
 	"type": "give_admin",
+  "chat_id": "uuid",
   "user_id": "uuid"
 }
 ```
@@ -436,6 +438,7 @@ Fields:
     - avatar_url: url
     - last_read_at: ISOTimeString
     - nickname: string
+    - role: "member | admin"
 
 <details>
 <summary>Example</summary>
@@ -474,7 +477,8 @@ Fields:
         "name": "text",
         "avatar_url": "url",
         "last_read_at": "ISOTimeString",
-        "nickname": "text" | null
+        "nickname": "text" | null,
+        "role": "member | admin"
       },
       ...
     ]
@@ -674,7 +678,6 @@ Fields:
 </details>
 
 ---
-
 ### search_people_results
 
 Fields:
@@ -697,9 +700,7 @@ Fields:
     } | null
   }
 }
-
 ```
-
 </details>
 
 ---
@@ -732,6 +733,7 @@ Fields:
     - avatar_url: url
     - last_read_at: ISOTimeString
     - nickname: string | null
+    - role: "member | admin"
 
 - chat_item: Object
   - id: uuid
@@ -776,7 +778,8 @@ Fields:
         "name": "text",
         "avatar_url": "url",
         "last_read_at": "ISOTimeString",
-        "nickname": "text" | null
+        "nickname": "text" | null,
+        "role": "member | admin"
       },
       ...
     ]
@@ -956,6 +959,7 @@ Fields:
     - avatar_url: url
     - last_read_at: ISOTimeString
     - nickname: string | null
+    - role: "member | admin"
 
 - chat_item: Object
   - id: uuid
@@ -1001,7 +1005,8 @@ Fields:
         "name": "text",
         "avatar_url": "url",
         "last_read_at": "ISOTimeString",
-        "nickname": "text" | null
+        "nickname": "text" | null,
+        "role": "member | admin"
       },
       ...
     ]
@@ -1222,5 +1227,43 @@ caso `status == "failure`
   }
 }
 
+```
+</details>
+
+
+---
+### admin_given_to_member
+
+Fields:
+- type: admin_given_to_member,
+- chat_id: uuid,
+- member: Object:
+  - user_id: uuid
+  - username: string
+  - name: string
+  - avatar_url: url
+  - last_read_at: ISOTimeString
+  - nickname: string | null
+  - role: "member | admin"
+- giving_user_id: uuid
+
+<details>
+<summary>Example</summary>
+
+```json
+{
+  "type": "admin_given_to_member",
+  "chat_id": "uuid",
+  "member": {
+    "user_id": "uuid",
+    "username": "text",
+    "name": "text",
+    "avatar_url": "url",
+    "last_read_at": "ISOTimeString",
+    "nickname": "text" | null,
+    "role": "member | admin"
+  },
+  "giving_user_id": "uuid"
+}
 ```
 </details>
