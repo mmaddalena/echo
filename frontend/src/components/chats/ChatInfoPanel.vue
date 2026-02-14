@@ -56,9 +56,15 @@
     return true;
   }
 
+  function isAdmin(member_id) {
+    const member = chatInfo.members.find(m => m.user_id === member_id)
+    return member && member.role === "admin"
+  }
+
   function canGiveAdmin(member_id) {
     if (!isCurrentUserAdmin.value) return false;
     if (isYou(member_id)) return false;
+    if (isAdmin(member_id)) return false;
 
     return true;
   }
@@ -78,7 +84,7 @@
   }
 
   function giveAdmin(member_id) {
-    emit('give-admin', member_id)  
+    emit('give-admin', chatInfo.id, member_id)  
   }
 
   async function addMembers() {
@@ -161,7 +167,10 @@
   watch(
     () => chatInfo,
     (info) => {
-      if (!info) return
+      if (!info) {
+        handleClosePanel()
+        return;
+      }
       groupName.value = info.name
       groupDescription.value = info.description ?? ""
     },
@@ -204,6 +213,15 @@
     autoResize(groupDescriptionInput.value);
 	});
 
+  watch(isCurrentUserAdmin, async (isAdmin) => {
+    if (!isAdmin) return
+
+    await nextTick()
+
+    if (groupDescriptionInput.value) {
+      autoResize(groupDescriptionInput.value)
+    }
+  })
 
 </script>
 

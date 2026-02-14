@@ -118,6 +118,8 @@ export const useSocketStore = defineStore("socket", () => {
 				dispatch_group_name_changed(payload)
 			} else if (payload.type === 'group_description_change_result') {
 				dispatch_group_description_changed(payload)
+			} else if (payload.type === 'admin_given_to_member') {
+				dispatch_admin_given_to_member(payload)
 			}
 		};
 
@@ -563,7 +565,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 			chats.value = chats.value.filter((c) => c.id !== chat_id);
 		}
-}
+	}
 
 	function dispatch_chat_member_added(payload) {
 		const chat_id = payload.chat_id;
@@ -648,6 +650,29 @@ export const useSocketStore = defineStore("socket", () => {
 						description: payload.new_description
 				},
 			};
+		}
+	}
+
+	function dispatch_admin_given_to_member(payload) {
+		const chat_id = payload.chat_id;
+		const member = payload.member;
+
+		const chat = chatsInfo.value[chat_id]
+		console.log(`CHAT`)
+		console.log(chat)
+
+		const updatedMembers = chat.members.map((m) =>
+			m.user_id === member.user_id
+				? member
+				: m,
+		);
+
+		chatsInfo.value = {
+			...chatsInfo.value, 
+			[chat_id]: {
+				...chat,
+					members: updatedMembers
+			}
 		}
 	}
 
@@ -936,9 +961,10 @@ export const useSocketStore = defineStore("socket", () => {
 		)?.user_id
 	}
 
-	function giveAdmin(member_id) {
+	function giveAdmin(chat_id, member_id) {
 		send({
 			type: "give_admin",
+			chat_id: chat_id,
 			user_id: member_id
 		});
 	}

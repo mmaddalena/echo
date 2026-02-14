@@ -160,8 +160,8 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "give_admin", "user_id" => user_id}, state) do
-    UserSession.give_admin(state.user_session, user_id)
+  defp dispatch(%{"type" => "give_admin", "chat_id" => chat_id, "user_id" => user_id}, state) do
+    UserSession.give_admin(state.user_session, chat_id, user_id)
     {:ok, state}
   end
 

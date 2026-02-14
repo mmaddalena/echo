@@ -107,8 +107,8 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:change_group_description, chat_id, new_description})
   end
 
-  def give_admin(us_pid, user_id) do
-    GenServer.cast(us_pid, {:give_admin, user_id})
+  def give_admin(us_pid, chat_id, user_id) do
+    GenServer.cast(us_pid, {:give_admin, chat_id, user_id})
   end
 
   def logout(us_pid) do
@@ -589,20 +589,26 @@ defmodule Echo.Users.UserSession do
     {:noreply, state}
   end
 
-  def handle_cast({:give_admin, user_id}, state) do
+  def handle_cast({:give_admin, chat_id, user_id}, state) do
+    IO.puts("\n\n\n SE LE QUIERE DAR ADMIN A #{user_id}\n\n\n")
 
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+
+    ChatSession.give_admin(cs_pid, chat_id, user_id, state.user_id)
+
+    {:noreply, state}
   end
 
   @impl true
-def handle_cast({:send_payload, _payload}, %{socket: nil} = state) do
-  # Socket is not alive, just ignore
-  {:noreply, state}
-end
+  def handle_cast({:send_payload, _payload}, %{socket: nil} = state) do
+    # Socket is not alive, just ignore
+    {:noreply, state}
+  end
 
-def handle_cast({:send_payload, payload}, state) do
-  send(state.socket, {:send, payload})
-  {:noreply, %{state | last_activity: DateTime.utc_now()}}
-end
+  def handle_cast({:send_payload, payload}, state) do
+    send(state.socket, {:send, payload})
+    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+  end
 
   ################### Helpers
   defp serialize_contacts_for_front(contacts) do

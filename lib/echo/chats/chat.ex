@@ -329,7 +329,7 @@ defmodule Echo.Chats.Chat do
 
   def remove_member(chat_id, requester_id, member_user_id) do
     Repo.transaction(fn ->
-      with {:ok, chat} <- get_chat(chat_id),
+      with {:ok, _chat} <- get_chat(chat_id),
           {:ok, member} <- get_member(chat_id, member_user_id),
           {:ok, requester} <- get_member(chat_id, requester_id),
           true <- can_remove_member?(requester, member, requester_id) do
@@ -489,15 +489,60 @@ end
     |> unwrap_tx_result()
   end
 
-  defp unwrap_tx_result({:ok, {:ok, _chat}}), do: :ok
+  def give_admin(chat_id, user_id, giving_user_id) do
+    Repo.transaction(fn ->
+      with {:ok, chat} <- get_chat(chat_id),
+          "group" <- chat.type || {:error, :not_a_group},
+          :ok <- ensure_admin(chat, giving_user_id),
+          {:ok, target_member} <- get_member(chat_id, user_id) do
 
-defp unwrap_tx_result({:ok, {:error, changeset}}),
-  do: {:error, %{name: User.format_changeset_error(changeset)}}
-defp unwrap_tx_result({:error, :not_found}),
-  do: {:error, :not_found}
-defp unwrap_tx_result({:error, :not_a_group}),
-  do: {:error, :not_found}
-defp unwrap_tx_result({:error, :invalid_chat_type}),
-  do: {:error, :not_found}
+        {:ok, _} =
+          target_member
+          |> Ecto.Changeset.change(role: "admin")
+          |> Repo.update()
+
+        get_member_view(chat_id, user_id)   # <- map limpio
+      else
+        {:error, reason} -> Repo.rollback(reason)
+        {:error, _} = err -> Repo.rollback(err)
+        _ -> Repo.rollback(:invalid_chat_type)
+      end
+    end)
+    |> unwrap_tx_result()
+  end
+
+
+
+  def get_member_view(chat_id, user_id) do
+    from(cm in ChatMember,
+      join: u in SchemaUser,
+      on: u.id == cm.user_id,
+      where: cm.chat_id == ^chat_id and u.id == ^user_id,
+      select: %{
+        user_id: u.id,
+        username: u.username,
+        name: u.name,
+        avatar_url: u.avatar_url,
+        last_read_at: cm.last_read_at,
+        role: cm.role
+      }
+    )
+    |> Repo.one()
+  end
+
+
+
+  defp unwrap_tx_result({:ok, {:ok, result}}), do: {:ok, result}
+
+  defp unwrap_tx_result({:ok, result}), do: {:ok, result}
+
+  defp unwrap_tx_result({:ok, {:error, changeset}}),
+    do: {:error, %{name: User.format_changeset_error(changeset)}}
+  defp unwrap_tx_result({:error, :not_found}),
+    do: {:error, :not_found}
+  defp unwrap_tx_result({:error, :not_a_group}),
+    do: {:error, :not_found}
+  defp unwrap_tx_result({:error, :invalid_chat_type}),
+    do: {:error, :not_found}
 
 end

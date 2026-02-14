@@ -84,4 +84,6 @@ defmodule Echo.Schemas.Chat do
       name: name
     })
   end
+
+
 end

@@ -46,6 +46,10 @@ defmodule Echo.Chats.ChatSession do
     GenServer.cast(cs_pid, {:change_group_description, chat_id, new_description, changer_user_id})
   end
 
+  def give_admin(cs_pid, chat_id, user_id, giving_user_id) do
+    GenServer.cast(cs_pid, {:give_admin, chat_id, user_id, giving_user_id})
+  end
+
   ##### Callbacks
 
   @impl true
@@ -331,7 +335,7 @@ defmodule Echo.Chats.ChatSession do
 
   def handle_cast({:change_group_name, chat_id, new_name, changer_user_id}, state) do
     payload = case Chat.change_group_name(chat_id, new_name, changer_user_id) do
-      :ok ->
+      {:ok, _result} ->
         %{
           type: "group_name_change_result",
           status: "success",
@@ -356,19 +360,19 @@ defmodule Echo.Chats.ChatSession do
           UserSession.send_payload(us_pid, payload)
         end
       end)
+      {:noreply, %{state | chat: %{state.chat | name: new_name}}}
     else
       # Notificamos sólo al que quiso hacer el cambio
       if us_pid = ProcessRegistry.whereis_user_session(changer_user_id) do
         UserSession.send_payload(us_pid, payload)
       end
+      {:noreply, state}
     end
-
-    {:noreply, state}
   end
 
   def handle_cast({:change_group_description, chat_id, new_description, changer_user_id}, state) do
     payload = case Chat.change_group_description(chat_id, new_description, changer_user_id) do
-      :ok ->
+      {:ok, _result} ->
         %{
           type: "group_description_change_result",
           status: "success",
@@ -394,16 +398,54 @@ defmodule Echo.Chats.ChatSession do
           UserSession.send_payload(us_pid, payload)
         end
       end)
+      {:noreply, %{state | chat: %{state.chat | description: new_description}}}
     else
       # Notificamos sólo al que quiso hacer el cambio
       if us_pid = ProcessRegistry.whereis_user_session(changer_user_id) do
         UserSession.send_payload(us_pid, payload)
       end
+      {:noreply, state}
     end
-
-    {:noreply, state}
   end
 
+  def handle_cast({:give_admin, chat_id, user_id, giving_user_id}, state) do
+    case Chat.give_admin(chat_id, user_id, giving_user_id) do
+      {:ok, updated_member} ->
+        new_members =
+          Enum.map(state.members, fn m ->
+            if m.user_id == updated_member.user_id do
+              updated_member
+            else
+              m
+            end
+          end)
+
+        Enum.each(new_members, fn member ->
+          enriched =
+            enrich_member(updated_member, member.user_id)
+
+          if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+            UserSession.send_payload(us_pid, %{
+              type: "admin_given_to_member",
+              chat_id: chat_id,
+              member: enriched,
+              giving_user_id: giving_user_id
+            })
+          end
+        end)
+
+
+        {:noreply, %{state | members: new_members}}
+
+      {:error, _reason} ->
+        {:noreply, state}
+    end
+  end
+
+
+  def enrich_member(member, viewer_id) do
+    Map.put(member, :nickname, User.get_nickname(viewer_id, member.user_id))
+  end
 
 
 
