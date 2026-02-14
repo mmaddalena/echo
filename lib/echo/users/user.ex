@@ -526,7 +526,7 @@ defmodule Echo.Users.User do
   end
 
 
-  defp format_changeset_error(changeset) do
+  def format_changeset_error(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
     |> Enum.map(fn {field, [error | _]} ->
       {field, error}

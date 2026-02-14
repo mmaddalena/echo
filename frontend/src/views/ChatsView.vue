@@ -191,6 +191,10 @@ function handleChangeGroupDescription(chat_id, new_description) {
 	socketStore.changeGroupDescription(chat_id, new_description)
 }
 
+function handleGiveAdmin(member_id) {
+	socketStore.giveAdmin(member_id)
+}
+
 function handleCloseChatInfo() {
 	uiStore.closePanel()
 }
@@ -245,6 +249,7 @@ function handleCloseChatInfo() {
 					@open-person-info="handleOpenPersonInfo"
 					@change-group-name="handleChangeGroupName"
 					@change-group-description="handleChangeGroupDescription"
+					@give-admin="handleGiveAdmin"
 				/>
 				<PersonInfoPanel
 					v-if="panel === 'person-info' && openedPersonInfo != null"

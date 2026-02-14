@@ -114,6 +114,10 @@ export const useSocketStore = defineStore("socket", () => {
 				chatsInfo.value = rest;
 			} else if (payload.type === "chat_admin_changed") {
 				dispatch_chat_admin_changed(payload);
+			} else if (payload.type === 'group_name_change_result') {
+				dispatch_group_name_changed(payload)
+			} else if (payload.type === 'group_description_change_result') {
+				dispatch_group_description_changed(payload)
 			}
 		};
 
@@ -599,11 +603,53 @@ export const useSocketStore = defineStore("socket", () => {
 			c.id === chat_id
 			? {
 				...c,
-				members: chatsInfo.value[chat_id].members,
+					members: chatsInfo.value[chat_id].members,
 				}
 			: c
 		);
+	}
+
+	function dispatch_group_name_changed(payload) {
+		if (payload.status === 'success') {
+			chats.value = chats.value.map((c) =>
+				c.id === payload.chat_id
+				? {
+					...c,
+						name: payload.new_name
+					}
+				: c
+			);
+			const chat = chatsInfo.value[payload.chat_id]
+			chatsInfo.value = {
+				...chatsInfo.value,
+				[payload.chat_id]: {
+					...chat,
+						name: payload.new_name
+				},
+			};
 		}
+	}
+	
+	function dispatch_group_description_changed(payload) {
+		if (payload.status === 'success') {
+			chats.value = chats.value.map((c) =>
+				c.id === payload.chat_id
+				? {
+					...c,
+						description: payload.new_description
+					}
+				: c
+			);
+			const chat = chatsInfo.value[payload.chat_id]
+			chatsInfo.value = {
+				...chatsInfo.value,
+				[payload.chat_id]: {
+					...chat,
+						description: payload.new_description
+				},
+			};
+		}
+	}
 
 	function disconnect() {
 		if (socket.value) {
@@ -621,6 +667,14 @@ export const useSocketStore = defineStore("socket", () => {
 		peopleSearchResults.value = null;
 		pendingPrivateChat.value = null;
 		pendingMessage.value = null;
+
+		creatingGroup.value = false;
+		selectedGroupMembers.value = [];
+		newGroupInfo.value = {
+			name: "",
+			description: "",
+			avatar: null,
+		};
 
 		themeStore.setTheme('dark');
 		
@@ -882,6 +936,13 @@ export const useSocketStore = defineStore("socket", () => {
 		)?.user_id
 	}
 
+	function giveAdmin(member_id) {
+		send({
+			type: "give_admin",
+			user_id: member_id
+		});
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -919,6 +980,7 @@ export const useSocketStore = defineStore("socket", () => {
 		changeGroupName,
 		changeGroupDescription,
 
-		getOtherMemberId
+		getOtherMemberId,
+		giveAdmin
 	};
 });
