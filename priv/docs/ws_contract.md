@@ -12,8 +12,6 @@ the frontend client and the Elixir backend.
 Fields:
 
 - chat_id: uuid
-- content: string
-- format: text | image | file
 
 <details>
 <summary>Example</summary>
@@ -22,7 +20,6 @@ Fields:
 {
 	"type": "open_chat",
 	"chat_id": "uuid",
-	"format": "text"
 }
 ```
 
