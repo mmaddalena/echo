@@ -13,10 +13,11 @@ const username = ref("lucas"); //TODO CAMBIAR A VACIO ("")
 const password = ref("12345678"); //TODO CAMBIAR A VACIO ("")
 const router = useRouter();
 const socketStore = useSocketStore();
+const errorMessage = ref(null)
+
 
 async function handleLogin() {
-	console.log("Username:", username.value);
-	console.log("Password:", password.value);
+	errorMessage.value = null
 
 	try {
 		const res = await fetch(
@@ -30,9 +31,24 @@ async function handleLogin() {
 				password: password.value,
 			}),
 		});
-		if (!res.ok) throw new Error("Credenciales incorrectas");
 
 		const data = await res.json();
+
+		if (!res.ok) {
+      // traducimos mensajes del backend
+      switch (data.error) {
+        case "User not found":
+          errorMessage.value = "El usuario no existe"
+          break
+        case "Invalid password":
+          errorMessage.value = "Contraseña incorrecta"
+          break
+        default:
+          errorMessage.value = "Credenciales inválidas"
+      }
+      return
+    }
+
 		const token = data.token;
 
 		socketStore.disconnect();
@@ -40,10 +56,9 @@ async function handleLogin() {
 		sessionStorage.setItem("token", token);
 		socketStore.connect(token);
 		router.push("/chats");
-	} catch (err) {
-		console.log(`Error: ${err}`);
-		alert("Login fallido");
-	}
+	} catch (e) {
+    errorMessage.value = "No se pudo conectar con el servidor"
+  }
 }
 </script>
 
@@ -61,6 +76,10 @@ async function handleLogin() {
 				<input type="text" placeholder="Username" v-model="username" />
 
 				<input type="password" placeholder="Contraseña" v-model="password" />
+
+				<p v-if="errorMessage" class="error-box">
+					{{ errorMessage }}
+				</p>
 
 				<button type="submit">Entrar</button>
 			</form>
@@ -111,6 +130,7 @@ input {
 	padding: 10px;
 	border-radius: 6px;
 	border: none;
+	background-color: var(--bg-chatlist-hover);
 }
 
 button {
@@ -130,4 +150,15 @@ button {
 .register-link:hover {
 	color: #6b8fb8;
 }
+
+.error-box {
+  background: #481818;
+	box-shadow: 0 0 5px 5px rgb(125, 8, 8) inset;
+  color: white;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
 </style>

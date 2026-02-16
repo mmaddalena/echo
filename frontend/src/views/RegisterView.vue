@@ -12,8 +12,66 @@ const avatarPreview = ref(null);
 
 const router = useRouter();
 const socketStore = useSocketStore();
+const errorMessage = ref(null)
+
+function humanizeFieldError(field, msg) {
+	switch (field) {
+		case "username":
+			if (msg === "can't be blank") return "Tenés que elegir un nombre de usuario"
+			if (msg === "has already been taken") return "El nombre de usuario ya está en uso"
+			if (msg === "can only contain letters, numbers, and underscores")
+				return "El username solo puede usar letras, números y _"
+			if (msg.includes("at least")) return "El username es demasiado corto"
+			if (msg.includes("at most")) return "El username es demasiado largo"
+			return "Username inválido"
+
+		case "email":
+			if (msg === "can't be blank") return "Tenés que ingresar un email"
+			if (msg === "has already been taken") return "Ese email ya está registrado"
+			if (msg === "has invalid format") return "El email no tiene un formato válido"
+			return "Email inválido"
+
+		case "password":
+			if (msg === "can't be blank") return "Tenés que ingresar una contraseña"
+			if (msg.includes("at least")) return "La contraseña debe tener al menos 8 caracteres"
+			return "Contraseña inválida"
+
+		case "name":
+			if (msg === "can't be blank") return "Tenés que ingresar tu nombre"
+			if (msg.includes("at most")) return "El nombre es demasiado largo"
+			return "Nombre inválido"
+
+		default:
+			return "Dato inválido"
+	}
+}
+
+function isValidEmail(value) {
+	return /^[^\s]+@[^\s]+$/.test(value)
+}
+
+function handleBackendErrors(errors) {
+	const msgs = []
+
+	for (const field in errors) {
+		msgs.push(
+			humanizeFieldError(field, errors[field])
+		)
+	}
+
+	errorMessage.value = msgs.join(" • ")
+}
 
 async function handleRegister() {
+	if (!isValidEmail(email.value)) {
+		const fakeBackendError = {
+			email: "has invalid format"
+		}
+
+		handleBackendErrors(fakeBackendError)
+		return
+	}
+
 	try {
 		const formData = new FormData();
 
@@ -36,9 +94,43 @@ async function handleRegister() {
 			},
 		);
 
-		if (!res.ok) throw new Error("Error en los datos");
-
 		const data = await res.json();
+
+		if (!res.ok) {
+
+			if (data.errors) {
+				handleBackendErrors(data.errors)
+			}
+
+			if (data.error) {
+				switch (data.error) {
+					case "Invalid multipart data":
+						errorMessage.value = "Error al enviar el formulario"
+						break
+					case "Invalid avatar type":
+						errorMessage.value = "El avatar debe ser una imagen (jpg, png o webp)"
+						break
+					case "Invalid avatar":
+						errorMessage.value = "Archivo de avatar inválido"
+						break
+					case "Avatar too large":
+						errorMessage.value = "El avatar es demasiado pesado (máx 2MB)"
+						break
+					case "Avatar upload failed":
+						errorMessage.value = "No se pudo subir el avatar"
+						break
+					default:
+						errorMessage.value = "Error en el registro"
+				}
+				return
+			}
+
+			errorMessage.value = "Datos inválidos"
+			return
+		}
+
+
+
 		const token = data.token;
 
 		sessionStorage.setItem("token", token);
@@ -46,10 +138,9 @@ async function handleRegister() {
 		socketStore.disconnect();
 		socketStore.connect(token);
 		router.push("/chats");
-	} catch (err) {
-		console.error(err);
-		alert("Registro fallido");
-	}
+	} catch (e) {
+    errorMessage.value = "No se pudo conectar con el servidor"
+  }
 }
 
 function onFileChange(e) {
@@ -74,12 +165,12 @@ function onFileChange(e) {
 			/>
 			<p>Iniciar sesión</p>
 
-			<form @submit.prevent="handleRegister">
+			<form novalidate @submit.prevent="handleRegister">
 				<input type="text" placeholder="Username" v-model="username" />
 
 				<input type="text" placeholder="Nombre Completo" v-model="name" />
 
-				<input type="email" placeholder="Correo electrónico" v-model="email" />
+				<input type="text" placeholder="Correo electrónico" v-model="email" />
 
 				<input type="password" placeholder="Contraseña" v-model="password" />
 
@@ -92,6 +183,10 @@ function onFileChange(e) {
 						{{ avatarFile ? "Cambiar avatar" : "Elegir avatar" }}
 					</span>
 				</label>
+
+				<p v-if="errorMessage" class="error-box">
+					{{ errorMessage }}
+				</p>
 
 				<button type="submit">Registrar</button>
 			</form>
@@ -140,6 +235,7 @@ input {
 	padding: 10px;
 	border-radius: 6px;
 	border: none;
+	background-color: var(--bg-chatlist-hover);
 }
 
 button {
@@ -208,4 +304,15 @@ button {
 .file-upload span:active {
 	transform: scale(0.97);
 }
+
+.error-box {
+  background: #481818;
+  box-shadow: 0 0 5px 5px rgb(125, 8, 8) inset;
+  color: white;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
 </style>

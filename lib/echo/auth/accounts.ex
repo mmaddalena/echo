@@ -44,7 +44,7 @@ defmodule Echo.Auth.Accounts do
     else
       {:error, %Ecto.Changeset{} = cs} ->
         IO.inspect(cs.errors, label: "REGISTER ERRORS")
-        {:error, cs}
+        {:error, User.format_changeset_error(cs)}
 
       {:error, reason} ->
         IO.inspect(reason, label: "REGISTER ERROR")
