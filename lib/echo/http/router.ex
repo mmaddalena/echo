@@ -130,11 +130,11 @@ defmodule Echo.Http.Router do
         |> put_resp_content_type("application/json")
         |> send_resp(201, Jason.encode!(%{token: token}))
 
-      {:error, :username_taken} ->
-        send_resp(conn, 409, Jason.encode!(%{error: "Username already taken"}))
+      {:error, errors} when is_map(errors) ->
+        send_resp(conn, 400, Jason.encode!(%{errors: errors}))
 
       {:error, reason} ->
-        send_resp(conn, 400, Jason.encode!(%{error: inspect(reason)}))
+        send_resp(conn, 400, Jason.encode!(%{error: reason}))
     end
   end
 

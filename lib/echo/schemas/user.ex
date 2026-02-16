@@ -39,8 +39,9 @@ defmodule Echo.Schemas.User do
   def registration_changeset(user, attrs) do
     user
     |> cast(attrs, [:username, :email, :password, :name, :avatar_url])
-    |> validate_required([:username, :email, :password, :name])
+    |> validate_required([:username, :email, :password])
     |> validate_length(:username, min: 3, max: 30)
+    |> validate_length(:name, max: 30)
     |> validate_format(:username, @username_regex,
       message: "can only contain letters, numbers, and underscores"
     )

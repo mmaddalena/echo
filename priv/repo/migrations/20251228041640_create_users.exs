@@ -6,7 +6,7 @@ defmodule Echo.Repo.Migrations.CreateUsers do
           add :id, :binary_id, primary_key: true
           add :username, :string, null: false
           add :password_hash, :string, null: false
-          add :name, :string, null: false
+          add :name, :string
           add :email, :string, null: false
           add :avatar_url, :string
           add :last_seen_at, :utc_datetime

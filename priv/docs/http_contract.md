@@ -95,19 +95,32 @@ Fields:
 ```
 
 ### ❌ Errors:
-### 409 Conflict
-
-```json
-{
-  "error": "Username already taken"
-}
-```
-
 ### 400 Bad Request
 
 ```json
 {
-  "error": "{reason}"
+  "error": "Invalid multipart data" |
+           "Invalid avatar type" |
+           "Invalid avatar" |
+           "Avatar too large" |
+           "Avatar upload failed" |
+           "Bad request"
+} ||
+{
+  "errors": {
+    "username": "can't be blank" |
+                "has already been taken" |
+                "can only contain letters, numbers, and underscores" |
+                "should be at least 3 character(s)" |
+                "should be at most 30 character(s)",
+    "email": "can't be blank" |
+              "has already been taken" |
+              "has invalid format",
+    "password": "can't be blank" |
+                "should be at least 8 character(s)",
+    "name": "can't be blank" |
+            "should bee at most 30 character(s)"
+  }
 }
 ```
 
