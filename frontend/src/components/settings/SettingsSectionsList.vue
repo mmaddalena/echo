@@ -48,7 +48,7 @@ li:hover {
   margin-top: auto;
   margin-bottom: 1rem;
   color: var(--text-main-light);
-  background-color: brown;
+  background-color: var(--bg-logout);
   width: fit-content;
 }
 .logout:hover {

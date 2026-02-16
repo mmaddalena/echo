@@ -36,6 +36,11 @@
 
   --scroll-bar: rgba(255, 255, 255, 0.25);
   --scroll-bar-hover: rgba(255, 255, 255, 0.4);
+
+  --bg-logout: brown;
+
+  --bg-warning-panel: #3a1515;
+  --bg-warning-button: brown;
   
 }
 
@@ -67,4 +72,7 @@
 
   --scroll-bar: rgba(0, 0, 0, 0.25);
   --scroll-bar-hover: rgba(0, 0, 0, 0.377);
+
+  --bg-warning-panel: #d4aeae;
+  --bg-warning-button: brown;
 }
