@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSocketStore } from "@/stores/socket";
 import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
 import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
+import { useThemeStore } from "@/stores/theme";
 
-import { useThemeStore } from "@/stores/theme"
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
 
@@ -59,6 +59,10 @@ async function handleLogin() {
 	} catch (e) {
     errorMessage.value = "No se pudo conectar con el servidor"
   }
+
+	onMounted(() => {
+		themeStore.setTheme('dark')
+	});
 }
 </script>
 

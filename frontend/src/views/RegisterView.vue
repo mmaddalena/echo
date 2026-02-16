@@ -1,7 +1,13 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSocketStore } from "@/stores/socket";
+import { useThemeStore } from "@/stores/theme";
+import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
+import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
+
+const themeStore = useThemeStore()
+const theme = computed(() => themeStore.theme)
 
 const username = ref("");
 const password = ref("");
@@ -141,6 +147,10 @@ async function handleRegister() {
 	} catch (e) {
     errorMessage.value = "No se pudo conectar con el servidor"
   }
+
+	onMounted(() => {
+		themeStore.setTheme('dark')
+	});
 }
 
 function onFileChange(e) {
@@ -159,7 +169,7 @@ function onFileChange(e) {
 	<div class="body">
 		<div class="register-container">
 			<img
-				src="@/assets/logo/Echo_Logo_Completo_Negativo.svg"
+				:src="theme === 'dark' ? logoDark : logoLight"
 				class="logo"
 				alt="Echo logo"
 			/>

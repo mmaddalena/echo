@@ -112,12 +112,14 @@
     newMemberIds.value = [];
   }
 
-  async function leaveGroup() {
-    const confirmLeave = confirm(
-      "¿Seguro que quieres abandonar el grupo?"
-    );
-    if (!confirmLeave) return;
+  
+  const showLeaveConfirm = ref(false)
 
+  function askLeaveGroup() {
+    showLeaveConfirm.value = true
+  }
+
+  async function confirmLeaveGroup() {
     const token = sessionStorage.getItem("token");
 
     try {
@@ -131,23 +133,17 @@
         }
       );
 
-      console.log("Status:", res.status);
-      console.log("Body:", await res.text());
-
       if (res.status === 204) {
-        // Successfully left the group
-        alert("Has abandonado el grupo");
         emit("close-chat-info-panel");
-        // Optionally, you can emit a custom event to refresh the chat list
-        // emit("left-group", chatInfo.value.id);
       } else {
         const data = await res.json();
         alert(`Error al abandonar el grupo: ${data.error}`);
       }
     } catch (err) {
-      console.error(err);
       alert("Error de red al intentar abandonar el grupo");
     }
+
+    showLeaveConfirm.value = false
   }
 
   function handleOpenPersonInfo(member_id) {
@@ -408,13 +404,40 @@
       </div>
     </div>
 
-    <!-- ABANDON GROUP BUTTON -->
-    <div v-if="isGroup" class="leave-group-section">
-      <button class="leave-group-btn" @click="leaveGroup">
-        Abandonar grupo
-      </button>
-    </div>
-    
+    <Transition name="leave-swap" mode="out-in">
+      <!-- ABANDON GROUP BUTTON -->
+      <div 
+        v-if="isGroup && !showLeaveConfirm" 
+        class="leave-group-section"
+        key="leave-btn"
+      >
+        <button class="leave-group-btn" @click="askLeaveGroup">
+          Abandonar grupo
+        </button>
+      </div>
+
+      <!-- ABANDON GROUP CONFIRMATION SECTION -->
+      <div 
+        v-else 
+        class="leave-confirm-box"
+        key="leave-confirm"
+      >
+        <p class="leave-warning">
+          ¿Seguro que querés abandonar el grupo?<br>
+          No vas a poder volver a ver los mensajes antiguos.
+        </p>
+
+        <div class="leave-confirm-actions">
+          <button class="cancel-btn" @click="showLeaveConfirm = false">
+            Cancelar
+          </button>
+
+          <button class="confirm-leave-btn" @click="confirmLeaveGroup">
+            Abandonar grupo
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -731,6 +754,8 @@ button {
 
 .cancel-btn {
   margin: 1rem;
+  background-color: var(--bg-chatlist-panel);
+  color: var(--text-main)
 }
 
 .leave-group-section {
@@ -773,5 +798,57 @@ button {
 .members-section::-webkit-scrollbar-button {
   display: none;
 }
+
+.leave-confirm-box {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border-radius: 1rem;
+  background: var(--bg-warning-panel);
+  color: white;
+  text-align: center;
+  box-shadow: inset 0 0 8px rgba(255, 0, 0, 0.4);
+  margin-bottom: 2rem;
+}
+
+.leave-warning {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: var(--text-main)
+}
+
+.leave-confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.confirm-leave-btn {
+  background: var(--bg-warning-button);
+  color: white;
+  height: fit-content;
+  padding: 1rem 1.5rem;
+}
+
+.leave-confirm-actions .cancel-btn {
+  margin: 0;
+  height: fit-content;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-chatlist-panel);
+  color: var(--text-main)
+}
+
+.leave-swap-enter-active,
+.leave-swap-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+.leave-swap-enter-from {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+}
+.leave-swap-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+}
+
 
 </style>
