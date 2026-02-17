@@ -1,4 +1,4 @@
-.PHONY: dev db stop deps run build
+.PHONY: dev db stop deps run build test
 dev:
 	iex -S mix
 up:
@@ -7,6 +7,10 @@ build:
 	docker compose build app
 setup:
 	docker compose run --rm app mix ecto.setup
+test:
+	docker compose up -d db
+	@sleep 3
+	docker compose run --rm test
 reset:
 	docker compose run --rm app mix ecto.reset
 deps:
@@ -19,7 +23,6 @@ shell:
 	docker compose run --rm app sh
 stop:
 	docker compose down -v
-
 deps-local:
 	mix deps.get
 compile-local:

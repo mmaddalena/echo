@@ -25,6 +25,22 @@ services:
     networks:
       - echo_net
 
+  # Test service - for running tests
+  test:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: ecto://postgres:postgres@db:5432/echo_test
+      MIX_ENV: test
+    command: mix test
+    networks:
+      - echo_net
+    volumes:
+      - .:/app
+    profiles:
+      - test  # This prevents it from starting with 'docker compose up'
+      
 networks:
   echo_net:
     driver: bridge
