@@ -62,7 +62,6 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "messages_delivered") {
 				markMessagesDelivered(payload.message_ids);
 			} else if (payload.type === "contacts") {
-				console.log("CONTACTS RECIBIDOS:", payload.contacts);
 				contacts.value = payload.contacts;
 				contactsLoaded.value = true;
 			} else if (payload.type === "person_info") {
@@ -94,9 +93,7 @@ export const useSocketStore = defineStore("socket", () => {
 					activeChatId.value = null;
 					sessionStorage.removeItem("activeChatId");
 				}
-
 				chats.value = chats.value.filter(c => c.id !== payload.chat_id);
-
 				const { [payload.chat_id]: _, ...rest } = chatsInfo.value;
 				chatsInfo.value = rest;
 			} else if (payload.type === "chat_admin_changed") {

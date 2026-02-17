@@ -13,12 +13,51 @@ __Profesores:__
 - Manuel Camejo
 - Matías Onorato
 
-## Compilación, Empaquetación y Ejecución
-	Instalar previamente (TODO ESTO DEBERÍA HACERSE DENTRO DE UN DOCKER, PARA NO TENER QUE INSTALAR TODO ESTO, ES UN QUILOMBO SINO):
+## Diseño general de la app
+**Core Stack**
 
-- **Erlang**
-- **Elixir**
-- **PostgreSQL**
+![Elixir](https://img.shields.io/badge/Elixir-4B275F?logo=elixir&logoColor=white)
+![Erlang](https://img.shields.io/badge/Erlang-A90533?logo=erlang&logoColor=white)
+![Vue](https://img.shields.io/badge/Vue.js-35495E?logo=vue.js&logoColor=4FC08D)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Postgres](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+
+**Backend Stack**
+
+![Plug](https://img.shields.io/badge/Plug-Elixir-blueviolet?style=for-the-badge&logo=elixir)
+![Cowboy](https://img.shields.io/badge/Cowboy-WebSocket%20%2B%20HTTP-orange?style=for-the-badge)
+![Ecto](https://img.shields.io/badge/Ecto-Database%20Toolkit-4B275F?style=for-the-badge&logo=postgresql)
+
+
+### Backend
+- **Elixir (sobre Erlang/OTP)**: Concurrencia, tolerancia a fallos y arquitectura basada en 
+procesos.
+- **Cowboy**: Servidor HTTP + WebSocket.
+
+- **Plug**: Pipeline HTTP y ruteo de APIs.
+
+- **PostgreSQL**: Base de datos relacional (persistencia de usuarios, chats, mensajes, relaciones, etc.).
+
+- **Ecto**: Capa de persistencia de datos en Elixir que gestiona schemas, validaciones, consultas y transacciones, actuando como abstracción sobre PostgreSQL mediante su driver nativo.
+
+- **OAuth (Goth + Google Cloud)**: Autenticación para servicios de media.
+
+### Frontend
+- **Vue 3**: SPA basada en componentes.
+- **Vue Router**: Sistema de vistas y guards de autenticación.
+- **State stores**: Socket, UI, theme. (JavaScript).
+
+### Infraestructura
+- **Docker**: Contenedorización del backend, base de datos y entorno de ejecución.
+- **PostgreSQL**: Motor de base de datos principal.
+- **Makefile**: Orquestación de entorno, dependencias, setup y ejecución.
+
+
+<br><br>
+
+## Backend - Compilación, Empaquetación y Ejecución
+Instalar previamente:
+
 - **Docker + Docker Desktop**
 - **make (MSYS2)**
 
@@ -30,16 +69,13 @@ En **Windows**, además instalar **Visual Studio Build Tools**:
 	
 	<br>
 
-Compilar dependencias (CLAVE para Windows) con `mix deps.compile`
-
 1. Abrir ``Docker Desktop``.
 2. (En Windows) `$env:PATH = "C:\msys64\usr\bin;C:\msys64\mingw64\bin;" + $env:PATH` -> para que make, gcc y sh funcionen correctamente.
 3. `make up` -> Para levantar el contenedor de Docker.
 4. `make deps` -> Para instalar las dependencias necesarias.
-5. `make build` -> .
-6. `make setup` -> Para preparar la DB.
-7. `make seed` -> Para cargar datos a la DB.
-8. `make run` -> Correr la app.
+5. `make setup` -> Para preparar la DB. (o `make reset` si tiene datos y se quieren borrar).
+6. `make seed` -> Para cargar datos de prueba en la DB.
+7. `make run` -> Buildear y correr la app.
 
 
 Windows ENV local:
@@ -48,6 +84,12 @@ Windows ENV local:
 
 
 `$env:GOOGLE_APPLICATION_CREDENTIALS="/app/priv/gcp/service-account.json"`
+
+## Frontend - Ejecución
+
+1. Entrar a la carpeta `frontend` desde la terminal (otra a la del back).
+2. Ejecutar `make deps`
+3. Ejecutar `make run`.
 
 <br><br>
 
@@ -231,7 +273,7 @@ Con esto definimos la conexión via WebSocket desde el cliente hasta el UserSess
 
 ## Flujo de enviar un mensaje
 
-![Diagrama de flujo de enviar un mensaje](/priv/docs/readme/login_flow_chart.png)
+![Diagrama de flujo de enviar un mensaje](/priv/docs/readme/send_message_flow_chart.png)
 
 ### 1. Intención del cliente
 
@@ -252,8 +294,53 @@ Con esto definimos la conexión via WebSocket desde el cliente hasta el UserSess
 3. Éste determina si es un mensaje entrante (`incoming`) o saliente (`outgoing`).
 
 Observación: En el caso de que sea `outgoing`, el mensaje de vuelta sería como una 'confirmación' o *acknowledgement* de que el mensaje se envió correctamente al backend. (Además de que trae campos actualizados, entre ellos, el id que le asignó el backend a ese mensaje).
+<br>
+<br>
+<br>
 
 
 
-## Frontend
+## Frontend - Arquitectura
+
+### ``App.vue``
+Funciona como contenedor principal de la aplicación.
+Responsabilidades:
+- Inicicalizar el estado global (theme).
+- Delegar render al ``router``.
+
+### ``Routing Layer``
+Views principales (estados generales de la app):
+- ``LoginView``
+- ``RegisterView``
+- ``ChatsView``
+- ``SettingsView``
+
+### Guards de autenticación
+En el `router` se determinan dos valores `requiresAuth:bool` y `guestOnly:bool` para redireccionar al usuario a distintas views dependiendo de su autorización.<br>
+Ésta depende de si tiene almacenado en el _SessionStorage_ el token enviado desde el backend.
+
+### Stores
+- **socket.js**
+	- Conexión websocket.
+	- Envío de eventos al backend.
+	- Recepción de mensajes.
+
+- **theme.js**
+	- Cambio de tema oscuro/claro.
+
+- **ui.js**
+	- Paneles abiertos.
+	- Selección de chat.
+	- Estados de interfaz.
+
+### ChatsView - Orquestador
+Es el centro de coordinación.
+- Los componentes:
+	- No conocen websocket.
+	- No conocen el backend.
+	- Solamente muestran los datos que les pasa ChatsView y emiten intenciones del cliente.
+
+### ChatsView - Orquestador
+Funciona como una sub-view dentro de ChatsView, ya que accede al socket, maneja estado real de los usuarios y dispara eventos importantes.<br>
+Su función principal es la de mostrar los contactos y la búsqueda de usuarios.
 
