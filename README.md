@@ -186,3 +186,74 @@ Atiende conexiones HTTP y WebSocket. Rutea:
 - **``Echo.Contacts.Contacts``**: Gestión de contactos. Utiliza `Repo` para accionar sobre la DB. Es utilizada principalemente por `User` y `Chat`.
 
 
+## Flujo de autenticación
+
+![Diagrama de flujo de login](/priv/docs/readme/login_flow_chart.png)
+
+### 1. Login request vía HTTP
+
+1. El cliente envía credenciales a: ``POST /api/login``
+
+2. El Router:
+	- Parsea JSON.
+	- Llama a `Echo.Auth.Accounts.login/2`.
+
+3. Accounts:
+	- Busca usuario en DB con ``Repo``.
+	- Verifica la contraseña.
+	- Genera el token JWT.
+
+4. El backend responde:
+
+```json
+{ "token": "JWT_TOKEN" }
+```
+
+### 2. Creación del WebSocket
+
+1. El cliente quiere iniciar el WebSocket con: `/ws?token=token`
+
+2. Al ser ``/ws``, Cowboy lo handlea con ``UserSocket`` en lugar de ``Router``.
+
+3. Se llama a `Echo.WS.UserSocket.init/2` donde se verifica el token.
+
+4. Una vez validado, la conexión HTTP se actualiza a WebSocket, derivando en llamar a `Echo.WS.UserSocket.websocket_init/2`.
+
+5. Ésta le pide el *process id* (pid) a ``UserSessionSup``, se lo guarda en su *state* y luego llama a `UserSession.login/1`.
+
+6. Allí, ``UserSession`` se guarda el *pid* del socket en su *state* y linkea los procesos.
+
+7. Por último, ``UserSession`` envía la información del usuario al cliente mediante el socket.
+
+Con esto definimos la conexión via WebSocket desde el cliente hasta el UserSession.
+
+
+
+## Flujo de enviar un mensaje
+
+![Diagrama de flujo de enviar un mensaje](/priv/docs/readme/login_flow_chart.png)
+
+### 1. Intención del cliente
+
+1. El cliente envía un mensaje con la estructura definida en el contrato.
+
+2. UserSocket lo despacha a `UserSession.send_message/2`.
+
+3. UserSession lo delega a `ChatSession.send_message/3`.
+
+4. Éste handlea la acción utilizando ``User``, ``Chat``, ``Message``, etc.
+
+### 2. Acknowledgement (retorno)
+
+1. El ``ChatSession`` le envía un mensaje a cada ``UserSession`` correspondiente a cada miembro de ese chat. Y cada ``UserSession`` se lo envía al cliente mediante ``UserSocket``.
+
+2. El cliente le llega una estructura determinada en el contrato, de tipo `new_message`.
+
+3. Éste determina si es un mensaje entrante (`incoming`) o saliente (`outgoing`).
+
+Observación: En el caso de que sea `outgoing`, el mensaje de vuelta sería como una 'confirmación' o *acknowledgement* de que el mensaje se envió correctamente al backend. (Además de que trae campos actualizados, entre ellos, el id que le asignó el backend a ese mensaje).
+
+
+
+## Frontend
+
