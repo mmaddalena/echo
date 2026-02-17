@@ -35,12 +35,8 @@ defmodule Echo.Users.UserSession do
 
   ##### Funciones llamadas desde el socket
 
-  def attach_socket(us_pid, socket_pid) do
-    GenServer.cast(us_pid, {:attach_socket, socket_pid})
-  end
-
-  def send_user_info(us_pid) do
-    GenServer.cast(us_pid, {:send_user_info})
+  def login(us_pid, socket_pid) do
+    GenServer.cast(us_pid, {:login, socket_pid})
   end
 
   def open_chat(us_pid, chat_id) do
@@ -53,10 +49,6 @@ defmodule Echo.Users.UserSession do
 
   def chat_messages_read(us_pid, chat_id) do
     GenServer.cast(us_pid, {:chat_messages_read, chat_id})
-  end
-
-  def mark_pending_messages_delivered(us_pid) do
-    GenServer.cast(us_pid, :mark_pending_delivered)
   end
 
   def get_contacts(us_pid) do
@@ -159,49 +151,20 @@ defmodule Echo.Users.UserSession do
       disconnect_timer: nil
     }
 
-    messages = Messages.get_sent_messages_for_user(user.id)
-
-    Messages.mark_delivered_for_user(user.id)
-
-    messages
-    |> Enum.group_by(& &1.user_id) # sender_id
-    |> Enum.each(fn {sender_id, msgs} ->
-      if us_pid = ProcessRegistry.whereis_user_session(sender_id) do
-        messages_delivered(us_pid, Enum.map(msgs, & &1.id))
-      end
-    end)
-
     {:ok, state}
   end
 
   @impl true
-  def handle_cast({:attach_socket, socket_pid}, state) do
-    Process.link(socket_pid)
+  def handle_cast({:login, socket_pid}, state) do
+    new_state =
+    state
+    |> attach_socket(socket_pid)
+    |> send_user_info()
+    |> mark_pending_messages_delivered()
 
-    if state.disconnect_timer do
-      Process.cancel_timer(state.disconnect_timer)
-    end
-
-    {:noreply, %{state |
-        socket: socket_pid,
-        disconnect_timer: nil,
-        #user: user = User.get(user_id)
-      }
-    }
+    {:noreply, new_state}
   end
 
-  @impl true
-  def handle_cast({:send_user_info}, state) do
-    user_info = %{
-      type: "user_info",
-      user: User.user_payload(state.user),
-      last_chats: User.last_chats(state.user_id)
-    }
-
-    send(state.socket, {:send, user_info})
-
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
-  end
 
   @impl true
   def handle_cast({:open_chat, chat_id}, state) do
@@ -611,6 +574,47 @@ defmodule Echo.Users.UserSession do
   end
 
   ################### Helpers
+  defp attach_socket(state, socket_pid) do
+    Process.link(socket_pid)
+
+    if state.disconnect_timer do
+      Process.cancel_timer(state.disconnect_timer)
+    end
+
+    %{state |
+        socket: socket_pid,
+        disconnect_timer: nil,
+        #user: user = User.get(user_id)
+    }
+  end
+  defp send_user_info(state) do
+    user_info = %{
+      type: "user_info",
+      user: User.user_payload(state.user),
+      last_chats: User.last_chats(state.user_id)
+    }
+
+    send(state.socket, {:send, user_info})
+
+    %{state | last_activity: DateTime.utc_now()}
+  end
+  defp mark_pending_messages_delivered(state) do
+    messages = Messages.get_sent_messages_for_user(state.user_id)
+
+    Messages.mark_delivered_for_user(state.user_id)
+
+    messages
+    |> Enum.group_by(& &1.user_id) # sender_id
+    |> Enum.each(fn {sender_id, msgs} ->
+      if us_pid = ProcessRegistry.whereis_user_session(sender_id) do
+        messages_delivered(us_pid, Enum.map(msgs, & &1.id))
+      end
+    end)
+
+    state
+  end
+
+
   defp serialize_contacts_for_front(contacts) do
     Enum.map(contacts, fn c ->
       serialize_contact_for_front(c)

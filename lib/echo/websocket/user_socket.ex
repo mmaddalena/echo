@@ -41,11 +41,7 @@ defmodule Echo.WS.UserSocket do
   def websocket_init(state) do
     {:ok, us_pid} = Echo.Users.UserSessionSup.get_or_start(state.user_id)
 
-    UserSession.attach_socket(us_pid, self())
-
-    UserSession.send_user_info(us_pid)
-
-    UserSession.mark_pending_messages_delivered(us_pid)
+    UserSession.login(us_pid, self())
 
     {:ok, %{state | user_session: us_pid}}
   end
