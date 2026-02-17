@@ -70,20 +70,7 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "search_people_results") {
 				peopleSearchResults.value = payload.search_people_results;
 			} else if (payload.type === "private_chat_created") {
-				console.log(`LLEGO LA CREACION DEL CHAT: ${payload.chat.id}`);
-				// Meto la info en la caché de los chats
-				chats.value = [payload.chat_item, ...chats.value];
-				if (pendingPrivateChat.value != null) {
-					console.log(`Se creó el chat privado con id: ${payload.chat.id}`);
-
-					dispatch_chat_info(payload);
-					// Mando el mensaje pendiente
-					const msg = { ...pendingMessage.value, chat_id: payload.chat.id };
-					sendMessage(msg);
-					// Seteo todo lo pending en null, ya que ya no hay nada pendiente
-					pendingPrivateChat.value = null;
-					pendingMessage.value = null;
-				}
+				dispatch_private_chat_created(payload)
 			} else if (payload.type === "username_change_result") {
 				dispatch_change_username(payload);
 			} else if (payload.type === "name_change_result") {
@@ -251,6 +238,22 @@ export const useSocketStore = defineStore("socket", () => {
 		const lastMsg = getLastMessage(chatsInfo.value[chat_id]);
 		if (lastMsg) {
 			updateChatListItem({ ...lastMsg, state: "read" });
+		}
+	}
+
+	function dispatch_private_chat_created(payload) {
+		// Meto la info en la caché de los chats
+		chats.value = [payload.chat_item, ...chats.value];
+		if (pendingPrivateChat.value != null) {
+			console.log(`Se creó el chat privado con id: ${payload.chat.id}`);
+
+			dispatch_chat_info(payload);
+			// Mando el mensaje pendiente
+			const msg = { ...pendingMessage.value, chat_id: payload.chat.id };
+			sendMessage(msg);
+			// Seteo todo lo pending en null, ya que ya no hay nada pendiente
+			pendingPrivateChat.value = null;
+			pendingMessage.value = null;
 		}
 	}
 

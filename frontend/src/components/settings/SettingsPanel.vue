@@ -10,13 +10,13 @@
       <ProfileSettings />
     </section>
 
-    <section id="privacy">
+    <!-- <section id="privacy">
       <PrivacySettings />
     </section>
 
     <section id="notifications">
       <NotificationsSettings />
-    </section>
+    </section> -->
 </div>
 
 </template>

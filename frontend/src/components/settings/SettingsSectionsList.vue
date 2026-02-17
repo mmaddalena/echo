@@ -10,8 +10,8 @@
 <template>
   <ul>
     <li @click="go('profile')">Perfil</li>
-    <li @click="go('privacy')">Privacidad</li>
-    <li @click="go('notifications')">Notificaciones</li>
+    <!-- <li @click="go('privacy')">Privacidad</li>
+    <li @click="go('notifications')">Notificaciones</li> -->
 
     <li class="logout" @click="$emit('logout')">
       Cerrar sesión
