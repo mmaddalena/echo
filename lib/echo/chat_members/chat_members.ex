@@ -47,4 +47,12 @@ defmodule Echo.ChatMembers.ChatMembers do
     |> Repo.one()
   end
 
+  def get_role(chat_id, user_id) do
+    from(cm in ChatMember,
+      where: cm.chat_id == ^chat_id and cm.user_id == ^user_id,
+      select: cm.role
+    )
+    |> Repo.one()
+  end
+
 end
