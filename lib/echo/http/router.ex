@@ -62,19 +62,27 @@ defmodule Echo.Http.Router do
          {:ok, %{"username" => u, "password" => p}} <- Jason.decode(body),
          {:ok, token} <- Echo.Auth.Accounts.login(u, p) do
       IO.puts("\n\n\nLOGIN CORRECTO: token: #{inspect(token)}\n\n\n")
-      send_resp(conn, 200, Jason.encode!(%{token: token}))
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, Jason.encode!(%{token: token}))
     else
       {:error, :user_not_found} ->
         IO.puts("\n\n\nLOGIN FALLIDO: User not found\n\n\n")
-        send_resp(conn, 401, Jason.encode!(%{error: "User not found"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(401, Jason.encode!(%{error: "User not found"}))
 
       {:error, :invalid_password} ->
         IO.puts("\n\n\nLOGIN FALLIDO: Invalid password\n\n\n")
-        send_resp(conn, 401, Jason.encode!(%{error: "Invalid password"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(401, Jason.encode!(%{error: "Invalid password"}))
 
       _ ->
         IO.puts("\n\n\nLOGIN FALLIDO: Invalid credentials\n\n\n")
-        send_resp(conn, 401, Jason.encode!(%{error: "Invalid credentials"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(401, Jason.encode!(%{error: "Invalid credentials"}))
     end
   end
 
@@ -131,10 +139,14 @@ defmodule Echo.Http.Router do
         |> send_resp(201, Jason.encode!(%{token: token}))
 
       {:error, errors} when is_map(errors) ->
-        send_resp(conn, 400, Jason.encode!(%{errors: errors}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{errors: errors}))
 
       {:error, reason} ->
-        send_resp(conn, 400, Jason.encode!(%{error: reason}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{error: reason}))
     end
   end
 
@@ -145,10 +157,14 @@ defmodule Echo.Http.Router do
     with {:ok, user_id} <- Echo.Auth.JWT.extract_user_id(token),
          {:ok, upload, conn} <- parse_multipart(conn),
          {:ok, user} <- Echo.Media.upload_user_avatar(user_id, upload) do
-      send_resp(conn, 200, Jason.encode!(%{avatar_url: user.avatar_url}))
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, Jason.encode!(%{avatar_url: user.avatar_url}))
     else
       _ ->
-        send_resp(conn, 400, Jason.encode!(%{error: "Avatar upload failed"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{error: "Avatar upload failed"}))
     end
   end
 
@@ -158,7 +174,9 @@ defmodule Echo.Http.Router do
         handle_group_avatar_upload(conn, group_id)
 
       _ ->
-        send_resp(conn, 404, Jason.encode!(%{error: "Not found"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(404, Jason.encode!(%{error: "Not found"}))
     end
   end
 
@@ -169,8 +187,9 @@ defmodule Echo.Http.Router do
     with {:ok, user_id} <- Echo.Auth.JWT.extract_user_id(token),
          {:ok, upload, conn} <- parse_multipart(conn),
          {:ok, file_url} <- Echo.Media.upload_chat_file(user_id, upload) do
-      send_resp(
-        conn,
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(
         200,
         Jason.encode!(%{
           url: file_url,
@@ -179,7 +198,9 @@ defmodule Echo.Http.Router do
       )
     else
       _ ->
-        send_resp(conn, 400, Jason.encode!(%{error: "Upload failed"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{error: "Upload failed"}))
     end
   end
 
@@ -268,8 +289,9 @@ end
 
     cond do
       is_nil(query) or query == "" ->
-        send_resp(
-          conn,
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(
           400,
           Jason.encode!(%{error: "Missing search query"})
         )
@@ -290,11 +312,15 @@ end
     with {:ok, _user_id} <- Echo.Auth.JWT.extract_user_id(token),
          {:ok, upload, conn} <- parse_multipart(conn),
          {:ok, url} <- Echo.Media.upload_group_avatar(group_id, upload) do
-      send_resp(conn, 200, Jason.encode!(%{avatar_url: url}))
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(200, Jason.encode!(%{avatar_url: url}))
     else
       error ->
         IO.inspect(error, label: "GROUP AVATAR UPLOAD ERROR")
-        send_resp(conn, 400, Jason.encode!(%{error: "Avatar upload failed"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{error: "Avatar upload failed"}))
     end
   end
 
@@ -315,16 +341,24 @@ end
              requester_id,
              member_user_id
            ) do
-      send_resp(conn, 204, "")
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(204, "")
     else
       {:error, :unauthorized} ->
-        send_resp(conn, 403, Jason.encode!(%{error: "Not allowed"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(403, Jason.encode!(%{error: "Not allowed"}))
 
       {:error, :not_found} ->
-        send_resp(conn, 404, Jason.encode!(%{error: "Member not found"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(404, Jason.encode!(%{error: "Member not found"}))
 
       {:error, reason} ->
-        send_resp(conn, 400, Jason.encode!(%{error: inspect(reason)}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{error: inspect(reason)}))
     end
   end
 
@@ -337,16 +371,24 @@ end
         {:ok, %{"member_ids" => member_ids}} <- Jason.decode(body),
         {:ok, :added} <-
           Echo.Chats.Chat.add_members(chat_id, requester_id, member_ids) do
-      send_resp(conn, 204, "")
+      conn
+      |> put_resp_content_type("application/json")
+      |> send_resp(204, "")
     else
       {:error, :unauthorized} ->
-        send_resp(conn, 403, Jason.encode!(%{error: "Not allowed"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(403, Jason.encode!(%{error: "Not allowed"}))
 
       {:error, :not_found} ->
-        send_resp(conn, 404, Jason.encode!(%{error: "Chat not found"}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(404, Jason.encode!(%{error: "Chat not found"}))
 
       {:error, reason} ->
-        send_resp(conn, 400, Jason.encode!(%{error: inspect(reason)}))
+        conn
+        |> put_resp_content_type("application/json")
+        |> send_resp(400, Jason.encode!(%{error: inspect(reason)}))
     end
   end
 
