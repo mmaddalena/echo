@@ -227,6 +227,13 @@ function handleCloseChatInfo() {
     socketStore.deleteContact(personId)
   }
 
+  function handleAddMembers(chatId, memberIds) {
+	socketStore.addMembers(chatId, memberIds)
+  }
+
+  function handleRemoveMember(chatId, memberId) {
+	socketStore.removeMember(chatId, memberId)
+  }
 </script>
 
 <template>
@@ -250,6 +257,8 @@ function handleCloseChatInfo() {
 					@change-group-name="handleChangeGroupName"
 					@change-group-description="handleChangeGroupDescription"
 					@give-admin="handleGiveAdmin"
+					@add-members="handleAddMembers"
+					@remove-member="handleRemoveMember"
 				/>
 				<PersonInfoPanel
 					v-if="panel === 'person-info' && openedPersonInfo != null"

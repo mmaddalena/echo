@@ -214,26 +214,6 @@ defmodule Echo.Http.Router do
     end
   end
 
-  defp route(conn, "DELETE", "/api/chats/" <> rest) do
-    case String.split(rest, "/") do
-      [chat_id, "members", member_user_id] ->
-        handle_remove_chat_member(conn, chat_id, member_user_id)
-
-      _ ->
-        not_found(conn)
-    end
-  end
-
-  defp route(conn, "POST", "/api/chats/" <> rest) do
-  case String.split(rest, "/") do
-    [chat_id, "members"] ->
-      handle_add_chat_members(conn, chat_id)
-
-    _ ->
-      not_found(conn)
-  end
-end
-
   ## -------- SPA fallback (Vue Router support) --------
 
   # defp route(conn, "GET", _path) do
@@ -328,68 +308,6 @@ end
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(404, Jason.encode!(%{error: "Not found"}))
-  end
-
-  defp handle_remove_chat_member(conn, chat_id, member_user_id) do
-    auth_header = List.first(get_req_header(conn, "authorization")) || ""
-    token = String.replace(auth_header, "Bearer ", "")
-
-    with {:ok, requester_id} <- Echo.Auth.JWT.extract_user_id(token),
-         {:ok, :removed} <-
-           Echo.Chats.Chat.remove_member(
-             chat_id,
-             requester_id,
-             member_user_id
-           ) do
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(204, "")
-    else
-      {:error, :unauthorized} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(403, Jason.encode!(%{error: "Not allowed"}))
-
-      {:error, :not_found} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(404, Jason.encode!(%{error: "Member not found"}))
-
-      {:error, reason} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(400, Jason.encode!(%{error: inspect(reason)}))
-    end
-  end
-
-  defp handle_add_chat_members(conn, chat_id) do
-    auth_header = List.first(get_req_header(conn, "authorization")) || ""
-    token = String.replace(auth_header, "Bearer ", "")
-
-    with {:ok, requester_id} <- Echo.Auth.JWT.extract_user_id(token),
-        {:ok, body, conn} <- read_body(conn),
-        {:ok, %{"member_ids" => member_ids}} <- Jason.decode(body),
-        {:ok, :added} <-
-          Echo.Chats.Chat.add_members(chat_id, requester_id, member_ids) do
-      conn
-      |> put_resp_content_type("application/json")
-      |> send_resp(204, "")
-    else
-      {:error, :unauthorized} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(403, Jason.encode!(%{error: "Not allowed"}))
-
-      {:error, :not_found} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(404, Jason.encode!(%{error: "Chat not found"}))
-
-      {:error, reason} ->
-        conn
-        |> put_resp_content_type("application/json")
-        |> send_resp(400, Jason.encode!(%{error: inspect(reason)}))
-    end
   end
 
   defp get_markdown_html(md) do

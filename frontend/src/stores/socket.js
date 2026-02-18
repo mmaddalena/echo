@@ -969,6 +969,22 @@ export const useSocketStore = defineStore("socket", () => {
 		});
 	}
 
+	function addMembers(chat_id, member_ids) {
+		send({
+			type: "add_members",
+			chat_id: chat_id,
+			member_ids: member_ids
+		});
+	}
+
+	function removeMember(chat_id, member_id) {
+		send({
+			type: "remove_member",
+			chat_id: chat_id,
+			member_id: member_id
+		});
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -1007,6 +1023,8 @@ export const useSocketStore = defineStore("socket", () => {
 		changeGroupDescription,
 
 		getOtherMemberId,
-		giveAdmin
+		giveAdmin,
+		addMembers,
+		removeMember
 	};
 });

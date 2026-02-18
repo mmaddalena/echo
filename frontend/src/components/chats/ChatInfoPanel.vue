@@ -28,7 +28,9 @@
     "open-person-info",
     "change-group-name",
     "change-group-description",
-    "give-admin"
+    "give-admin",
+    "add-members",
+    "remove-member"
   ]);
 
   /* -----------------------
@@ -70,17 +72,7 @@
   }
 
   async function removeMember(member_id) {
-    const token = sessionStorage.getItem("token");
-
-    await fetch(
-      `/api/chats/${chatInfo.id}/members/${member_id}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    emit('remove-member', chatInfo.id, member_id)
   }
 
   function giveAdmin(member_id) {
@@ -90,18 +82,7 @@
   async function addMembers() {
     if (!newMemberIds.value.length) return;
 
-    const token = sessionStorage.getItem("token");
-
-    await fetch(`/api/chats/${chatInfo.id}/members`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        member_ids: newMemberIds.value,
-      }),
-    });
+    emit('add-members', chatInfo.id, newMemberIds.value)
 
     showAddMembers.value = false;
     newMemberIds.value = [];
@@ -120,30 +101,9 @@
   }
 
   async function confirmLeaveGroup() {
-    const token = sessionStorage.getItem("token");
-
-    try {
-      const res = await fetch(
-        `/api/chats/${chatInfo.id}/members/${currentUserId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (res.status === 204) {
-        emit("close-chat-info-panel");
-      } else {
-        const data = await res.json();
-        alert(`Error al abandonar el grupo: ${data.error}`);
-      }
-    } catch (err) {
-      alert("Error de red al intentar abandonar el grupo");
-    }
-
+    emit('remove-member', chatInfo.id, currentUserId)
     showLeaveConfirm.value = false
+    emit("close-chat-info-panel");
   }
 
   function handleOpenPersonInfo(member_id) {
