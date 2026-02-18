@@ -103,6 +103,14 @@ defmodule Echo.Users.UserSession do
     GenServer.cast(us_pid, {:give_admin, chat_id, user_id})
   end
 
+  def remove_member(us_pid, chat_id, member_id) do
+    GenServer.cast(us_pid, {:remove_member, chat_id, member_id})
+  end
+
+  def add_members(us_pid, chat_id, member_ids) do
+    GenServer.cast(us_pid, {:add_members, chat_id, member_ids})
+  end
+
   def logout(us_pid) do
     GenServer.call(us_pid, :logout)
   end
@@ -558,6 +566,24 @@ defmodule Echo.Users.UserSession do
     {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
 
     ChatSession.give_admin(cs_pid, chat_id, user_id, state.user_id)
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:remove_member, chat_id, member_id}, state) do
+
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+
+    ChatSession.remove_member(cs_pid, chat_id, state.user_id, member_id)
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:add_members, chat_id, member_ids}, state) do
+
+    {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
+
+    ChatSession.add_members(cs_pid, chat_id, state.user_id, member_ids)
 
     {:noreply, state}
   end

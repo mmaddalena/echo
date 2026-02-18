@@ -50,6 +50,14 @@ defmodule Echo.Chats.ChatSession do
     GenServer.cast(cs_pid, {:give_admin, chat_id, user_id, giving_user_id})
   end
 
+  def remove_member(cs_pid, chat_id, user_id, member_id) do
+    GenServer.cast(cs_pid, {:remove_member, chat_id, user_id, member_id})
+  end
+
+  def add_members(cs_pid, chat_id, user_id, member_ids) do
+    GenServer.cast(cs_pid, {:add_members, chat_id, user_id, member_ids})
+  end
+
   ##### Callbacks
 
   @impl true
@@ -440,6 +448,18 @@ defmodule Echo.Chats.ChatSession do
       {:error, _reason} ->
         {:noreply, state}
     end
+  end
+
+  def handle_cast({:remove_member, chat_id, user_id, member_id}, state) do
+    Chat.remove_member(chat_id, user_id, member_id)
+    new_members = Enum.reject(state.members, fn m -> m.user_id == member_id end)
+    {:noreply, %{state | members: new_members}}
+  end
+
+  def handle_cast({:add_members, chat_id, user_id, member_ids}, state) do
+    Chat.add_members(chat_id, user_id, member_ids)
+    new_members = Chat.get_members(chat_id)
+    {:noreply, %{state | members: new_members}}
   end
 
 

@@ -161,6 +161,16 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
+  defp dispatch(%{"type" => "remove_member", "chat_id" => chat_id, "member_id" => member_id}, state) do
+    UserSession.remove_member(state.user_session, chat_id, member_id)
+    {:ok, state}
+  end
+
+  defp dispatch(%{"type" => "add_members", "chat_id" => chat_id, "member_ids" => member_ids}, state) do
+    UserSession.add_members(state.user_session, chat_id, member_ids)
+    {:ok, state}
+  end
+
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)
     #Process.exit(state.user_session, :normal)
