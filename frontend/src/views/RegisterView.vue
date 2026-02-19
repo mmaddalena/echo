@@ -64,8 +64,7 @@ function handleBackendErrors(errors) {
 			humanizeFieldError(field, errors[field])
 		)
 	}
-
-	errorMessage.value = msgs.join(" • ")
+	errorMessage.value = msgs.map(m => `• ${m}`).join("\n")
 }
 
 async function handleRegister() {
@@ -106,8 +105,8 @@ async function handleRegister() {
 
 			if (data.errors) {
 				handleBackendErrors(data.errors)
+				return
 			}
-
 			if (data.error) {
 				switch (data.error) {
 					case "Invalid multipart data":
@@ -126,22 +125,17 @@ async function handleRegister() {
 						errorMessage.value = "No se pudo subir el avatar"
 						break
 					default:
-						errorMessage.value = "Error en el registro"
+						errorMessage.value = "Datos inválidos"
 				}
 				return
 			}
-
-			errorMessage.value = "Datos inválidos"
-			return
 		}
 
-
+		socketStore.disconnect();
 
 		const token = data.token;
-
 		sessionStorage.setItem("token", token);
-
-		socketStore.disconnect();
+		
 		socketStore.connect(token);
 		router.push("/chats");
 	} catch (e) {
@@ -323,6 +317,7 @@ button {
   border-radius: 6px;
   font-size: 1.3rem;
   text-align: center;
+  white-space: pre-line;
 }
 
 </style>

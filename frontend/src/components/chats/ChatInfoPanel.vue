@@ -6,8 +6,7 @@
   import IconEdit from '@/components/icons/IconEdit.vue'
   import IconConfirm from '@/components/icons/IconConfirm.vue'
   import IconAdmin from '../icons/IconAdmin.vue';
-
-
+  import IconImage from '@/components/icons/IconImage.vue';
 
 
   const { chatInfo, currentUserId } = defineProps({
@@ -30,7 +29,8 @@
     "change-group-description",
     "give-admin",
     "add-members",
-    "remove-member"
+    "remove-member",
+    "change-group-avatar"
   ]);
 
   /* -----------------------
@@ -163,6 +163,53 @@
     el.style.height = el.scrollHeight + "px"
   }
 
+
+const uploadingAvatar = ref(false)
+const groupFileInput = ref(null)
+
+function triggerGroupAvatarPicker() {
+  if (!isCurrentUserAdmin.value) return
+  groupFileInput.value?.click()
+}
+
+async function onGroupAvatarSelected(e) {
+  const file = e.target.files[0]
+  if (!file) return
+
+  if (file.size > 5_000_000) {
+    alert("Max 5MB")
+    return
+  }
+
+  const formData = new FormData()
+  formData.append("avatar", file)
+
+  uploadingAvatar.value = true
+
+  try {
+    const res = await fetch(
+      `http://localhost:4000/api/groups/${chatInfo.id}/avatar`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+        body: formData,
+      }
+    )
+
+    const data = await res.json()
+
+    // Tell parent to update group avatar
+    emit("change-group-avatar", chatInfo.id, data.avatar_url)
+
+  } catch (err) {
+    console.error("Group avatar upload failed", err)
+  } finally {
+    uploadingAvatar.value = false
+  }
+  }
+
   onMounted(() => {
 		editingGroupName.value = false;
     editingGroupDescription.value = false;
@@ -187,7 +234,33 @@
       <IconClose />
     </button>
 
-    <img class="avatar" :src="chatInfo?.avatar_url" />
+    <div 
+    class="avatar-wrapper"
+    @click="triggerGroupAvatarPicker"
+  >
+    <img 
+      class="avatar" 
+      :src="chatInfo?.avatar_url" 
+    />
+
+    <div 
+      v-if="isGroup && isCurrentUserAdmin"
+      class="avatar-overlay"
+    >
+      <IconImage class="overlay-icon" />
+      <span>
+        {{ uploadingAvatar ? "Subiendo..." : "Cambiar imagen" }}
+      </span>
+    </div>
+
+    <input
+      ref="groupFileInput"
+      type="file"
+      accept="image/*"
+      hidden
+      @change="onGroupAvatarSelected"
+    />
+  </div>
     <div class="editable-field" v-if="isGroup && isCurrentUserAdmin">
       <textarea
         ref="groupNameInput"
@@ -438,14 +511,14 @@
 }
 
 
-.avatar {
+/* .avatar {
   width: 15rem;
   height: 15rem;
   border-radius: 50%;
   margin: 4rem auto 2rem auto;
   object-fit: cover;
   object-position: center;
-}
+} */
 .main-name {
   color: var(--text-main) !important;
   font-size: 2.2rem !important;
@@ -810,5 +883,53 @@ button {
   transform: translateY(-6px) scale(0.97);
 }
 
+.avatar-wrapper {
+  position: relative;
+  width: 15rem;
+  height: 15rem;
+  margin: 4rem auto 2rem auto;
+  cursor: pointer;
+}
+
+.avatar-wrapper .avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: filter 0.2s ease;
+}
+
+/* Overlay */
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  color: white;
+  font-size: 1.4rem;
+  gap: 0.6rem;
+
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Hover effect */
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-wrapper:hover .avatar {
+  filter: brightness(0.6);
+}
+
+.overlay-icon {
+  height: 2.4rem;
+}
 
 </style>
