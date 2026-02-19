@@ -228,11 +228,11 @@ function handleCloseChatInfo() {
   }
 
   function handleAddMembers(chatId, memberIds) {
-	socketStore.addMembers(chatId, memberIds)
+		socketStore.addMembers(chatId, memberIds)
   }
 
   function handleRemoveMember(chatId, memberId) {
-	socketStore.removeMember(chatId, memberId)
+		socketStore.removeMember(chatId, memberId)
   }
 </script>
 

@@ -545,4 +545,39 @@ end
   defp unwrap_tx_result({:error, :invalid_chat_type}),
     do: {:error, :not_found}
 
+
+  def update_group_avatar(chat_id, avatar_url) do
+  result =
+    Repo.transaction(fn ->
+      case Repo.get(Chat, chat_id) do
+        nil ->
+          Repo.rollback(:not_found)
+
+        chat ->
+          case chat
+               |> Ecto.Changeset.change(%{avatar_url: avatar_url})
+               |> Repo.update() do
+            {:ok, _chat} ->
+              {:ok, avatar_url}
+
+            {:error, changeset} ->
+              Repo.rollback(changeset)
+          end
+      end
+    end)
+
+  case unwrap_tx_result(result) do
+    {:ok, avatar_url} = ok ->
+      Echo.Chats.ChatSession.broadcast(chat_id, %{
+        type: "group_avatar_updated",
+        chat_id: chat_id,
+        avatar_url: avatar_url
+      })
+
+      ok
+
+    error ->
+      error
+  end
+end
 end

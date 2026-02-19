@@ -139,11 +139,13 @@ defmodule Echo.Http.Router do
         |> send_resp(201, Jason.encode!(%{token: token}))
 
       {:error, errors} when is_map(errors) ->
+        # IO.inspect("errors: #{inspect(errors)}")
         conn
         |> put_resp_content_type("application/json")
         |> send_resp(400, Jason.encode!(%{errors: errors}))
 
       {:error, reason} ->
+        IO.inspect("reason: #{inspect(reason)}")
         conn
         |> put_resp_content_type("application/json")
         |> send_resp(400, Jason.encode!(%{error: reason}))
@@ -292,6 +294,7 @@ defmodule Echo.Http.Router do
     with {:ok, _user_id} <- Echo.Auth.JWT.extract_user_id(token),
          {:ok, upload, conn} <- parse_multipart(conn),
          {:ok, url} <- Echo.Media.upload_group_avatar(group_id, upload) do
+
       conn
       |> put_resp_content_type("application/json")
       |> send_resp(200, Jason.encode!(%{avatar_url: url}))

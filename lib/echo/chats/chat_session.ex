@@ -336,10 +336,8 @@ defmodule Echo.Chats.ChatSession do
         end)
 
         {:noreply, %{state | members: new_members, last_activity: DateTime.utc_now()}}
-    end
   end
-
-
+end
 
   def handle_cast({:change_group_name, chat_id, new_name, changer_user_id}, state) do
     payload = case Chat.change_group_name(chat_id, new_name, changer_user_id) do

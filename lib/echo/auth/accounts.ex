@@ -33,6 +33,7 @@ defmodule Echo.Auth.Accounts do
     - {:error, :username_taken} si el username ya existe
   """
   def register(params) do
+    IO.inspect(User.handle_avatar(params["avatar"]), label: "Handle avatar result")
     with {:ok, avatar_url} <- User.handle_avatar(params["avatar"]),
          clean_params <-
            params
@@ -43,7 +44,7 @@ defmodule Echo.Auth.Accounts do
       {:ok, token}
     else
       {:error, %Ecto.Changeset{} = cs} ->
-        IO.inspect(cs.errors, label: "REGISTER ERRORS")
+        # IO.inspect(cs.errors, label: "REGISTER ERRORS")
         {:error, User.format_changeset_error(cs)}
 
       {:error, reason} ->

@@ -104,6 +104,9 @@ export const useSocketStore = defineStore("socket", () => {
 				dispatch_group_description_changed(payload)
 			} else if (payload.type === 'admin_given_to_member') {
 				dispatch_admin_given_to_member(payload)
+			} else if (payload.type === 'group_avatar_updated') {
+				console.log(`Payload de group avatar updated: `, payload);
+				dispatch_group_avatar_updated(payload)
 			}
 		};
 
@@ -676,6 +679,29 @@ export const useSocketStore = defineStore("socket", () => {
 		}
 	}
 
+	function dispatch_group_avatar_updated(payload) {
+		const chat_id = payload.chat_id;
+		const avatar_url = payload.avatar_url;
+
+		const chat = chatsInfo.value[chat_id];
+		if (!chat) return;
+
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chat_id]: {
+				...chat,
+				avatar_url: avatar_url
+			}
+		};
+
+		chats.value = chats.value.map(chat => {
+			if (chat.id === chat_id) {
+				return { ...chat, avatar_url: avatar_url };
+			}
+			return chat;
+		});
+	}
+
 	function disconnect() {
 		if (socket.value) {
 			send({ type: "logout" });
@@ -985,6 +1011,12 @@ export const useSocketStore = defineStore("socket", () => {
 		});
 	}
 
+	function changeGroupAvatar(chatId, avatarUrl) {
+		if (!chatsInfo.value[chatId]) return
+
+		chatsInfo.value[chatId].avatar_url = avatarUrl
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -1025,6 +1057,7 @@ export const useSocketStore = defineStore("socket", () => {
 		getOtherMemberId,
 		giveAdmin,
 		addMembers,
-		removeMember
+		removeMember,
+		changeGroupAvatar
 	};
 });

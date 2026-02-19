@@ -336,6 +336,7 @@ defmodule Echo.Users.User do
   def handle_avatar(%Upload{} = upload) do
     with :ok <- validate_avatar(upload),
          {:ok, url} <- store_avatar(upload) do
+      IO.inspect(url, label: "Avatar URL after upload")
       {:ok, url}
     end
   end
@@ -356,20 +357,13 @@ defmodule Echo.Users.User do
   defp store_avatar(%Upload{} = upload) do
     File.mkdir_p!(@avatar_dir)
 
-    ext = Path.extname(upload.filename)
-    uuid = Ecto.UUID.generate()
-    local_name = "#{uuid}#{ext}"
-
-    # 1️⃣ Store locally
-    # local_path = Path.join(@avatar_dir, local_name)
-    # File.cp!(upload.path, local_path)
-
     # 2️⃣ Upload to GCP using existing Media module
-    case Echo.Media.upload_to_gcs(local_name, upload) do
-      {:ok, gcp_url} ->
-        {:ok, gcp_url}
+    case Echo.Media.upload_register_avatar(upload) do
+      {:ok, url} ->
+        {:ok, url}
 
       {:error, reason} ->
+        IO.inspect(reason, label: "Avatar upload error")
         {:error, reason}
     end
   end

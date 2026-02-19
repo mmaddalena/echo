@@ -1,5 +1,6 @@
 defmodule Echo.Media do
   alias Echo.Users.User
+  alias Echo.Chats.Chat
 
   @bucket "echo-fiuba"
   @scope "https://www.googleapis.com/auth/devstorage.full_control"
@@ -52,6 +53,18 @@ defmodule Echo.Media do
     end
   end
 
+  def upload_register_avatar(%Plug.Upload{} = upload) do
+    ext = Path.extname(upload.filename)
+
+    object_name =
+      "avatars/register/#{Ecto.UUID.generate()}#{ext}"
+
+    with {:ok, object} <- upload_to_gcs(object_name, upload) do
+      url = "https://storage.googleapis.com/#{@bucket}/#{object.name}"
+      {:ok, url}
+    end
+  end
+
   def upload_avatar(user_id, %Plug.Upload{} = upload) do
     ext = Path.extname(upload.filename)
 
@@ -73,8 +86,9 @@ defmodule Echo.Media do
     object_name =
       "avatars/groups/#{group_id}-#{Ecto.UUID.generate()}#{ext}"
 
-    with {:ok, _object} <- upload_to_gcs(object_name, upload) do
-      {:ok, public_url(object_name)}
+    with {:ok, object} <- upload_to_gcs(object_name, upload) do
+        Chat.update_group_avatar(group_id, public_url(object.name))
+        {:ok, public_url(object.name)}
     end
 
     rescue
