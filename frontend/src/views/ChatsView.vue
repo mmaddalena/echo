@@ -283,6 +283,7 @@ function handleCloseChatInfo() {
 			<ChatMessages
 				:messages="messages"
 				:chatType="chatType"
+				:unreadMessages="activeChat?.unread_messages"
 				ref="chatMessagesRef"
 			/>
 			<ChatInput

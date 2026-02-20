@@ -155,7 +155,6 @@ defmodule Echo.Users.UserSession do
       user: user,
       socket: nil,
       current_chat_id: nil,
-      last_activity: DateTime.utc_now(),
       disconnect_timer: nil
     }
 
@@ -181,7 +180,7 @@ defmodule Echo.Users.UserSession do
         {:ok, cs_pid} = ChatSessionSup.get_or_start(chat_id)
         ChatSession.get_chat_info(cs_pid, state.user_id, self())
 
-        {:noreply, %{state | last_activity: DateTime.utc_now()}}
+        {:noreply, state}
 
       false ->
         # User is no longer member → reject
@@ -194,7 +193,7 @@ defmodule Echo.Users.UserSession do
 
         IO.puts("\nUser tried to open forbidden chat #{chat_id}\n")
 
-        {:noreply, %{state | last_activity: DateTime.utc_now()}}
+        {:noreply, state}
     end
   end
 
@@ -208,7 +207,7 @@ defmodule Echo.Users.UserSession do
 
     send(state.socket, {:send, msg})
 
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
 
 
@@ -218,7 +217,7 @@ defmodule Echo.Users.UserSession do
 
     ChatSession.send_message(cs_pid, front_msg, self())
 
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
 
   @impl true
@@ -231,7 +230,7 @@ defmodule Echo.Users.UserSession do
       send(state.socket, {:send, msg})
     end
 
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
 
   @impl true
@@ -240,7 +239,7 @@ defmodule Echo.Users.UserSession do
 
     ChatSession.chat_messages_read(cs_pid, chat_id, state.user_id)
 
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
 
   @impl true
@@ -251,7 +250,7 @@ defmodule Echo.Users.UserSession do
       reader_user_id: reader_user_id
     }
     if state.socket, do: send(state.socket, {:send, msg})
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
 
   @impl true
@@ -596,7 +595,7 @@ defmodule Echo.Users.UserSession do
 
   def handle_cast({:send_payload, payload}, state) do
     send(state.socket, {:send, payload})
-    {:noreply, %{state | last_activity: DateTime.utc_now()}}
+    {:noreply, state}
   end
 
   ################### Helpers
@@ -622,7 +621,7 @@ defmodule Echo.Users.UserSession do
 
     send(state.socket, {:send, user_info})
 
-    %{state | last_activity: DateTime.utc_now()}
+    state
   end
   defp mark_pending_messages_delivered(state) do
     messages = Messages.get_sent_messages_for_user(state.user_id)
