@@ -190,6 +190,9 @@ export const useSocketStore = defineStore("socket", () => {
 			};
 
 			const chat = chatsInfo.value[chatId];
+			
+			const isActive = chatId === activeChatId.value
+			const isIncoming = msg.user_id !== userInfo.value.id
 
 			if (chat) {
 				chatsInfo.value = {
@@ -197,6 +200,9 @@ export const useSocketStore = defineStore("socket", () => {
 					[chatId]: {
 						...chat,
 						messages: [...chat.messages, normalizedMsg],
+						unread_messages: (!isActive && isIncoming)
+							? chat.unread_messages + 1
+							: chat.unread_messages
 					},
 				};
 			}
@@ -737,10 +743,23 @@ export const useSocketStore = defineStore("socket", () => {
 			socket.value.send(JSON.stringify(data));
 		} else {
 			console.error("El socket no está abierto");
+			disconnect();
 		}
 	}
 
 	function openChat(chatId) {
+		// Primero seteamos el unread_messages del actual en 0.
+		const chat = chatsInfo.value[activeChatId.value]
+		if (activeChatId.value && chat)
+		chatsInfo.value = {
+				...chatsInfo.value,
+				[activeChatId.value]: {
+					...chat,
+					unread_messages: 0,
+				},
+			};
+
+		// Ahora sí, hacemos el open del siguiente chat.
 		pendingPrivateChat.value = null;
 		pendingMessage.value = null;
 

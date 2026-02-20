@@ -106,6 +106,41 @@ defmodule Echo.Chats.Chat do
     end
   end
 
+  def get_unread_messages(user_id, chat_id) do
+    # Find the chat member to get last_read_at
+    chat_member = Repo.get_by(ChatMember, chat_id: chat_id, user_id: user_id)
+
+    if is_nil(chat_member) do
+      0
+    else
+      # Count messages that are:
+      # 1. In the specified chat
+      # 2. Not deleted
+      # 3. Not sent by the user themselves
+      # 4. Created after the user joined the chat
+      # 5. Created after last_read_at (or all messages if last_read_at is nil)
+
+      query =
+        from m in Message,
+          where: m.chat_id == ^chat_id,
+          where: is_nil(m.deleted_at),
+          where: m.user_id != ^user_id
+
+      # Add condition for last_read_at if it exists
+      query =
+        if chat_member.last_read_at do
+          from m in query,
+            where: m.inserted_at > ^chat_member.last_read_at
+        else
+          query
+        end
+
+        # TODO si es grupal que agarre los mensajes desde que se inserto el member
+
+      Repo.aggregate(query, :count, :id)
+    end
+  end
+
   def set_messages_read(chat_id, reader_user_id) do
     if Repo.get(Chat, chat_id).type == Constants.private_chat() do
       from(m in Message,
@@ -219,6 +254,8 @@ defmodule Echo.Chats.Chat do
 
     avatar_url = get_avatar_url(chat, other_user_id)
 
+    unread_messages = get_unread_messages(user_id, chat_id)
+
     if(is_private?) do
       %{
         id: chat_id,
@@ -227,7 +264,8 @@ defmodule Echo.Chats.Chat do
         status: status,
         type: chat.type,
         avatar_url: avatar_url,
-        members: members
+        members: members,
+        unread_messages: unread_messages
       }
     else
       %{
@@ -238,7 +276,8 @@ defmodule Echo.Chats.Chat do
         status: status,
         type: chat.type,
         avatar_url: avatar_url,
-        members: members
+        members: members,
+        unread_messages: unread_messages
       }
     end
   end
