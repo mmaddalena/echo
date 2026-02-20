@@ -710,7 +710,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 	function disconnect() {
 		if (socket.value) {
-			send({ type: "logout" });
+			send({ type: "logout"});
 			socket.value.close();
 		}
 		socket.value = null;
