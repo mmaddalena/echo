@@ -67,6 +67,7 @@ defmodule Echo.Chats.Chat do
         name: u.name,
         avatar_url: u.avatar_url,
         last_read_at: cm.last_read_at,
+        last_seen_at: u.last_seen_at,
         role: cm.role
       }
     )

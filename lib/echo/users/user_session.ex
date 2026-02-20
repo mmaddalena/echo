@@ -695,6 +695,10 @@ defmodule Echo.Users.UserSession do
 
   @impl true
   def handle_call(:logout, _from, state) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    User.update_last_seen_at(state.user_id, now)
+
     ProcessRegistry.unregister_user_session(state.user_id)
     {:stop, :normal, :ok, %{state | socket: nil}}
   end

@@ -376,6 +376,16 @@ defmodule Echo.Users.User do
     end
   end
 
+  def update_last_seen_at(user_id, datetime) do
+    case Repo.get(UserSchema, user_id) do
+      nil -> {:error, :not_found}
+      user ->
+        user
+        |> Ecto.Changeset.change(last_seen_at: datetime)
+        |> Repo.update()
+    end
+    IO.inspect("\n\nUSER LAST_SEEN_AT UPDATED TO: #{datetime}")
+  end
 
   def search_users(asking_user, input) do
     query =
