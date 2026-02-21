@@ -194,7 +194,7 @@ onMounted(() => {
 
 <style scoped>
 .settings-section {
-	padding: 2.4rem 0;
+	padding: 0;
 }
 
 h2 {

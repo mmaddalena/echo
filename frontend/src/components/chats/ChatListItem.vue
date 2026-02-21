@@ -24,10 +24,6 @@ const emit = defineEmits(["open"]);
 function handleClick() {
 	emit("open", chat.id);
 }
-
-onMounted(() => {
-	console.log(`ID del chat con ${chat.name}: ${chat.id}`)
-});
 </script>
 
 <template>

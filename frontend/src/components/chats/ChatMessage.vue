@@ -145,6 +145,11 @@ watch(
 	margin-left: auto;
 	margin-right: calc(3rem + 1rem);
 }
+@media (max-width: 768px) {
+	.outgoing {
+		margin-right: 0;
+	}
+}
 .incoming {
 	background: var(--msg-in);
 	margin-right: auto;

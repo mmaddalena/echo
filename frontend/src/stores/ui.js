@@ -4,6 +4,7 @@ export const useUIStore = defineStore("ui", {
   state: () => ({
     leftPanel: "chats",
     panelHistory: [],
+    isMobile: false,
   }),
   actions: {
     openPanel(panel) {
@@ -27,6 +28,9 @@ export const useUIStore = defineStore("ui", {
     },
     showPersonInfo() {
       this.openPanel("person-info")
+    },
+    setIsMobile(val) {
+      this.isMobile = val
     }
   },
 })

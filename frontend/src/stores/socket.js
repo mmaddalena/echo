@@ -925,9 +925,8 @@ export const useSocketStore = defineStore("socket", () => {
 		});
 	}
 
-	function openPendingPrivateChat(personInfo) {
-		console.log("Se abre un chat que no está creado en el back");
-		pendingPrivateChat.value = personInfo.value;
+	function openPendingPrivateChat() {
+		pendingPrivateChat.value = openedPersonInfo.value;
 		activeChatId.value = null;
 		sessionStorage.removeItem("activeChatId");
 	}
@@ -1036,6 +1035,10 @@ export const useSocketStore = defineStore("socket", () => {
 		chatsInfo.value[chatId].avatar_url = avatarUrl
 	}
 
+	function closeActiveChat() {
+		activeChatId.value = null;
+	}
+
 	return {
 		socket,
 		userInfo,
@@ -1077,6 +1080,7 @@ export const useSocketStore = defineStore("socket", () => {
 		giveAdmin,
 		addMembers,
 		removeMember,
-		changeGroupAvatar
+		changeGroupAvatar,
+		closeActiveChat,
 	};
 });

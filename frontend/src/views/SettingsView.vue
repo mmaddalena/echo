@@ -3,6 +3,7 @@ import { computed } from "vue";
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSocketStore } from "@/stores/socket";
+import { useUIStore } from "@/stores/ui";
 
 import Sidebar from "@/components/layout/Sidebar.vue";
 import SettingsSectionsList from "../components/settings/SettingsSectionsList.vue";
@@ -13,6 +14,7 @@ import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
 
 import { useThemeStore } from "@/stores/theme"
 const themeStore = useThemeStore()
+const uiStore = useUIStore();
 const theme = computed(() => themeStore.theme)
 
 const router = useRouter();
@@ -31,6 +33,8 @@ function logout() {
 	socketStore.disconnect();
 	router.push("/login");
 }
+
+const isMobile = computed(() => uiStore.isMobile)
 </script>
 
 <template>
@@ -43,11 +47,14 @@ function logout() {
 			/>
 			<div class="main">
 				<Sidebar :avatarURL="user?.avatar_url" />
-				<SettingsSectionsList class="sections-list" @logout="logout" />
+				<SettingsSectionsList 
+					v-if="!isMobile"
+					class="sections-list"
+				/>
 			</div>
 		</div>
 		<div class="right">
-			<SettingsPanel />
+			<SettingsPanel @logout="logout" />
 		</div>
 	</div>
 </template>
@@ -79,11 +86,34 @@ function logout() {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
-	height: 100%;
+	margin: 10rem 0 2rem 2rem;
 }
 
 .sections-list {
 	background-color: var(--bg-chatlist-panel);
 	border-radius: 1.5rem 1.5rem 0 0;
+}
+
+
+@media (max-width: 768px) {
+  .settings-layout {
+    flex-direction: column !important;
+		height: 100dvh !important;
+  }
+  .left {
+    width: 100% !important;
+    height: auto !important;
+  }
+  .main {
+    display: block !important;
+  }
+  .right {
+    flex: 1 !important;
+    width: 100% !important;
+		height: auto !important;
+		margin: 0 !important;
+		padding-bottom: calc(var(--sidebar-mobile-heigth) + 2rem);
+		padding-left: 2rem;
+  }
 }
 </style>

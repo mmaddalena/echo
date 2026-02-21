@@ -649,7 +649,7 @@ button {
   margin-top: 2rem;
   padding: 0 1.5rem;
   
-  max-height: 30vh;
+  max-height: 50vh;
   /* min-height: 0; */
   /* flex: 1; */
   min-height: 0;

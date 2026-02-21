@@ -12,10 +12,6 @@
     <li @click="go('profile')">Perfil</li>
     <!-- <li @click="go('privacy')">Privacidad</li>
     <li @click="go('notifications')">Notificaciones</li> -->
-
-    <li class="logout" @click="$emit('logout')">
-      Cerrar sesión
-    </li>
 </ul>
 
 </template>
@@ -44,16 +40,6 @@ li:hover {
   background: var(--bg-chatlist-hover);
 }
 
-.logout {
-  margin-top: auto;
-  margin-bottom: 1rem;
-  color: var(--text-main-light);
-  background-color: var(--bg-logout);
-  width: fit-content;
-}
-.logout:hover {
-  background: rgb(182, 75, 75);
-}
 
 
 </style>
