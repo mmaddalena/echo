@@ -338,7 +338,6 @@ function handleCloseChatInfo() {
 		>
 			<ChatHeader
 				:chatInfo="activeChat"
-				:last_seen_at="userInfo?.last_seen_at"
 				:currentUserId="userInfo?.id"
 				:isMobile="isMobile"
 				@scroll-to-message="scrollToMessage"

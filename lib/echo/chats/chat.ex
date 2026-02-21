@@ -56,6 +56,17 @@ defmodule Echo.Chats.Chat do
     |> Repo.all()
   end
 
+  def get_chat_partners(user_id) do
+    # Get all unique users that have chats with the given user
+    query = from cm in ChatMember,
+            join: cm2 in ChatMember, on: cm.chat_id == cm2.chat_id,
+            where: cm.user_id == ^user_id and cm2.user_id != ^user_id,
+            select: cm2.user_id,
+            distinct: true
+
+    Echo.Repo.all(query)
+  end
+
   def get_members(chat_id) do
     from(cm in ChatMember,
       join: u in SchemaUser,
@@ -67,6 +78,7 @@ defmodule Echo.Chats.Chat do
         name: u.name,
         avatar_url: u.avatar_url,
         last_read_at: cm.last_read_at,
+        last_seen_at: u.last_seen_at,
         role: cm.role
       }
     )
@@ -367,18 +379,29 @@ defmodule Echo.Chats.Chat do
   end
 
   def remove_member(chat_id, requester_id, member_user_id) do
-    Repo.transaction(fn ->
-      with {:ok, _chat} <- get_chat(chat_id),
-          {:ok, member} <- get_member(chat_id, member_user_id),
-          {:ok, requester} <- get_member(chat_id, requester_id),
-          true <- can_remove_member?(requester, member, requester_id) do
+  Repo.transaction(fn ->
+    with {:ok, chat} <- get_chat(chat_id),
+        {:ok, member} <- get_member(chat_id, member_user_id),
+        {:ok, requester} <- get_member(chat_id, requester_id),
+        true <- can_remove_member?(requester, member, requester_id) do
 
-        # Get all remaining members (excluding the one leaving)
-        remaining_members = Echo.ChatMembers.ChatMembers.get_all_members(chat_id)
-                            |> Enum.reject(&(&1.user_id == member_user_id))
+      # Get all remaining members (excluding the one leaving)
+      remaining_members = Echo.ChatMembers.ChatMembers.get_all_members(chat_id)
+                          |> Enum.reject(&(&1.user_id == member_user_id))
 
-        # If leaving member is admin, assign admin to oldest member
-        if member.role == "admin" && length(remaining_members) > 0 do
+      # Check if this is the last member
+      if length(remaining_members) == 0 do
+        # Delete the entire chat group
+        Repo.delete!(chat)
+
+        # Broadcast chat deletion
+        Echo.Chats.ChatSession.broadcast(chat_id, %{
+          type: "chat_deleted",
+          chat_id: chat_id
+        })
+      else
+        # Handle admin transfer if needed
+        if member.role == "admin" do
           oldest_member = Enum.min_by(remaining_members, & &1.inserted_at)
           Repo.update!(Ecto.Changeset.change(oldest_member, role: "admin"))
 
@@ -399,15 +422,16 @@ defmodule Echo.Chats.Chat do
           chat_id: chat_id,
           user_id: member_user_id
         })
-
-        {:ok, :removed}
-      else
-        false -> Repo.rollback({:error, :unauthorized})
-        error -> Repo.rollback(error)
       end
-    end)
-    |> unwrap_tx()
-  end
+
+      {:ok, :removed}
+    else
+      false -> Repo.rollback({:error, :unauthorized})
+      error -> Repo.rollback(error)
+    end
+  end)
+  |> unwrap_tx()
+end
 
 defp can_remove_member?(%{role: "admin"}, _member, _requester_id), do: true
 defp can_remove_member?(%{role: _}, %{user_id: member_id}, requester_id) do
