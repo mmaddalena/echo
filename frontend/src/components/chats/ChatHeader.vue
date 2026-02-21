@@ -5,7 +5,7 @@ import IconBack from "../icons/IconBack.vue";
 import { computed, ref, watch, nextTick } from "vue";
 import { formatAddedTime } from "@/utils/formatAddedTime";
 
-
+const API_URL = import.meta.env.VITE_API_URL
 
 const emit = defineEmits(["scroll-to-message", "open-chat-info", "go-back"]);
 
@@ -44,9 +44,13 @@ async function search() {
 		const token = sessionStorage.getItem("token");
 
 		const res = await fetch(
-			`/api/chats/${props.chatInfo.id}/search?q=${encodeURIComponent(
+			// `/api/chats/${props.chatInfo.id}/search?q=${encodeURIComponent(
+			// 	query.value,
+			// )}`,
+			`${API_URL}/api/chats/${props.chatInfo.id}/search?q=${encodeURIComponent(
 				query.value,
 			)}`,
+
 			{
 				headers: {
 					Authorization: `Bearer ${token}`,
