@@ -334,6 +334,19 @@ defmodule Echo.Chats.ChatSession do
         end)
 
         {:noreply, %{state | members: new_members}}
+
+      "group_avatar_updated" ->
+        # Update the chat's avatar in the state
+        updated_chat = %{state.chat | avatar_url: payload.avatar_url}
+
+        # Broadcast the avatar update to all members
+        Enum.each(state.members, fn member ->
+          if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
+            UserSession.send_payload(us_pid, payload)
+          end
+        end)
+
+        {:noreply, %{state | chat: updated_chat, last_activity: DateTime.utc_now()}}
   end
 end
 
