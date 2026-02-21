@@ -105,8 +105,10 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === 'admin_given_to_member') {
 				dispatch_admin_given_to_member(payload)
 			} else if (payload.type === 'group_avatar_updated') {
-				console.log(`Payload de group avatar updated: `, payload);
 				dispatch_group_avatar_updated(payload)
+			} else if (payload.type === "user_status_changed") {
+				console.log("user status changedddddd!")
+				dispatch_user_status_changed(payload);
 			}
 		};
 
@@ -706,6 +708,68 @@ export const useSocketStore = defineStore("socket", () => {
 			}
 			return chat;
 		});
+	}
+
+	function dispatch_user_status_changed(payload) {
+		const { user_id, is_online, last_seen_at } = payload;
+
+		// 2. Update opened person info
+		if (openedPersonInfo.value?.id === user_id) {
+			openedPersonInfo.value = {
+			...openedPersonInfo.value,
+			status: is_online ? 'Online' : 'Offline',
+			last_seen_at: last_seen_at || openedPersonInfo.value.last_seen_at
+			};
+		}
+
+		// 3. Update chatsInfo (the detailed chat cache)
+		const updatedChatsInfo = { ...chatsInfo.value };
+		let hasUpdates = false;
+
+		Object.entries(chatsInfo.value).forEach(([chatId, chat]) => {
+			let chatUpdated = false;
+			
+			// Update members array
+			const updatedMembers = chat.members?.map(member => {
+			if (member.user_id === user_id) {
+				chatUpdated = true;
+				return {
+				...member,
+				last_seen_at: last_seen_at || member.last_seen_at
+				};
+			}
+			return member;
+			});
+
+			// For private chats, update the status field
+			if (chat.type === 'private') {
+				const isUserInChat = chat.members?.some(m => m.user_id === user_id);
+				
+				if (isUserInChat) {
+					chatUpdated = true;
+					updatedChatsInfo[chatId] = {
+					...chat,
+					status: is_online ? 'Online' : 'Offline',
+					members: updatedMembers || chat.members
+					};
+				}
+			} 
+			// For group chats, only update members
+			else if (chat.type === 'group' && chatUpdated) {
+				updatedChatsInfo[chatId] = {
+					...chat,
+					members: updatedMembers
+				};
+			}
+
+			if (chatUpdated) {
+			hasUpdates = true;
+			}
+		});
+
+		if (hasUpdates) {
+			chatsInfo.value = updatedChatsInfo;
+		}
 	}
 
 	function disconnect() {

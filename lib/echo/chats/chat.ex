@@ -56,6 +56,17 @@ defmodule Echo.Chats.Chat do
     |> Repo.all()
   end
 
+  def get_chat_partners(user_id) do
+    # Get all unique users that have chats with the given user
+    query = from cm in ChatMember,
+            join: cm2 in ChatMember, on: cm.chat_id == cm2.chat_id,
+            where: cm.user_id == ^user_id and cm2.user_id != ^user_id,
+            select: cm2.user_id,
+            distinct: true
+
+    Echo.Repo.all(query)
+  end
+
   def get_members(chat_id) do
     from(cm in ChatMember,
       join: u in SchemaUser,
