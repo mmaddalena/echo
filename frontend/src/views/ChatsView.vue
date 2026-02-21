@@ -22,6 +22,7 @@ import { useThemeStore } from "@/stores/theme"
 import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
 import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
 
+const API_URL = import.meta.env.VITE_API_URL
 
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
@@ -119,13 +120,16 @@ async function handleSendAttachment(file) {
 	formData.append("file", file);
 
 	// 1. Upload via HTTP
-	const res = await fetch("/api/chat/upload", {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${token}`,
+	const res = await fetch(
+		`${API_URL}/api/chat/upload`,
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+			body: formData,
 		},
-		body: formData,
-	});
+	);
 
 	console.log(res);
 
