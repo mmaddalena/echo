@@ -13,13 +13,16 @@ defmodule Echo.Http.Router do
   def call(conn, _opts) do
     conn = CORSPlug.call(conn, cors_opts())
 
-    if conn.halted do
-      conn
-    else
-      conn
-      # |> serve_static()
-      |> route(conn.method, conn.request_path)
-    end
+    # if conn.halted do
+    #   conn
+    # else
+    #   conn
+    #   # |> serve_static()
+    #   |> route(conn.method, conn.request_path)
+    # end
+
+    conn
+    |> route(conn.method, conn.request_path)
   end
 
   ## -------- Static frontend (Vue) --------
