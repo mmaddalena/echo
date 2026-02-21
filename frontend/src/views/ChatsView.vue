@@ -208,11 +208,14 @@ function handleCloseChatInfo() {
   }
 
   function handleOpenChat(chatId) {
-    if (chatId) {
-      socketStore.openChat(chatId)
+		if (chatId) {
+			socketStore.openChat(chatId)
     } else {
-      socketStore.openPendingPrivateChat(openedPersonInfo)
+			socketStore.openPendingPrivateChat()
     }
+		if (isMobile) {
+			closePersonInfoPanel();
+		}
   }
 
   function handleChangeNickname(personId, newNickname) {
@@ -234,11 +237,67 @@ function handleCloseChatInfo() {
   function handleRemoveMember(chatId, memberId) {
 		socketStore.removeMember(chatId, memberId)
   }
+
+
+	////////////  Responsiveness
+	const isMobile = computed(() => uiStore.isMobile)
+
+	function checkScreen() {
+		uiStore.setIsMobile(window.innerWidth <= 768)
+	}
+
+	onMounted(() => {
+		checkScreen()
+		window.addEventListener("resize", checkScreen)
+	})
+
+	function handleGoBack() {
+		socketStore.closeActiveChat()
+		uiStore.showChats()
+	}
 </script>
 
 <template>
 	<div class="chats-layout">
-		<div class="left">
+		<!-- MOBILE -->
+		<Teleport to="body">
+			<Transition name="slide-panel">
+				<ChatInfoPanel
+					v-if="isMobile && panel === 'chat-info'"
+					class="mobile-overlay"
+					:chatInfo="activeChat"
+					:currentUserId="userInfo.id"
+					@close-chat-info-panel="handleCloseChatInfo"
+					@open-person-info="handleOpenPersonInfo"
+					@change-group-name="handleChangeGroupName"
+					@change-group-description="handleChangeGroupDescription"
+					@give-admin="handleGiveAdmin"
+					@add-members="handleAddMembers"
+					@remove-member="handleRemoveMember"
+				/>
+			</Transition>
+		</Teleport>
+
+		<Teleport to="body">
+			<Transition name="slide-panel">
+				<PersonInfoPanel
+					v-if="isMobile && panel === 'person-info' && openedPersonInfo != null"
+					class="mobile-overlay"
+					:personInfo="openedPersonInfo"
+					:currentUserId="userInfo.id"
+					@close-person-info-panel="closePersonInfoPanel"
+					@open-chat="handleOpenChat"
+					@change-nickname="handleChangeNickname"
+					@add-contact="handleAddContact"
+					@delete-contact="handleDeleteContact"
+				/>
+			</Transition>
+		</Teleport>
+
+		<div 
+			class="left"
+			v-if="!isMobile || (isMobile && !(activeChatId || isPendingChat))"
+		>
 			<img
 				:src="theme === 'dark' ? logoDark : logoLight"
 				class="logo"
@@ -249,7 +308,7 @@ function handleCloseChatInfo() {
 				<ChatPanel v-if="panel === 'chats'" />
 				<PeoplePanel v-if="panel === 'people'" />
 				<ChatInfoPanel
-					v-if="panel === 'chat-info'"
+					v-if="!isMobile && panel === 'chat-info'"
 					:chatInfo="activeChat"
 					:currentUserId="userInfo.id"
 					@close-chat-info-panel="handleCloseChatInfo"
@@ -261,7 +320,7 @@ function handleCloseChatInfo() {
 					@remove-member="handleRemoveMember"
 				/>
 				<PersonInfoPanel
-					v-if="panel === 'person-info' && openedPersonInfo != null"
+					v-if="!isMobile && panel === 'person-info' && openedPersonInfo != null"
 					:personInfo="openedPersonInfo"
 					:currentUserId="userInfo.id"
 					@close-person-info-panel="closePersonInfoPanel"
@@ -272,13 +331,19 @@ function handleCloseChatInfo() {
 				/>
 			</div>
 		</div>
-		<div class="right">
+
+		<div 
+			class="right"
+			v-if="!isMobile || (isMobile && (activeChatId || isPendingChat))"
+		>
 			<ChatHeader
 				:chatInfo="activeChat"
 				:last_seen_at="userInfo?.last_seen_at"
 				:currentUserId="userInfo?.id"
+				:isMobile="isMobile"
 				@scroll-to-message="scrollToMessage"
 				@open-chat-info="handleOpenChatInfo"
+				@go-back="handleGoBack"
 			/>
 			<ChatMessages
 				:messages="messages"
@@ -324,5 +389,43 @@ function handleCloseChatInfo() {
 	flex-direction: column;
 	flex: 1;
 	height: 100%;
+}
+
+@media (max-width: 768px) {
+  .chats-layout {
+    flex-direction: column;
+  }
+	.left {
+    width: 100%;
+    flex-direction: column;
+  }
+  .main {
+    flex: 1;
+  }
+	.right {
+    width: 100%;
+    height: calc(100vh - 6rem); /* resto la sidebar */
+  }
+}
+
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--bg-peoplelist-panel);
+}
+/* Slide animation */
+.slide-panel-enter-active,
+.slide-panel-leave-active {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.slide-panel-enter-from {
+  transform: translateX(100%);
+  opacity: 0.8;
+}
+.slide-panel-leave-to {
+  transform: translateX(100%);
+  opacity: 0.8;
 }
 </style>

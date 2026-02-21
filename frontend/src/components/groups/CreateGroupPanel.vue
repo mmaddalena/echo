@@ -517,4 +517,10 @@ button:disabled {
   display: none; /* saca las flechitas */
 }
 
+
+@media (max-width: 768px) {
+	.all {
+		padding-bottom: var(--sidebar-mobile-heigth);
+	}
+}
 </style>

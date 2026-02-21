@@ -44,6 +44,11 @@
   min-height: 0;
 	overflow-y: scroll;
 }
+@media (max-width: 768px) {
+	.people-list {
+		padding-bottom: var(--sidebar-mobile-heigth);
+	}
+}
 
 .people-move {
   transition: transform 200ms ease;

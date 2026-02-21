@@ -45,6 +45,12 @@ const orderedChats = computed(() => {
 	padding: 1rem;
 	scroll-padding-top: 2rem;
 }
+@media (max-width: 768px) {
+	.chat-list {
+		padding-bottom: var(--sidebar-mobile-heigth);
+	}
+}
+
 .chat-move {
 	transition: transform 0.25s ease;
 }

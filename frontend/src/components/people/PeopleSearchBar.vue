@@ -1,11 +1,12 @@
 <script setup>
   import IconClose from '../icons/IconClose.vue';
   import IconSearch from '../icons/IconSearch.vue';
-  import { ref } from 'vue'
+  import { ref, defineExpose, nextTick } from 'vue'
 
   const emit = defineEmits(["search-people"])
 
   const text = ref("")
+  const inputRef = ref(null)
 
   function searchPeople(input){
     emit("search-people", input);
@@ -15,6 +16,16 @@
     text.value = "";
     searchPeople("");
   }
+
+  function focusInput() {
+    nextTick(() => {
+      inputRef.value?.focus()
+    })
+  }
+
+  defineExpose({
+    focusInput
+  })
 </script>
 
 <template>
@@ -22,6 +33,7 @@
     <div class="search">
       <div class="main">
         <input
+          ref="inputRef"
           v-model="text"
           placeholder="Buscar"
           @input="searchPeople(text)"

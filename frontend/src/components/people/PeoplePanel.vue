@@ -6,9 +6,7 @@
   import { useSocketStore } from "@/stores/socket"
   import { useUIStore } from "@/stores/ui"
   import { storeToRefs } from "pinia";
-  import { ref, computed } from "vue";
-  import { onUnmounted } from "vue";
-  import { watch } from "vue";
+  import { ref, computed, watch, onMounted, nextTick, onUnmounted } from "vue";
 
   const socketStore = useSocketStore();
   const uiStore = useUIStore();
@@ -64,12 +62,6 @@
     socketStore.getPersonInfo(person_id)
   }
 
-
-
-
-
-
-
   function searchPeople(input){
     if (activeTab.value === "people")
       socketStore.searchPeople(input);
@@ -77,34 +69,17 @@
       contactSearchText.value = input;
   }
 
-  // function closePersonInfoPanel() {
-  //   socketStore.deletePersonInfo();
-  //   contactSearchText.value = null;
-  //   socketStore.deletePeopleSearchResults();
-  //   uiStore.closePanel();
-  // }
 
-  // function handleOpenChat(chatId) {
-  //   if (chatId) {
-  //     socketStore.openChat(chatId)
-  //   } else {
-  //     socketStore.openPendingPrivateChat(openedPersonInfo)
-  //   }
-  // }
-
-  // function handleChangeNickname(personId, newNickname) {
-  //   socketStore.changeNickname(personId, newNickname)
-  // }
-
-  // function handleAddContact(personId) {
-  //   socketStore.addContact(personId)
-  // }
-
-  // function handleDeleteContact(personId) {
-  //   socketStore.deleteContact(personId)
-  // }
-
-  
+  const searchBarRef = ref(null)
+  onMounted(() => {
+    searchBarRef.value?.focusInput()
+  })
+  watch(
+    () => activeTab.value,
+    () => {
+      searchBarRef.value?.focusInput()
+    }
+  )
 
 </script>
 
@@ -117,6 +92,7 @@
     />
 
     <PeopleSearchBar
+      ref="searchBarRef"
       class="search-bar"
       v-if="openedPersonInfo == null"
       @search-people="searchPeople"

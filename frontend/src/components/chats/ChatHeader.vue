@@ -1,12 +1,13 @@
 <script setup>
 import IconSearch from "../icons/IconSearch.vue";
 import IconOptsMenu from "../icons/IconOptsMenu.vue";
-import { computed, ref, watch } from "vue";
+import IconBack from "../icons/IconBack.vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { formatAddedTime } from "@/utils/formatAddedTime";
 
 
 
-const emit = defineEmits(["scroll-to-message", "open-chat-info"]);
+const emit = defineEmits(["scroll-to-message", "open-chat-info", "go-back"]);
 
 const props = defineProps({
 	chatInfo: {
@@ -15,6 +16,7 @@ const props = defineProps({
 	},
 	last_seen_at: { type: String, default: null },
 	currentUserId: { type: [String, Number], default: null },
+	isMobile: Boolean,
 });
 
 const zoomedImage = ref(null);
@@ -126,10 +128,33 @@ function openChatInfo() {
 	props.chatInfo.last_seen_at = props.last_seen_at;
 	emit("open-chat-info", props.chatInfo);
 }
+watch(
+	() => props.isMobile,
+	() => {
+		console.log(`Is Mobile vale: ${props.isMobile}`)
+	},
+);
+
+// focus al input
+const searchInputRef = ref(null);
+watch(showSearch, async (val) => {
+  if (val) {
+    await nextTick();
+    searchInputRef.value?.focus();
+  }
+});
+
 </script>
 
 <template>
 	<header v-if="chatInfo" class="chat-header" :class="{'no-border': showSearch}">
+		<button 
+			v-if="isMobile"
+			class="back-btn"
+			@click="emit('go-back')"
+		>
+			<IconBack class="icon-back" />
+		</button>
 		<div class="user_info" @click="openChatInfo">
 			<img
 				:src="chatInfo.avatar_url"
@@ -143,7 +168,7 @@ function openChatInfo() {
 					<p v-if="chatInfo.type == 'private'">
 						{{ chatInfo.status }}
 						<span v-if="chatInfo.status == 'Offline' && last_seen_at">
-							- Ultima vez activo
+							- Última vez activo
 							{{ formatAddedTime(last_seen_at) }}
 						</span>
 					</p>
@@ -157,7 +182,12 @@ function openChatInfo() {
 	</header>
 
 	<div v-if="showSearch" class="search-bar">
-		<input v-model="query" placeholder="Search in chat" @keyup.enter="search" />
+		<input
+			ref="searchInputRef"
+			v-model="query" 
+			placeholder="Buscar en el chat" 
+			@keyup.enter="search" 
+		/>
 
 		<template v-if="results.length" class="search-results">
 			<button @click="prev" class="search-move-btn">
@@ -301,4 +331,25 @@ function openChatInfo() {
 .search-move-btn:hover {
 	background-color: var(--accent);
 }
+
+.back-btn {
+	all: unset;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 1rem;
+	margin-right: 1rem;
+}
+.icon-back {
+	height: 2rem;
+	color: var(--text-main);
+}
+
+@media (max-width: 768px) {
+	.chat-header {
+		padding-right: 1rem;
+		padding-left: 1rem;
+	}
+}
+
 </style>

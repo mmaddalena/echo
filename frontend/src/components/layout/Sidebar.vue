@@ -67,6 +67,10 @@
       }
     }
   )
+
+  /////// Responsiveness
+  const isMobile = computed(() => uiStore.isMobile)
+
 </script>
 
 <template>
@@ -86,7 +90,7 @@
         <IconChats class="icon" />
       </button>
     </div>
-    <div class="config_opts">
+    <div class="config-opts">
       <Transition name="theme-toggle" mode="out-in">
       <button
         v-if="theme === 'dark'"
@@ -144,6 +148,24 @@
   padding: 16px 0;
   gap: 20px;
 }
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    height: 6rem;
+    width: 100%;
+
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 0;
+    padding: 1rem 0;
+    background: color-mix(in srgb, var(--bg-chatlist-panel) 90%, transparent);
+    border-radius: 1rem 1rem 0 0;
+  }
+}
 button {
   background: none;
   border: none;
@@ -155,13 +177,26 @@ button {
   flex-direction: column;
   gap: 2rem;
 }
+@media (max-width: 768px) {
+  .profile-opts, .config-opts {
+    display: contents !important;
+  }
+  .profile-opts button:nth-child(1) /* Profile pic */ { order: 1; }
+  .profile-opts button:nth-child(2) /* PeoplePanel */ { order: 3; }
+  .config-opts button:nth-child(1)  /* Theme */       { order: 2; }
+  .config-opts button:nth-child(2)  /* Settings */    { order: 4; }
+  .profile {
+    height: 4rem !important;
+    width: 4rem !important;
+  }
+}
 .profile {
   height: 5rem;
   width: 5rem;
   border-radius: 50%;
   background-color: none;
 }
-.config_opts {
+.config-opts {
   display: flex;
   flex-direction: column;
   gap: 2rem;
