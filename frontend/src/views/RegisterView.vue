@@ -6,6 +6,8 @@ import { useThemeStore } from "@/stores/theme";
 import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
 import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
 
@@ -91,8 +93,8 @@ async function handleRegister() {
 		}
 
 		const res = await fetch(
-			"http://localhost:4000/api/register",
-			//"api/register",
+			// "http://localhost:4000/api/register",
+			`${API_URL}/api/register`,
 			{
 				method: "POST",
 				body: formData, // multipart/form-data
