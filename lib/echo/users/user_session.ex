@@ -169,6 +169,9 @@ defmodule Echo.Users.UserSession do
     |> send_user_info()
     |> mark_pending_messages_delivered()
 
+    # Broadcast that user is now online
+    broadcast_user_status(state.user_id, true)
+
     {:noreply, new_state}
   end
 
@@ -686,6 +689,33 @@ defmodule Echo.Users.UserSession do
     end)
   end
 
+  defp broadcast_user_status(user_id, is_online) do
+    # Get the user to include last_seen_at
+    user = User.get(user_id)
+
+    payload = %{
+      type: "user_status_changed",
+      user_id: user_id,
+      is_online: is_online,
+      last_seen_at: user.last_seen_at
+    }
+
+    # Get users from contacts AND chat partners
+    contact_users = Contacts.get_users_with_contact(user_id)
+    chat_partners = Chat.get_chat_partners(user_id)
+
+    # Combine and deduplicate
+    relevant_users = Enum.uniq(contact_users ++ chat_partners)
+
+    # Send only to online sessions
+    Enum.each(relevant_users, fn relevant_user_id ->
+      case ProcessRegistry.whereis_user_session(relevant_user_id) do
+        nil -> :ok
+        us_pid -> send_payload(us_pid, payload)
+      end
+    end)
+  end
+
   ################### Calls
 
   @impl true
@@ -699,12 +729,21 @@ defmodule Echo.Users.UserSession do
 
     User.update_last_seen_at(state.user_id, now)
 
+    broadcast_user_status(state.user_id, false)
+
     ProcessRegistry.unregister_user_session(state.user_id)
     {:stop, :normal, :ok, %{state | socket: nil}}
   end
 
   @impl true
-  def terminate(_reason, _state) do
+  def terminate(reason, state) do
+    if state.user_id != nil and reason != :normal do
+
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+      User.update_last_seen_at(state.user_id, now)
+
+      broadcast_user_status(state.user_id, false)
+    end
     :ok
   end
 
