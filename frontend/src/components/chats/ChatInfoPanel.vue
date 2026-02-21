@@ -8,6 +8,7 @@
   import IconAdmin from '../icons/IconAdmin.vue';
   import IconImage from '@/components/icons/IconImage.vue';
 
+  const API_URL = import.meta.env.VITE_API_URL
 
   const { chatInfo, currentUserId } = defineProps({
     chatInfo: Object,
@@ -188,7 +189,8 @@ async function onGroupAvatarSelected(e) {
 
   try {
     const res = await fetch(
-      `http://localhost:4000/api/groups/${chatInfo.id}/avatar`,
+      // `http://localhost:4000/api/groups/${chatInfo.id}/avatar`,
+      `${API_URL}/api/groups/${chatInfo.id}/avatar`,
       {
         method: "POST",
         headers: {
