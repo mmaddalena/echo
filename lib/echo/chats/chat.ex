@@ -379,58 +379,69 @@ defmodule Echo.Chats.Chat do
   end
 
   def remove_member(chat_id, requester_id, member_user_id) do
-  Repo.transaction(fn ->
-    with {:ok, chat} <- get_chat(chat_id),
-        {:ok, member} <- get_member(chat_id, member_user_id),
-        {:ok, requester} <- get_member(chat_id, requester_id),
-        true <- can_remove_member?(requester, member, requester_id) do
+    Repo.transaction(fn ->
+      with {:ok, chat} <- get_chat(chat_id),
+          {:ok, member} <- get_member(chat_id, member_user_id),
+          {:ok, requester} <- get_member(chat_id, requester_id),
+          true <- can_remove_member?(requester, member, requester_id) do
 
-      # Get all remaining members (excluding the one leaving)
-      remaining_members = Echo.ChatMembers.ChatMembers.get_all_members(chat_id)
-                          |> Enum.reject(&(&1.user_id == member_user_id))
+        # Get all remaining members (excluding the one leaving)
+        remaining_members = Echo.ChatMembers.ChatMembers.get_all_members(chat_id)
+                            |> Enum.reject(&(&1.user_id == member_user_id))
 
-      # Check if this is the last member
-      if length(remaining_members) == 0 do
-        # Delete the entire chat group
-        Repo.delete!(chat)
+        # Check if this is the last member
+        if length(remaining_members) == 0 do
+          # First delete the member (to maintain referential integrity if needed)
+          Repo.delete!(member)
 
-        # Broadcast chat deletion
-        Echo.Chats.ChatSession.broadcast(chat_id, %{
-          type: "chat_deleted",
-          chat_id: chat_id
-        })
-      else
-        # Handle admin transfer if needed
-        if member.role == "admin" do
-          oldest_member = Enum.min_by(remaining_members, & &1.inserted_at)
-          Repo.update!(Ecto.Changeset.change(oldest_member, role: "admin"))
+          # Then delete the entire chat group
+          Repo.delete!(chat)
 
-          # Broadcast the new admin
+          # Broadcast chat deletion
           Echo.Chats.ChatSession.broadcast(chat_id, %{
-            type: "chat_admin_changed",
+            type: "chat_member_removed",
             chat_id: chat_id,
-            new_admin_id: oldest_member.user_id
+            user_id: member_user_id
+          })
+        else
+          # Check if the member being removed is an admin AND there are no other admins
+          if member.role == "admin" and not Enum.any?(remaining_members, &(&1.role == "admin")) do
+            # Transfer admin to the oldest member
+            oldest_member = Enum.min_by(remaining_members, & &1.inserted_at)
+
+            {:ok, _} = oldest_member
+                      |> Ecto.Changeset.change(role: "admin")
+                      |> Repo.update()
+
+            # Broadcast the new admin
+            Echo.Chats.ChatSession.broadcast(chat_id, %{
+              type: "chat_admin_changed",
+              chat_id: chat_id,
+              new_admin_id: oldest_member.user_id
+            })
+          end
+
+          # Remove the member
+          Repo.delete!(member)
+
+          # Broadcast member removal
+          Echo.Chats.ChatSession.broadcast(chat_id, %{
+            type: "chat_member_removed",
+            chat_id: chat_id,
+            user_id: member_user_id
           })
         end
 
-        # Remove the member
-        Repo.delete!(member)
-
-        # Broadcast member removal
-        Echo.Chats.ChatSession.broadcast(chat_id, %{
-          type: "chat_member_removed",
-          chat_id: chat_id,
-          user_id: member_user_id
-        })
+        {:ok, :removed}
+      else
+        false -> Repo.rollback({:error, :unauthorized})
+        error -> Repo.rollback(error)
       end
-
-      {:ok, :removed}
-    else
-      false -> Repo.rollback({:error, :unauthorized})
-      error -> Repo.rollback(error)
+    end)
+    |> case do
+      {:ok, result} -> {:ok, result}
+      {:error, reason} -> {:error, reason}
     end
-  end)
-  |> unwrap_tx()
 end
 
 defp can_remove_member?(%{role: "admin"}, _member, _requester_id), do: true

@@ -48,6 +48,7 @@ function nextStep() {
 }
 
 function prevStep() {
+	selectedIds.value = [];
 	step.value = 1;
 }
 
