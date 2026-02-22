@@ -857,7 +857,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 		themeStore.setTheme('dark');
 		
-		sessionStorage.clear();
+		// sessionStorage.clear();
 	}
 
 	function send(data) {
