@@ -357,7 +357,9 @@ Fields:
   - type: "private | group",
   - name: string,
   - avatar_url: url,
+  - status: "Offline | Online",
   - unread_messages: integer,
+  - other_user_id: uuid
   - last_message: Object
     - type: "outgoing | incoming",
     - content: string,
