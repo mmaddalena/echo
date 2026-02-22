@@ -125,7 +125,7 @@ defmodule Echo.Users.User do
             self_user.username
           ),
         avatar_url: fragment("COALESCE(?, ?)", other_user.avatar_url, self_user.avatar_url),
-        other_user_id: fragment("COALESCE(?, ?)", other_user.id, self_user.id)
+        other_user_id: fragment("CAST(? AS VARCHAR)", fragment("COALESCE(?, ?)", other_user.id, self_user.id))
       }
     )
     |> Repo.all()
@@ -135,7 +135,7 @@ defmodule Echo.Users.User do
         :status,
         if(is_active?(chat.other_user_id), do: Constants.online(), else: Constants.offline())
       )
-      |> Map.delete(:other_user_id)
+      |> Map.put(:other_user_id, chat.other_user_id)
       |> Map.put(:unread_messages, Chat.get_unread_messages(user_id, chat.id))
       |> Map.put(:last_message, get_last_message(user_id, chat.id))
     end)

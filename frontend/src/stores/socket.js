@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { generateId } from "@/utils/idGenerator";
 import { useThemeStore } from "@/stores/theme"
 
+const API_URL = import.meta.env.VITE_API_URL
 
 export const useSocketStore = defineStore("socket", () => {
 	const socket = ref(null);
@@ -29,10 +30,11 @@ export const useSocketStore = defineStore("socket", () => {
 	function connect(token) {
 		if (socket.value) return; // ya conectado
 
-		const protocol = location.protocol === "https:" ? "wss" : "ws";
+		// const protocol = location.protocol === "https:" ? "wss" : "ws";
 		socket.value = new WebSocket(
 			// `${protocol}://${location.host}/ws?token=${token}`,
-			`http://localhost:4000/ws?token=${token}`,
+			// `http://localhost:4000/ws?token=${token}`,
+			`${API_URL}/ws?token=${token}`,
 		);
 
 		socket.value.onopen = () => {
@@ -46,12 +48,15 @@ export const useSocketStore = defineStore("socket", () => {
 					chat_id: savedChatId,
 				});
 			}
+
+			window.addEventListener('beforeunload', handleBeforeUnload);
 		};
 
 		socket.value.onmessage = (event) => {
 			const payload = JSON.parse(event.data);
 
 			if (payload.type === "user_info") {
+				console.log("Recibí la info de los last_chats: ", payload.last_chats);
 				dispatch_user_info(payload);
 			} else if (payload.type === "chat_info") {
 				dispatch_chat_info(payload);
@@ -114,6 +119,10 @@ export const useSocketStore = defineStore("socket", () => {
 
 		socket.value.onerror = () => {
 			console.error("Error en WS");
+		};
+
+		socket.value.onclose = () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
 		};
 	}
 
@@ -713,16 +722,63 @@ export const useSocketStore = defineStore("socket", () => {
 	function dispatch_user_status_changed(payload) {
 		const { user_id, is_online, last_seen_at } = payload;
 
+		// 1. Update contacts list
+		contacts.value = contacts.value.map(contact => {
+			if (contact.id === user_id) {
+				return {
+					...contact,
+					status: is_online ? 'Online' : 'Offline',
+					last_seen_at: last_seen_at || contact.last_seen_at
+				};
+			}
+			return contact;
+		});
+
 		// 2. Update opened person info
 		if (openedPersonInfo.value?.id === user_id) {
 			openedPersonInfo.value = {
-			...openedPersonInfo.value,
-			status: is_online ? 'Online' : 'Offline',
-			last_seen_at: last_seen_at || openedPersonInfo.value.last_seen_at
+				...openedPersonInfo.value,
+				status: is_online ? 'Online' : 'Offline',
+				last_seen_at: last_seen_at || openedPersonInfo.value.last_seen_at
 			};
 		}
 
-		// 3. Update chatsInfo (the detailed chat cache)
+		// 3. Update chats list (this is the most important part for unopened chats)
+		chats.value = chats.value.map(chat => {
+			// For private chats
+			if (chat.type === 'private') {
+				// Check if this chat involves the user whose status changed
+				// We need to determine this from the chat info we have
+				
+				// If we have the full chat info in chatsInfo
+				if (chatsInfo.value[chat.id]?.members) {
+					const otherMember = chatsInfo.value[chat.id].members.find(
+						m => m.user_id !== userInfo.value.id
+					);
+					if (otherMember?.user_id === user_id) {
+						return {
+							...chat,
+							status: is_online ? 'Online' : 'Offline'
+						};
+					}
+				} 
+				// If we don't have full chat info, we need to infer from available data
+				else {
+					// You might have the other user's info in the chat summary
+					// For example, if the chat name is the username or you store participant info
+					// This depends on your data structure
+					if (chat.other_user_id === user_id) {
+						return {
+							...chat,
+							status: is_online ? 'Online' : 'Offline'
+						};
+					}
+				}
+			}
+			return chat;
+		});
+
+		// 4. Update chatsInfo (for already opened chats)
 		const updatedChatsInfo = { ...chatsInfo.value };
 		let hasUpdates = false;
 
@@ -731,14 +787,14 @@ export const useSocketStore = defineStore("socket", () => {
 			
 			// Update members array
 			const updatedMembers = chat.members?.map(member => {
-			if (member.user_id === user_id) {
-				chatUpdated = true;
-				return {
-				...member,
-				last_seen_at: last_seen_at || member.last_seen_at
-				};
-			}
-			return member;
+				if (member.user_id === user_id) {
+					chatUpdated = true;
+					return {
+						...member,
+						last_seen_at: last_seen_at || member.last_seen_at
+					};
+				}
+				return member;
 			});
 
 			// For private chats, update the status field
@@ -748,9 +804,9 @@ export const useSocketStore = defineStore("socket", () => {
 				if (isUserInChat) {
 					chatUpdated = true;
 					updatedChatsInfo[chatId] = {
-					...chat,
-					status: is_online ? 'Online' : 'Offline',
-					members: updatedMembers || chat.members
+						...chat,
+						status: is_online ? 'Online' : 'Offline',
+						members: updatedMembers || chat.members
 					};
 				}
 			} 
@@ -763,7 +819,7 @@ export const useSocketStore = defineStore("socket", () => {
 			}
 
 			if (chatUpdated) {
-			hasUpdates = true;
+				hasUpdates = true;
 			}
 		});
 
@@ -773,6 +829,8 @@ export const useSocketStore = defineStore("socket", () => {
 	}
 
 	function disconnect() {
+		window.removeEventListener('beforeunload', handleBeforeUnload);
+
 		if (socket.value) {
 			send({ type: "logout"});
 			socket.value.close();
@@ -799,7 +857,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 		themeStore.setTheme('dark');
 		
-		sessionStorage.clear();
+		// sessionStorage.clear();
 	}
 
 	function send(data) {
@@ -853,6 +911,10 @@ export const useSocketStore = defineStore("socket", () => {
 			type: "chat_messages_read",
 			chat_id: chatId,
 		});
+	}
+
+	function handleBeforeUnload() {
+		disconnect();
 	}
 
 	function sendMessage(front_msg) {
@@ -1096,7 +1158,22 @@ export const useSocketStore = defineStore("socket", () => {
 	function changeGroupAvatar(chatId, avatarUrl) {
 		if (!chatsInfo.value[chatId]) return
 
-		chatsInfo.value[chatId].avatar_url = avatarUrl
+		// Create new references to trigger reactivity
+		chatsInfo.value = {
+			...chatsInfo.value,
+			[chatId]: {
+				...chatsInfo.value[chatId],
+				avatar_url: avatarUrl
+			}
+		};
+
+		// Also update the chat in the chats list
+		chats.value = chats.value.map(chat => {
+			if (chat.id === chatId) {
+				return { ...chat, avatar_url: avatarUrl };
+			}
+			return chat;
+		});
 	}
 
 	function closeActiveChat() {

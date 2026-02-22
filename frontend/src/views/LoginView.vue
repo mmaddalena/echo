@@ -6,6 +6,8 @@ import logoLight from "@/assets/logo/Echo_Logo_Completo.svg";
 import logoDark from "@/assets/logo/Echo_Logo_Completo_Negativo.svg";
 import { useThemeStore } from "@/stores/theme";
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
 
@@ -21,8 +23,8 @@ async function handleLogin() {
 
 	try {
 		const res = await fetch(
-			"http://localhost:4000/api/login", 
-			//"/api/login", 
+			// "http://localhost:4000/api/login",
+			`${API_URL}/api/login`,
 			{
 			method: "POST",
 			headers: { "Content-Type": "application/json" },

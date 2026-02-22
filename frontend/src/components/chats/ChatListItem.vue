@@ -15,7 +15,7 @@ const isMuted = computed(() => {
 
 	return (
 		last.type === "outgoing" ||
-		(last.type === "incoming" && 	chat.unread_messages == 0)
+		(last.type === "incoming" && chat.unread_messages == 0)
 	);
 });
 
@@ -24,11 +24,20 @@ const emit = defineEmits(["open"]);
 function handleClick() {
 	emit("open", chat.id);
 }
+
+// Computed property for status color
+const statusColor = computed(() => {
+	return chat.status === "online" ? "green" : "red";
+});
 </script>
 
 <template>
 	<div class="chat-item" @click="handleClick">
-		<img class="avatar" :src="chat.avatar_url" alt="Avatar" />
+		<div class="avatar-wrapper">
+			<img class="avatar" :src="chat.avatar_url" alt="Avatar" />
+			<span v-if="chat.type === 'private'" class="status-indicator" :class="chat.status"></span>
+
+		</div>
 		<div class="info">
 			<div class="up">
 				<div class="texto">
@@ -86,12 +95,39 @@ function handleClick() {
 	background: var(--bg-chatlist-hover);
 	border-radius: 1.5rem;
 }
+
+.avatar-wrapper {
+	position: relative;
+	height: 5rem;
+	width: 5rem;
+}
+
 .avatar {
 	height: 5rem;
 	width: 5rem;
 	background-color: none;
 	border-radius: 50%;
 }
+
+.status-indicator {
+	position: absolute;
+	bottom: 2px;
+	right: 2px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2px solid white;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.status-indicator.Online {
+	background-color: #4caf50; /* Green */
+}
+
+.status-indicator.Offline {
+	background-color: #f44336; /* Red */
+}
+
 .info {
 	display: flex;
 	flex-direction: column;

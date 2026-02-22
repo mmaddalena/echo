@@ -9,8 +9,19 @@ if config_env() == :prod do
       ecto://postgres:postgres@localhost:5432/echo_prod
       """
 
+  ssl =
+  case(System.get_env("DATABASE_SSL")) do
+    "true" -> true
+    "false" -> false
+    nil -> false
+  end
+
   config :echo, Echo.Repo,
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    ssl: true
+    ssl: ssl,
+    ssl_opts: [
+    verify: :verify_none,  # Accept self-signed certificates
+    depth: 0                # Don't check certificate chain depth
+  ]
 end

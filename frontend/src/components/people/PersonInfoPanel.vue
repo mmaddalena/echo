@@ -113,7 +113,8 @@
       {{ personInfo.username}}
     </p>
 
-    <p v-if="isContact" class="added-date">
+    <p class="second-name">{{ personInfo.status }}</p>
+    <p class="added-date">
       <!-- Agregado {{ formatAddedTime(personInfo.contact_info?.added_at) }} -->
        <p v-if="personInfo.status == 'Offline' && personInfo.last_seen_at">
           Última vez activo:
