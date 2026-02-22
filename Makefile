@@ -9,7 +9,7 @@ setup:
 	docker compose run --rm app mix ecto.setup
 test:
 	docker compose up -d db
-	@sleep 3
+	@timeout /t 3 > NUL 2>&1 || sleep 3
 	docker compose run --rm test
 reset:
 	docker compose run --rm app mix ecto.reset

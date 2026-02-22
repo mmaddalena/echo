@@ -37,88 +37,88 @@ users = [
     "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-d9f4a4a0-c943-451a-b05b-2f3e58df54ab.jpeg"
   },
   %{
-    "username" => "manuel",
+    "username" => "mario_santos",
     "password" => "12345678",
-    "email" => "manuel@camejo.com",
-    "name" => "Manuel Camejo",
-    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-05c34105-41c9-4212-987d-6313d377d8e0.jpeg"
+    "email" => "mariosantos@simulador",
+    "name" => "Mario Santos",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3edc8153-88a1-4a39-afc2-f006cd5ade19-024f8189-fcba-4b27-b2b0-c0f57bd6c574.jpg",
   },
   %{
-    "username" => "matias",
+    "username" => "emilio_ravenna",
     "password" => "12345678",
-    "email" => "matias@onorato.com",
-    "name" => "Matías Onorato",
-    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/3842d0fa-c8e1-4a86-982d-e43392206834-42effcee-d371-459b-a25f-83ef881b3c28.jpeg"
+    "email" => "maximocossovich@simulador",
+    "name" => "Máximo Cozzetti",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-eda3b2a7-c926-4958-930a-cd1f8c9a7e16.jpg",
   },
   %{
-    "username" => "persona1",
+    "username" => "gabriel_medina",
     "password" => "12345678",
-    "email" => "persona1@nada",
-    "name" => "Persona1",
-    "avatar_url" => nil,
+    "email" => "gabimedina@simulador",
+    "name" => "Gabriel Medina",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-0a23bae5-db95-4d82-a56c-9226560b8da8.jpg",
   },
   %{
-    "username" => "persona2",
+    "username" => "pablo_lampone",
     "password" => "12345678",
-    "email" => "persona2@nada",
-    "name" => "Persona2",
-    "avatar_url" => nil,
+    "email" => "plampone@simulador",
+    "name" => "Pablo Lampone",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-8a37430e-8546-4712-95f8-4403efbd836b.jpg",
   },
   %{
-    "username" => "persona3",
+    "username" => "tamazaki",
     "password" => "12345678",
-    "email" => "persona3@nada",
-    "name" => "Persona3",
-    "avatar_url" => nil,
+    "email" => "tamazaki@subsimulador",
+    "name" => "Tamazaki",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-0a7cd3bb-89df-4ef3-938f-d0b45272b5f2.png",
   },
   %{
-    "username" => "persona4",
+    "username" => "marcos_molero",
     "password" => "12345678",
-    "email" => "persona4@nada",
-    "name" => "Persona4",
-    "avatar_url" => nil,
+    "email" => "marcos_molero_pd@capo",
+    "name" => "Marcos Molero",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-7b7af017-3963-49df-89e5-40caf312d576.jpg",
   },
   %{
-    "username" => "persona5",
+    "username" => "pp_argento",
     "password" => "12345678",
-    "email" => "persona5@nada",
-    "name" => "Persona5",
-    "avatar_url" => nil,
+    "email" => "pepe_arg@arg",
+    "name" => "Pepe Argento",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-2f810b36-d2ec-47ed-b1b8-51bc25b51dd7.jpg",
   },
   %{
-    "username" => "persona6",
+    "username" => "wwhite",
     "password" => "12345678",
-    "email" => "persona6@nada",
-    "name" => "Persona6",
-    "avatar_url" => nil,
+    "email" => "walterwhite@cooker",
+    "name" => "Walter Hartwell White",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-be508e0d-b04e-433b-ae08-fe39025ddc8c.png",
   },
   %{
-    "username" => "persona7",
+    "username" => "jesse_pinkman",
     "password" => "12345678",
-    "email" => "persona7@nada",
-    "name" => "Persona7",
-    "avatar_url" => nil,
+    "email" => "jesse_pinkman@cooker",
+    "name" => "Jesse Pinkman",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-cfc4f2e4-9ea7-4ecb-86f5-13f4cb5cd6b9.png",
   },
   %{
-    "username" => "persona8",
+    "username" => "lucio_bonelli",
     "password" => "12345678",
-    "email" => "persona8@nada",
-    "name" => "Persona8",
-    "avatar_url" => nil,
+    "email" => "lucio@simulador",
+    "name" => "Lucio Bonelli",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-24bfba69-360f-40fa-b04b-a20e9888ef6e.jpg"
   },
   %{
-    "username" => "persona9",
+    "username" => "feller",
     "password" => "12345678",
-    "email" => "persona9@nada",
-    "name" => "Persona9",
-    "avatar_url" => nil,
+    "email" => "feller@simulador",
+    "name" => "Feller",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-c4e5c2ec-5c72-43f7-9aca-24416a4ab2b5.jpg"
   },
   %{
-    "username" => "persona10",
+    "username" => "martin_vanegas",
     "password" => "12345678",
-    "email" => "persona10@nada",
-    "name" => "Persona10",
-    "avatar_url" => nil,
+    "email" => "vanegas@simulador",
+    "name" => "Martín Vanegas",
+    "avatar_url" => "https://storage.googleapis.com/echo-fiuba/avatars/users/5398cf4e-abb6-4226-9f38-487ae3c9bebb-60d545e8-04e9-4f60-9991-1eb5a751aee8.jpg"
   }
 ]
 
@@ -138,46 +138,71 @@ users_by_username =
 
 lucas   = users_by_username["lucas"]
 martin  = users_by_username["martin"]
-manuel  = users_by_username["manuel"]
-matias  = users_by_username["matias"]
+mario_santos  = users_by_username["mario_santos"]
+emilio_ravenna  = users_by_username["emilio_ravenna"]
+pablo_lampone  = users_by_username["pablo_lampone"]
+gabriel_medina  = users_by_username["gabriel_medina"]
+tamazaki  = users_by_username["tamazaki"]
+lucio_bonelli = users_by_username["lucio_bonelli"]
+feller = users_by_username["feller"]
+martin_vanegas = users_by_username["martin_vanegas"]
+marcos_molero  = users_by_username["marcos_molero"]
+pp_argento  = users_by_username["pp_argento"]
+wwhite  = users_by_username["wwhite"]
+jesse_pinkman  = users_by_username["jesse_pinkman"]
 
-persona1  = users_by_username["persona1"]
-persona2  = users_by_username["persona2"]
-persona3  = users_by_username["persona3"]
-persona4  = users_by_username["persona4"]
-persona5  = users_by_username["persona5"]
-persona6  = users_by_username["persona6"]
-persona7  = users_by_username["persona7"]
-persona8  = users_by_username["persona8"]
-persona9  = users_by_username["persona9"]
-persona10 = users_by_username["persona10"]
 
 
 # Update last_seen_at for more realistic data (truncate microseconds)
 now = truncate_datetime.(DateTime.utc_now())
+one_hour_ago = truncate_datetime.(DateTime.add(now, -3600, :second))
+three_hours_ago = truncate_datetime.(DateTime.add(now, -10800, :second))
 yesterday = truncate_datetime.(DateTime.add(now, -86400, :second))
-two_hours_ago = truncate_datetime.(DateTime.add(now, -7200, :second))
 
-Repo.get!(User, lucas.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
-Repo.get!(User, martin.id) |> Ecto.Changeset.change(last_seen_at: yesterday) |> Repo.update!()
-Repo.get!(User, manuel.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
-Repo.get!(User, matias.id) |> Ecto.Changeset.change(last_seen_at: two_hours_ago) |> Repo.update!()
+Repo.get!(User, mario_santos.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
+Repo.get!(User, emilio_ravenna.id) |> Ecto.Changeset.change(last_seen_at: one_hour_ago) |> Repo.update!()
+Repo.get!(User, pablo_lampone.id) |> Ecto.Changeset.change(last_seen_at: three_hours_ago) |> Repo.update!()
+Repo.get!(User, gabriel_medina.id) |> Ecto.Changeset.change(last_seen_at: yesterday) |> Repo.update!()
 
-# Create contacts (friendships)
+Repo.get!(User, wwhite.id) |> Ecto.Changeset.change(last_seen_at: now) |> Repo.update!()
+Repo.get!(User, jesse_pinkman.id) |> Ecto.Changeset.change(last_seen_at: one_hour_ago) |> Repo.update!()
+
+Repo.get!(User, tamazaki.id) |> Ecto.Changeset.change(last_seen_at: yesterday) |> Repo.update!()
+Repo.get!(User, lucio_bonelli.id) |> Ecto.Changeset.change(last_seen_at: three_hours_ago) |> Repo.update!()
+Repo.get!(User, feller.id) |> Ecto.Changeset.change(last_seen_at: yesterday) |> Repo.update!()
+Repo.get!(User, martin_vanegas.id) |> Ecto.Changeset.change(last_seen_at: one_hour_ago) |> Repo.update!()
+
+# Create contacts
 IO.puts("🤝 Creating contacts...")
 
 contacts = [
   # Lucas's contacts
   %{user_id: lucas.id, contact_id: martin.id, nickname: "Marto"},
-  %{user_id: lucas.id, contact_id: manuel.id},
-  %{user_id: lucas.id, contact_id: persona3.id, nickname: "Capo"},
+  %{user_id: lucas.id, contact_id: jesse_pinkman.id, nickname: "Jesse"},
   # Martin's contacts
   %{user_id: martin.id, contact_id: lucas.id, nickname: "Luquitas"},
-  %{user_id: martin.id, contact_id: manuel.id, nickname: nil},
-  # Manuel's contacts
-  %{user_id: manuel.id, contact_id: matias.id, nickname: "Mati"},
-  # Matias's contacts
-  %{user_id: matias.id, contact_id: manuel.id, nickname: "Manuuu"}
+  %{user_id: martin.id, contact_id: jesse_pinkman.id, nickname: nil},
+  # mario_santos's contacts
+  %{user_id: mario_santos.id, contact_id: emilio_ravenna.id, nickname: "Ravenna"},
+  %{user_id: mario_santos.id, contact_id: pablo_lampone.id, nickname: "Lampone"},
+  %{user_id: mario_santos.id, contact_id: gabriel_medina.id, nickname: "Medina"},
+  %{user_id: mario_santos.id, contact_id: marcos_molero.id, nickname: "Molero"},
+  # emilio_ravenna's contacts
+  %{user_id: emilio_ravenna.id, contact_id: mario_santos.id, nickname: "Marito"},
+  %{user_id: emilio_ravenna.id, contact_id: pablo_lampone.id, nickname: "Cinthia Lampone"},
+  %{user_id: emilio_ravenna.id, contact_id: gabriel_medina.id, nickname: "Medina"},
+  # pablo_lampone's contacts
+  %{user_id: pablo_lampone.id, contact_id: mario_santos.id, nickname: "Mario"},
+  %{user_id: pablo_lampone.id, contact_id: emilio_ravenna.id, nickname: "Emilio"},
+  %{user_id: pablo_lampone.id, contact_id: gabriel_medina.id, nickname: "Gabriel"},
+  # gabriel_medina's contacts
+  %{user_id: gabriel_medina.id, contact_id: mario_santos.id, nickname: "Mar"},
+  %{user_id: gabriel_medina.id, contact_id: pablo_lampone.id, nickname: "Camaleón"},
+  %{user_id: gabriel_medina.id, contact_id: emilio_ravenna.id, nickname: "Pablín"},
+  # wwhite's contacts
+  %{user_id: wwhite.id, contact_id: jesse_pinkman.id, nickname: "Jesse"},
+  # jesse_pinkman's contacts
+  %{user_id: jesse_pinkman.id, contact_id: wwhite.id, nickname: "Mister White"},
 ]
 
 Enum.each(contacts, fn contact_attrs ->
@@ -188,35 +213,44 @@ end)
 
 IO.puts("✅ #{length(contacts)} contacts created")
 
-# Create blocked contacts
-IO.puts("🚫 Creating blocked contacts...")
-
-blocked_contacts = [
-  # manuel blocked Martin
-  %{blocker_id: manuel.id, blocked_id: martin.id},
-]
-
-Enum.each(blocked_contacts, fn blocked_attrs ->
-  %BlockedContact{}
-  |> BlockedContact.changeset(blocked_attrs)
-  |> Repo.insert!()
-end)
-
-IO.puts("✅ #{length(blocked_contacts)} blocked contacts created")
-
 # Create chats
 IO.puts("💬 Creating chats...")
 
 # Direct chats (private)
 direct_chats = [
   %{name: nil, type: "private", creator_id: lucas.id}, # Lucas ↔ Martin
-  %{name: nil, type: "private", creator_id: lucas.id}, # Lucas ↔ Manu
+  %{name: nil, type: "private", creator_id: pablo_lampone.id}, # Lampone ↔ Ravenna
+  %{name: nil, type: "private", creator_id: pablo_lampone.id}, # Lampone ↔ Medina
+  %{name: nil, type: "private", creator_id: wwhite.id},        # Walter ↔ Jesse
+  %{name: nil, type: "private", creator_id: mario_santos.id}   # Mario ↔ Molero
 ]
 
 # Group chats
 group_chats = [
-  %{name: "CS2", type: "group", creator_id: lucas.id, avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/e1e26110-e81f-4e61-8cce-ba181a34577c-47ccfd5a-80a3-4ebf-834a-6084776fc1d0.jpg"},
-  %{name: "TP FINAL Taller", type: "group", creator_id: martin.id, avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/e1e26110-e81f-4e61-8cce-ba181a34577c-33e3aba1-c8bf-4991-ac25-3013bb7e3502.png"}
+  %{
+    name: "CS2",
+    type: "group",
+    creator_id: lucas.id,
+    avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/3edc8153-88a1-4a39-afc2-f006cd5ade19-7daea6ab-a679-4fdb-b147-80e018bf94e7.png"
+  },
+  %{
+    name: "TP FINAL Taller",
+    type: "group",
+    creator_id: martin.id,
+    avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/3edc8153-88a1-4a39-afc2-f006cd5ade19-533d0965-dd99-4c27-a452-8afed768aa6c.jpg"
+  },
+  %{
+    name: "Los Simuladores",
+    type: "group",
+    creator_id: mario_santos.id,
+    avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/3edc8153-88a1-4a39-afc2-f006cd5ade19-0d7d4f22-5505-47c9-af4d-d29714d7905e.jpg"
+  },
+  %{
+    name: "Operativo Completo",
+    type: "group",
+    creator_id: mario_santos.id,
+    avatar_url: "https://storage.googleapis.com/echo-fiuba/avatars/users/3edc8153-88a1-4a39-afc2-f006cd5ade19-96a4d893-7710-4ddf-8e70-01019837f442.jpg"
+  }
 ]
 
 all_chats = direct_chats ++ group_chats
@@ -230,7 +264,17 @@ end)
 IO.puts("✅ #{length(created_chats)} chats created")
 
 # Map chats for reference
-[lucas_martin_chat, lucas_manuel_chat, cs2_chat, tp_final_taller_chat] = created_chats
+[
+  lucas_martin_chat,
+  lampone_ravenna_chat,
+  lampone_medina_chat,
+  walter_jesse_chat,
+  mario_molero_chat,
+  cs2_chat,
+  tp_final_taller_chat,
+  simuladores_chat,
+  operativo_chat
+] = created_chats
 
 # Create chat members
 IO.puts("👥 Adding members to chats...")
@@ -240,20 +284,45 @@ chat_members = [
   %{chat_id: lucas_martin_chat.id, user_id: lucas.id},
   %{chat_id: lucas_martin_chat.id, user_id: martin.id},
 
-  # Direct chat: Lucas ↔ manu
-  %{chat_id: lucas_manuel_chat.id, user_id: lucas.id},
-  %{chat_id: lucas_manuel_chat.id, user_id: manuel.id},
+  # Direct chat: Lampone ↔ Ravenna
+  %{chat_id: lampone_ravenna_chat.id, user_id: pablo_lampone.id},
+  %{chat_id: lampone_ravenna_chat.id, user_id: emilio_ravenna.id},
 
-  # Group chat: TP FINAL Taller (Lucas, Martin, Manuel)
+  # Direct chat: Lampone ↔ Medina
+  %{chat_id: lampone_medina_chat.id, user_id: pablo_lampone.id},
+  %{chat_id: lampone_medina_chat.id, user_id: gabriel_medina.id},
+
+  # Direct chat: Walter ↔ Jesse
+  %{chat_id: walter_jesse_chat.id, user_id: wwhite.id},
+  %{chat_id: walter_jesse_chat.id, user_id: jesse_pinkman.id},
+
+  # Direct chat: Mario ↔ Molero
+  %{chat_id: mario_molero_chat.id, user_id: mario_santos.id},
+  %{chat_id: mario_molero_chat.id, user_id: marcos_molero.id},
+
+  # Group chat: Los Simuladores
+  %{chat_id: simuladores_chat.id, user_id: mario_santos.id, role: "admin"},
+  %{chat_id: simuladores_chat.id, user_id: emilio_ravenna.id},
+  %{chat_id: simuladores_chat.id, user_id: pablo_lampone.id},
+  %{chat_id: simuladores_chat.id, user_id: gabriel_medina.id},
+
+  # Group chat: Operativo Completo
+  %{chat_id: operativo_chat.id, user_id: mario_santos.id, role: "admin"},
+  %{chat_id: operativo_chat.id, user_id: emilio_ravenna.id},
+  %{chat_id: operativo_chat.id, user_id: pablo_lampone.id},
+  %{chat_id: operativo_chat.id, user_id: gabriel_medina.id},
+  %{chat_id: operativo_chat.id, user_id: tamazaki.id},
+  %{chat_id: operativo_chat.id, user_id: lucio_bonelli.id},
+  %{chat_id: operativo_chat.id, user_id: feller.id},
+  %{chat_id: operativo_chat.id, user_id: martin_vanegas.id},
+
+  # Group chat: TP FINAL Taller (Lucas, Martin)
   %{chat_id: tp_final_taller_chat.id, user_id: lucas.id, role: "admin"},
   %{chat_id: tp_final_taller_chat.id, user_id: martin.id},
-  %{chat_id: tp_final_taller_chat.id, user_id: manuel.id},
 
-  # Group chat: CS (Lucas, Martin, Manu, Mati)
+  # Group chat: CS (Lucas, Martin)
   %{chat_id: cs2_chat.id, user_id: lucas.id, role: "admin"},
-  %{chat_id: cs2_chat.id, user_id: martin.id},
-  %{chat_id: cs2_chat.id, user_id: manuel.id},
-  %{chat_id: cs2_chat.id, user_id: matias.id}
+  %{chat_id: cs2_chat.id, user_id: martin.id}
 ]
 
 Enum.each(chat_members, fn member_attrs ->
@@ -305,26 +374,42 @@ create_messages.(lucas_martin_chat.id, lucas.id, [
   {"De una", "sent", 42}
 ])
 
-# Messages in Lucas ↔ manuel chat
-create_messages.(lucas_manuel_chat.id, lucas.id, [
-  {"Hola profe, todo bien?", "sent", 49},
-  {"Tenía una duda sobre el TP", "sent", 48}
+# Messages in Lampone ↔ Ravenna chat
+create_messages.(lampone_ravenna_chat.id, pablo_lampone.id, [
+  {"Emilio, tenemos un problema.", "read", 20},
+  {"Hay que apretar a un tipo.", "read", 19}
 ])
-create_messages.(lucas_manuel_chat.id, manuel.id, [
-  {"Hola Lucas, sí decime", "sent", 47},
+create_messages.(lampone_ravenna_chat.id, emilio_ravenna.id, [
+  {"Pará, primero entendamos la situación.", "read", 18},
+  {"No siempre es a los golpes.", "read", 17}
 ])
-create_messages.(lucas_manuel_chat.id, lucas.id, [
-  {"Nosotros estamos haciendo un front para la app, pero el tema es que en la consigna dice que tiene que haber un cliente consola.", "sent", 46},
-  {"Ya que hacemos el front como cliente, hace falta también hacer el cliente consola? O eso es solo para los que no hacen front?", "sent", 44}
+
+# Messages in Lampone ↔ Medina chat
+create_messages.(lampone_medina_chat.id, gabriel_medina.id, [
+  {"Pablo, necesito que mantengas la calma.", "read", 16}
 ])
-create_messages.(lucas_manuel_chat.id, manuel.id, [
-  {"No no hace falta que hagan dos clientes, manden el front y listo", "sent", 43}
+create_messages.(lampone_medina_chat.id, pablo_lampone.id, [
+  {"Yo estoy calmado.", "read", 15},
+  {"Pero listo para actuar.", "delivered", 1}
 ])
-create_messages.(lucas_manuel_chat.id, lucas.id, [
-  {"Perfecto, gracias profe.\nBuen finde", "sent", 42},
+
+# Messages in Walter ↔ Jesse chat
+create_messages.(walter_jesse_chat.id, wwhite.id, [
+  {"Jesse, we need to cook. (léase con voz de Walter)", "read", 10},
+  {"Esta vez sin errores.", "read", 9}
 ])
-create_messages.(lucas_manuel_chat.id, manuel.id, [
-  {"Igualmente.", "sent", 41},
+create_messages.(walter_jesse_chat.id, jesse_pinkman.id, [
+  {"Yo nunca cometo errores, Mr. White.", "read", 8},
+  {"Bueno... casi nunca.", "delivered", 2}
+])
+
+# Messages in Mario ↔ Molero chat
+create_messages.(mario_molero_chat.id, mario_santos.id, [
+  {"Molero, investigá a este sujeto.", "read", 14}
+])
+create_messages.(mario_molero_chat.id, marcos_molero.id, [
+  {"Ya estoy en eso.", "read", 13},
+  {"En unas horas tengo todo.", "read", 12}
 ])
 
 # Messages in CS2 group
@@ -332,36 +417,20 @@ create_messages.(cs2_chat.id, lucas.id, [
   {"Que ondaa, sale una partida??", "sent", 36},
   {"Ando re manija", "sent", 35}
 ])
-
 create_messages.(cs2_chat.id, martin.id, [
   {"Banca que estoy mirando una serie", "sent", 34},
   {"Termino este episodio y entro", "sent", 33}
 ])
-
 create_messages.(cs2_chat.id, lucas.id, [
   {"Dale que ayer bajé de rango, quiero volver", "sent", 32}
 ])
-
 create_messages.(cs2_chat.id, martin.id, [
   {"Hoy se sube de nuevo chill", "sent", 31},
-])
-create_messages.(cs2_chat.id, manuel.id, [
   {"Yo en 20 entro aprox", "sent", 30},
   {"Si no subís de rango hoy, te desapruebo el TP", "sent", 29},
 ])
-create_messages.(cs2_chat.id, matias.id, [
-  {"Banco 👆", "sent", 28}
-])
 create_messages.(cs2_chat.id, lucas.id, [
-  {"jasjajsjasj no dale", "sent", 27},
-  {"no voy a pegar un tiro ahora", "delivered", 26},
-  {"Bueno avisen, me voy jugando otra de mientras", "read", 25}
-])
-create_messages.(cs2_chat.id, martin.id, [
-  {"Si lucas o yo nos taseamos a uno en la primer partida que juguemos los 4 nos aprueban con un 10 de una", "sent", 24},
-])
-create_messages.(cs2_chat.id, manuel.id, [
-  {"jasjasj dale, pero si alguno termina negativo va un 4", "sent", 23},
+  {"Bueno avisa, me voy jugando otra de mientras", "read", 25}
 ])
 
 # Messages in TP FINAL Taller Group
@@ -370,14 +439,43 @@ create_messages.(tp_final_taller_chat.id, lucas.id, [
   {"Que les parece el logo que mandé?", "sent", 96},
   {"No sé si cambiar un poco el color del violeta", "sent", 95}
 ])
-
 create_messages.(tp_final_taller_chat.id, martin.id, [
   {"quedo muy copado, me gusta me gusta:)", "sent", 94}
 ])
-
 create_messages.(tp_final_taller_chat.id, martin.id, [
   {"Sí puede ser", "sent", 91},
   {"Sino podrías hacer el violeta más oscuro para que contraste más", "sent", 90}
+])
+
+# Messages in Los Simuladores group
+create_messages.(simuladores_chat.id, mario_santos.id, [
+  {"Tenemos un nuevo caso.", "read", 24}
+])
+create_messages.(simuladores_chat.id, emilio_ravenna.id, [
+  {"¿De qué tipo?", "read", 23}
+])
+create_messages.(simuladores_chat.id, pablo_lampone.id, [
+  {"Si hay que apretar a alguien, yo me encargo.", "read", 22}
+])
+create_messages.(simuladores_chat.id, gabriel_medina.id, [
+  {"Tranquilos. Pensemos primero.", "read", 21}
+])
+
+# Messages in Operativo Completo group
+create_messages.(operativo_chat.id, mario_santos.id, [
+  {"Equipo completo, arrancamos mañana.", "read", 30}
+])
+create_messages.(operativo_chat.id, lucio_bonelli.id, [
+  {"Antecedentes revisados.", "read", 29}
+])
+create_messages.(operativo_chat.id, feller.id, [
+  {"El contacto está asegurado.", "read", 28}
+])
+create_messages.(operativo_chat.id, martin_vanegas.id, [
+  {"La logística está lista.", "read", 27}
+])
+create_messages.(operativo_chat.id, tamazaki.id, [
+  {"Transporte confirmado.", "delivered", 3}
 ])
 
 
@@ -385,13 +483,16 @@ IO.puts("\n🎉 Seed data created successfully!")
 IO.puts("📊 Summary:")
 IO.puts("  👤 Users: #{length(created_users)}")
 IO.puts("  🤝 Contacts: #{length(contacts)}")
-IO.puts("  🚫 Blocked: #{length(blocked_contacts)}")
 IO.puts("  💬 Chats: #{length(created_chats)} (2 group, 2 private)")
 IO.puts("  👥 Chat Members: #{length(chat_members)}")
 IO.puts("  📝 Messages: #{Repo.aggregate(Message, :count, :id)}")
 
 IO.puts("\n🔑 Test credentials (all passwords: 12345678):")
-IO.puts("  • lucas (Lucas Couttulenc)")
-IO.puts("  • martin (Martin Maddalena)")
-IO.puts("  • manuel (Manuel Camejo)")
-IO.puts("  • matias (Matías Onorato)")
+IO.puts("  • lucas")
+IO.puts("  • martin")
+IO.puts("  • mario_santos")
+IO.puts("  • emilio_ravenna")
+IO.puts("  • pablo_lampone")
+IO.puts("  • gabriel_medina")
+IO.puts("  • wwhite")
+IO.puts("  • jesse_pinkman")
