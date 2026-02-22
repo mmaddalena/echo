@@ -13,14 +13,18 @@ defmodule Echo.Http.Router do
   def call(conn, _opts) do
     conn = CORSPlug.call(conn, cors_opts())
 
-    if conn.halted do
-      conn
-    else
-      conn
-      # |> serve_static()
-      |> route(conn.method, conn.request_path)
+    case conn.method do
+      "OPTIONS" ->
+        # Preflight request - already handled by CORSPlug
+        conn
+        |> send_resp(204, "")
+        |> halt()
+
+      _ ->
+        conn
+        |> route(conn.method, conn.request_path)
     end
-  end
+end
 
   ## -------- Static frontend (Vue) --------
 
@@ -42,7 +46,7 @@ defmodule Echo.Http.Router do
     CORSPlug.init(
       origin: [
         "http://localhost:5173",
-        "https://*.onrender.com"
+        "https://echo-host.onrender.com"
       ],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       headers: ["Content-Type", "Authorization"]

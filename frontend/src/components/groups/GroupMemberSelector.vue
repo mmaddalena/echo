@@ -105,7 +105,7 @@ const unselectedContacts = computed(() =>
 
     <div class="contacts-list">
       <!-- SELECTED -->
-      <template v-if="!searchText && selectedPeople.length">
+      <template v-if="selectedPeople.length">
         <p class="selected-label">Seleccionados</p>
 
         <label
@@ -130,6 +130,10 @@ const unselectedContacts = computed(() =>
       </template>
 
       <!-- SEARCH RESULTS -->
+      <p v-if="peopleToShow.length" class="selected-label">
+          Personas
+        </p>
+
       <label
         v-if="searchText"
         v-for="person in peopleToShow"
