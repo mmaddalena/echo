@@ -7,6 +7,7 @@ import { formatChatTime } from "@/utils/formatChatTime";
 
 const { chat } = defineProps({
 	chat: Object,
+	isSelected: Boolean,
 });
 
 const isMuted = computed(() => {
@@ -32,10 +33,14 @@ const statusColor = computed(() => {
 </script>
 
 <template>
-	<div class="chat-item" @click="handleClick">
+	<div class="chat-item" :class="{selected: isSelected}" @click="handleClick">
 		<div class="avatar-wrapper">
 			<img class="avatar" :src="chat.avatar_url" alt="Avatar" />
-			<span v-if="chat.type === 'private'" class="status-indicator" :class="chat.status"></span>
+			<span 
+				v-if="chat.type === 'private'" 
+				class="status-indicator" 
+				:class="[chat.status, { selected: isSelected }]"
+			></span>
 
 		</div>
 		<div class="info">
@@ -91,7 +96,8 @@ const statusColor = computed(() => {
 	padding: 12px;
 	cursor: pointer;
 }
-.chat-item:hover {
+.chat-item:hover,
+.chat-item.selected {
 	background: var(--bg-chatlist-hover);
 	border-radius: 1.5rem;
 }
@@ -111,21 +117,27 @@ const statusColor = computed(() => {
 
 .status-indicator {
 	position: absolute;
-	bottom: 2px;
-	right: 2px;
-	width: 14px;
-	height: 14px;
+	bottom: 0.1rem;
+	right: 0.2rem;
+	width: 1.5rem;
+	height: 1.5rem;
 	border-radius: 50%;
-	border: 2px solid white;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	border: 0.25rem solid var(--bg-chatlist-panel);
+	/* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); */
+}
+.status-indicator.selected {
+	border: 0.25rem solid var(--bg-chatlist-hover);
+}
+.chat-item:hover .status-indicator {
+  border: 0.25rem solid var(--bg-chatlist-hover);
 }
 
 .status-indicator.Online {
-	background-color: #4caf50; /* Green */
+	background-color: var(--online);
 }
 
 .status-indicator.Offline {
-	background-color: #f44336; /* Red */
+	background-color: var(--offline);
 }
 
 .info {

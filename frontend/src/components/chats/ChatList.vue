@@ -9,6 +9,7 @@ const props = defineProps({
 		type: Array,
 		required: true,
 	},
+	selectedChatId: Boolean
 });
 
 function openChat(chatId) {
@@ -22,6 +23,10 @@ const orderedChats = computed(() => {
 		return tB - tA;
 	});
 });
+
+function isChatSelected(chat_id) {
+	return chat_id == props.selectedChatId;
+}
 </script>
 
 <template>
@@ -30,6 +35,7 @@ const orderedChats = computed(() => {
 			v-for="chat in orderedChats"
 			:key="chat.id"
 			:chat="chat"
+			:isSelected="isChatSelected(chat.id)"
 			@open="openChat"
 		/>
 	</TransitionGroup>

@@ -63,43 +63,44 @@ const messagesWithDays = computed(() => {
 	return result;
 });
 
-const messagesCompleteList = computed(() => {
-  const base = [...messagesWithDays.value];
 
-  if (!props.unreadMessages || props.unreadMessages <= 0) {
-    return base;
-  }
+// Unread split:
+const unreadAnchorId = ref(null)
 
-  let messageCountFromEnd = 0;
-  let insertIndex = null;
+watch(
+  () => props.unreadMessages,
+  (val) => {
+    if (val > 0 && orderedMessages.value.length) {
+      const firstUnread =
+        orderedMessages.value[orderedMessages.value.length - val]
 
-  // recorrer desde el final
-  for (let i = base.length - 1; i >= 0; i--) {
-    if (base[i].kind === "message") {
-      messageCountFromEnd++;
-
-      if (messageCountFromEnd === props.unreadMessages + 1) {
-        insertIndex = i + 1;
-        break;
-      }
+      unreadAnchorId.value = firstUnread?.id
+    } else {
+      unreadAnchorId.value = null
     }
+  },
+  { immediate: true }
+)
+
+const messagesCompleteList = computed(() => {
+  const base = [...messagesWithDays.value]
+
+  if (!unreadAnchorId.value) return base
+
+  const insertIndex = base.findIndex(
+    m => m.id === unreadAnchorId.value
+  )
+
+  if (insertIndex !== -1) {
+    base.splice(insertIndex, 0, {
+      front_msg_id: `unread-anchor`,
+      kind: "unread",
+      label: "Mensajes sin leer"
+    })
   }
 
-  // si no encontró posición (ej: todos son unread)
-  if (insertIndex === null) {
-    insertIndex = 0;
-  }
-
-  base.splice(insertIndex, 0, {
-    front_msg_id: `unread-${props.unreadMessages}`,
-    kind: "unread",
-    label: (props.unreadMessages > 1)
-		? `${props.unreadMessages} mensajes sin leer`
-		: `${props.unreadMessages} mensaje sin leer`
-  });
-
-  return base;
-});
+  return base
+})
 
 
 const messagesContainer = ref(null);
