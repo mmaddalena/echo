@@ -11,8 +11,8 @@ const API_URL = import.meta.env.VITE_API_URL
 const themeStore = useThemeStore()
 const theme = computed(() => themeStore.theme)
 
-const username = ref("lucas"); //TODO CAMBIAR A VACIO ("")
-const password = ref("12345678"); //TODO CAMBIAR A VACIO ("")
+const username = ref("");
+const password = ref("");
 const router = useRouter();
 const socketStore = useSocketStore();
 const errorMessage = ref(null)
@@ -79,7 +79,7 @@ async function handleLogin() {
 			<p>Iniciar sesión</p>
 
 			<form @submit.prevent="handleLogin">
-				<input type="text" placeholder="Username" v-model="username" />
+				<input type="text" placeholder="Nombre de Usuario" v-model="username" />
 
 				<input type="password" placeholder="Contraseña" v-model="password" />
 
