@@ -172,7 +172,7 @@ function onFileChange(e) {
 			<p>Iniciar sesión</p>
 
 			<form novalidate @submit.prevent="handleRegister">
-				<input type="text" placeholder="Username" v-model="username" />
+				<input type="text" placeholder="Nombre de Usuario" v-model="username" />
 
 				<input type="text" placeholder="Nombre Completo" v-model="name" />
 
