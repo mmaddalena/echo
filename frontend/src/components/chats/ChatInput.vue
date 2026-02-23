@@ -197,7 +197,7 @@ input {
 
 /* Send button can have a different color if you want */
 .send-button {
-	background-color: var(--accent-color); /* or keep it same as others */
+	background-color: var(--msg-out); /* or keep it same as others */
 }
 
 .emoji-picker-container {
