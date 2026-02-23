@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import EmojiPicker from 'vue3-emoji-picker';
 import 'vue3-emoji-picker/css';
 
@@ -20,6 +20,10 @@ function send() {
 
 	emit("send-message", text.value);
 	text.value = "";
+
+	nextTick(() => {
+    inputRef.value?.focus();
+  });
 }
 
 function pickFile() {
@@ -98,11 +102,15 @@ defineExpose({focusInput, clear});
 				ref="inputRef"
 				v-model="text"
 				placeholder="Escribe un mensaje..."
-				@keydown.enter="send"
+				@keydown.enter.prevent="send"
 			/>
 			
 			<!-- Send button -->
-			<button @click="send" class="send-button">
+			<button 
+				@click="send" 
+				@mousedown.prevent
+				class="send-button"
+			>
 				<IconSend class="icon"/>
 			</button>
 
@@ -172,7 +180,8 @@ input {
 /* Base button styles */
 .action-button, 
 .send-button {
-	display: flex;
+	/* display: flex; */
+	padding-top: 0.5rem;
 	align-items: center;
 	justify-content: center;
 	background-color: var(--msg-out);
