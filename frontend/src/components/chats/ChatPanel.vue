@@ -14,6 +14,7 @@ const socketStore = useSocketStore();
 
 const activeTab = ref("all");
 const { chats } = storeToRefs(socketStore);
+const { activeChatId } = storeToRefs(socketStore);
 
 const contactSearchText = ref(null);
 
@@ -100,6 +101,7 @@ function closeCreateGroup() {
 			<ChatList
 				v-if="rightPanel === 'list'"
 				:chats="filteredChats"
+				:selectedChatId="activeChatId"
 				@open-chat="handleOpenChat"
 			/>
 

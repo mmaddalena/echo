@@ -153,6 +153,7 @@ defineExpose({focusInput, clear});
 	display: flex;
 	gap: 0.5rem;
 	align-items: center;
+	flex-shrink: 0;
 }
 
 input {
@@ -163,25 +164,27 @@ input {
 	color: var(--text-main);
 	outline: none;
 	font-size: 1.5rem;
+
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 /* Base button styles */
-.action-button, .send-button {
+.action-button, 
+.send-button {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	background-color: var(--msg-out);
 	border: none;
 	border-radius: 50%;
-	width: 4rem;
-	height: 4rem;
+	width: 3.5rem;
+	height: 3.5rem;
 	color: white;
 	cursor: pointer;
 	transition: background-color 0.2s;
-}
 
-.action-button:hover, .send-button:hover {
-	background-color: var(--msg-out-hover);
+	flex-shrink: 0;
 }
 
 /* Active state for emoji button when picker is open */
@@ -209,5 +212,32 @@ input {
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 	border-radius: 8px;
 	overflow: hidden;
+}
+</style>
+
+<style>
+.v3-emoji-picker {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+
+	--v3-picker-emoji-hover: var(--bg-chatlist-panel) !important;
+}
+.v3-sticky {
+	background-color: var(--bg-input) !important;
+}
+.v3-text {
+	color: var(--text-main);
+}
+.v3-header img {
+	background-color: var(--text-main-light);
+	border-radius: 0.6rem;
+}
+.v3-header input {
+	background-color: var(--bg-chatlist-panel) !important;
+	border: none !important;
+	border-radius: 0.8rem !important;
+}
+.v3-skin-tones {
+	background-color: var(--bg-input) !important;
 }
 </style>
