@@ -5,7 +5,6 @@ import { useSocketStore } from "@/stores/socket";
 import { storeToRefs } from "pinia";
 
 import Sidebar from "@/components/layout/Sidebar.vue";
-import ChatList from "@/components/chats/ChatList.vue";
 import ChatHeader from "@/components/chats/ChatHeader.vue";
 import ChatMessages from "@/components/chats/ChatMessages.vue";
 import ChatInput from "@/components/chats/ChatInput.vue";
