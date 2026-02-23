@@ -366,7 +366,7 @@ function handleCloseChatInfo() {
 .chats-layout {
 	display: flex;
 	flex-direction: row;
-	height: 100vh;
+	height: 100dvh;
 }
 .left {
 	display: flex;
@@ -406,7 +406,7 @@ function handleCloseChatInfo() {
   }
 	.right {
     width: 100%;
-    height: calc(100vh - 6rem); /* resto la sidebar */
+    height: calc(100dvh - 6rem); /* resto la sidebar */
   }
 }
 

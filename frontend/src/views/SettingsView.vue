@@ -63,7 +63,7 @@ const isMobile = computed(() => uiStore.isMobile)
 .settings-layout {
 	display: flex;
 	flex-direction: row;
-	height: 100vh;
+	height: 100dvh;
 }
 .left {
 	display: flex;
