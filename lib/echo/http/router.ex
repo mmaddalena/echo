@@ -5,6 +5,7 @@ defmodule Echo.Http.Router do
   """
 
   import Plug.Conn
+  alias Plug.Static
 
   ## -------- Plug entrypoint --------
 
@@ -19,26 +20,42 @@ defmodule Echo.Http.Router do
         conn
         |> send_resp(204, "")
         |> halt()
-
       _ ->
-        conn
-        |> route(conn.method, conn.request_path)
+      case serve_static(conn) do
+          {:ok, conn} -> conn
+          {:pass, conn} -> route(conn, conn.method, conn.request_path)
+        end
     end
 end
 
-  ## -------- Static frontend (Vue) --------
+  ## -------- Static file serving with CORS --------
 
-  # defp serve_static(conn) do
-  #   Plug.Static.call(
-  #     conn,
-  #     Plug.Static.init(
-  #       at: "/",
-  #       from: {:echo, "priv/static"},
-  #       gzip: false,
-  #       only: ~w(index.html assets favicon.ico)
-  #     )
-  #   )
-  # end
+  defp serve_static(conn) do
+    # Serve uploaded files from /uploads path
+    static_opts = Static.init(
+      at: "/uploads",
+      from: "/app/priv/uploads",  # Or use {:echo, "priv/uploads"} for relative path
+      gzip: false,
+      headers: [
+        {"access-control-allow-origin", cors_origin()},
+        {"access-control-allow-methods", "GET, OPTIONS"},
+        {"access-control-allow-headers", "Content-Type"},
+        {"cache-control", "public, max-age=86400"}
+      ]
+    )
+
+    case Static.call(conn, static_opts) do
+      %{state: :sent} = conn -> {:ok, conn}
+      _ -> {:pass, conn}
+    end
+  end
+
+  defp cors_origin do
+    case Application.get_env(:echo, :environment) do
+      :prod -> "https://echo-host.onrender.com"
+      _ -> "http://localhost:5173"
+    end
+  end
 
   ## -------- CORS --------
 
