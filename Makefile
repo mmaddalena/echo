@@ -18,7 +18,7 @@ deps:
 seed:
 	docker compose run --rm app mix run priv/repo/seeds/seeds.exs
 run: 
-	docker compose up --build app
+	docker compose up app
 iex:
 	docker compose run --service-ports --remove-orphans app iex -S mix
 shell:

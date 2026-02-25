@@ -32,4 +32,6 @@ defmodule Echo.Constants do
   def session_timeout(), do: 500
 
   def idle_timeout(), do: 1000 * 60 * 10
+
+  def cleanup_interval(), do: 1000 * 10 # 10 seconds
 end
