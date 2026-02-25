@@ -9,11 +9,8 @@ defmodule Echo.Chats.ChatSessionSup do
 
   @impl true
   def init(:ok) do
-    DynamicSupervisor.init(
-      strategy: :one_for_one
-    )
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
-
 
   def get_or_start(chat_id) do
     case Registry.lookup(Echo.ProcessRegistry, {:chat, chat_id}) do
@@ -23,15 +20,20 @@ defmodule Echo.Chats.ChatSessionSup do
       [] ->
         case start_session(chat_id) do
           {:ok, pid} -> {:ok, pid}
-          {:error, {:already_started, pid}} -> {:ok, pid} # Creo que solo llegaría acá en una Race Condition
+          # Creo que solo llegaría acá en una Race Condition
+          {:error, {:already_started, pid}} -> {:ok, pid}
           {:error, reason} -> {:error, reason}
         end
     end
   end
 
   defp start_session(chat_id) do
-    spec = {Echo.Chats.ChatSession, chat_id}
+    spec = %{
+      id: {Echo.Chats.ChatSession, chat_id},
+      start: {Echo.Chats.ChatSession, :start_link, [chat_id]},
+      restart: :temporary
+    }
+
     DynamicSupervisor.start_child(__MODULE__, spec)
   end
-
 end
