@@ -51,6 +51,6 @@ defmodule Echo.Application do
 end
 
   defp gcp_configured? do
-    File.exists?("/app/priv/gcp/service-account.json")
+    File.exists?("priv/gcp/service-account.json")
   end
 end
