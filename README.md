@@ -95,7 +95,11 @@ Windows ENV local:
 5. `make build` -> Para buildear la `app`
 5. `make setup` -> Para preparar la DB. (o `make reset` si tiene datos y se quieren borrar).
 6. `make seed` -> Para cargar datos de prueba en la DB.
-7. `make run` -> Buildear y correr la app.
+7. `make run` -> Correr la app.
+8. `make iex` -> Correr la app con ``iex``. Comandos para correr dentro de esa subconsola:
+	-	`:observer_cli.start()`: Descripción general de todos los procesos corriendo.
+	- `DynamicSupervisor.count_children(Echo.Users.UserSessionSup)`: Descripción del proceso ``UserSessionSup``.
+	- `DynamicSupervisor.count_children(Echo.Chats.ChatSessionSup)`: Descripción del proceso ``ChatSessionSup``.
 
 
 ## Frontend - Ejecución
