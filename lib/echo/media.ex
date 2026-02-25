@@ -10,7 +10,7 @@ defmodule Echo.Media do
 
   # Check if GCP is configured by verifying the service account file exists
   defp gcp_configured? do
-    File.exists?("/app/priv/gcp/service-account.json")
+    File.exists?("priv/gcp/service-account.json")
   end
 
   # Ensure the base upload directory exists
