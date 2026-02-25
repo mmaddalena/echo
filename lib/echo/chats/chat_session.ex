@@ -12,6 +12,7 @@ defmodule Echo.Chats.ChatSession do
   alias Echo.Constants
   alias Echo.ChatMembers.ChatMembers
 
+
   def start_link(chat_id) do
     GenServer.start_link(
       __MODULE__,
@@ -69,7 +70,20 @@ defmodule Echo.Chats.ChatSession do
       members: Chat.get_members(chat_id),
     }
 
+    schedule_cleanup()
+
     {:ok, state}
+  end
+
+  @impl true
+  def handle_info(:cleanup, state) do
+    case any_user_online?(state.members) do
+      false -> {:stop, :normal, state}
+      true ->
+        IO.puts("ChatSession #{state.chat_id} se mantiene vivo porque hay usuarios online.")
+        schedule_cleanup()
+        {:noreply, state}
+    end
   end
 
   @impl true
@@ -476,12 +490,18 @@ end
     Map.put(member, :nickname, User.get_nickname(viewer_id, member.user_id))
   end
 
+  defp schedule_cleanup do
+    Process.send_after(self(), :cleanup, Constants.cleanup_interval())
+  end
 
-
-
-
-
-
+  defp any_user_online?(members) do
+    Enum.any?(members, fn member ->
+      case ProcessRegistry.whereis_user_session(member.user_id) do
+        nil -> false
+        pid -> UserSession.socket_alive?(pid)
+      end
+    end)
+  end
 
   @doc """
   Broadcast a message to all processes subscribed to a chat
