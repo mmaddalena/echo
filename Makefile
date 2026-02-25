@@ -17,8 +17,10 @@ deps:
 	docker compose run --rm app mix deps.get
 seed:
 	docker compose run --rm app mix run priv/repo/seeds/seeds.exs
-run: build
-	docker compose up app
+run: 
+	docker compose up --build app
+iex:
+	docker compose run --service-ports --remove-orphans app iex -S mix
 shell:
 	docker compose run --rm app sh
 stop:

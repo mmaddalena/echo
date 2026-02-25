@@ -606,12 +606,12 @@ end
 
 
 
-  defp unwrap_tx_result({:ok, {:ok, result}}), do: {:ok, result}
-
-  defp unwrap_tx_result({:ok, result}), do: {:ok, result}
-
+  defp unwrap_tx_result({:ok, {:ok, result}}),
+    do: {:ok, result}
   defp unwrap_tx_result({:ok, {:error, changeset}}),
     do: {:error, %{name: User.format_changeset_error(changeset)}}
+  defp unwrap_tx_result({:ok, result}),
+    do: {:ok, result}
   defp unwrap_tx_result({:error, :not_found}),
     do: {:error, :not_found}
   defp unwrap_tx_result({:error, :not_a_group}),
