@@ -53,64 +53,7 @@ procesos.
 - **Makefile**: Orquestación de entorno, dependencias, setup y ejecución.
 
 
-<br><br>
-
-## Backend - Compilación, Empaquetación y Ejecución
-Instalar previamente:
-
-- **Docker + Docker Desktop**
-  - `https://docs.docker.com/desktop/setup/install/windows-install/`
-  - (En Windows) Posiblemente al iniciar Docker salga que "WSL needs updating" y hasta provea el comando para actualizar el WSL. El comando es: `wsl --update`.
-- **make (MSYS2)** (En Windows, ya que en Unix-like ya viene instalado)
-	- `https://www.msys2.org/`
-	- Si no anda el comando make:<br>
-	  - Todo lo que se ejecuta a continuación se hace desde la consola `MSYS2 MINGW64` (Buscarla en el menú de Windows).<br>
-	  - Ahora sí, ejecutar `which make`. <br>
-	  - Si tira `which: no make in...` y al ejecutar `make --version` sigue tirando el `-bash: make: command not found` entonces hay que ejecutar: `pacman -S mingw-w64-x86_64-make`. <br>
-	  - Luego, si `make --version` sigue tirando el `-bash: make: command not found`, entonces ejecutar `ls /mingw64/bin | grep make` para verificar que se instaló al menos. Eso deberia imprimir: `mingw32-make.exe`. <br>
-	  - Eso quiere decir que el archivo no es `make.exe` a secas sino `mingw32-make.exe`. Por lo que probamos ejecutar `mingw32-make.exe --version` para comprobar. Eso debe tirar la versión del make. <br>
-	  - Entonces ahora hacemos `cp /mingw64/bin/mingw32-make.exe /mingw64/bin/make.exe` para copiar eso a `make.exe` y corroboramos que exista con `make --version`.<br>
-	  - Ejecutar `powershell -ExecutionPolicy Bypass -File .\setup.ps1` para setear las variables de entorno necesarias y que make, gcc y sh funcionen correctamente.
-
-- **Comanddos para ejecutar**: No se deberían necesitar ejecutar, ya que todo corre en Docker, pero si algo relacionado falla, posiblmente haya que ejecutar:
-Windows ENV local:
-  - `$env:DATABASE_URL="ecto://postgres:postgres@db:5432/echo_dev"`
-  - `$env:DATABASE_URL="ecto://postgres:postgres@localhost:5432/echo_dev"`
-  - `$env:GOOGLE_APPLICATION_CREDENTIALS="/app/priv/gcp/service-account.json"`
-- **Visual Studio Build Tools** (En Windos). Incluir mínimamente en la instalación:
-  - C++ Build Tools
-  - MSVC
-  - Windows SDK
-	
-	<br>
-
-
-
-
-	(Aclaración previa a los comandos: En Windows se ejecutan en la Powershell a partir de ahora)
-
-1. Abrir ``Docker Desktop``.
-3. `make up` -> Para levantar el contenedor de Docker.
-4. `make deps` -> Para instalar las dependencias necesarias.
-5. `make build` -> Para buildear la `app`
-5. `make setup` -> Para preparar la DB. (o `make reset` si tiene datos y se quieren borrar).
-6. `make seed` -> Para cargar datos de prueba en la DB.
-7. `make run` -> Correr la app.
-8. `make iex` -> Correr la app con ``iex``. Comandos para correr dentro de esa subconsola:
-	-	`:observer_cli.start()`: Descripción general de todos los procesos corriendo.
-	- `DynamicSupervisor.count_children(Echo.Users.UserSessionSup)`: Descripción del proceso ``UserSessionSup``.
-	- `DynamicSupervisor.count_children(Echo.Chats.ChatSessionSup)`: Descripción del proceso ``ChatSessionSup``.
-
-
-## Frontend - Ejecución
-
-1. Entrar a la carpeta `frontend` desde la terminal (otra a la del back).
-2. Ejecutar `make deps`
-3. Ejecutar `make run`.
-
-<br><br>
-
-
+<br>
 
 ## Backend - Arquitectura de Procesos y DB
 
@@ -360,4 +303,62 @@ Es el centro de coordinación.
 ### ``PeoplePanel``
 Funciona como una sub-view dentro de ``ChatsView``, ya que accede al socket, maneja estado real de los usuarios y dispara eventos importantes.<br>
 Su función principal es la de mostrar los contactos y la búsqueda de usuarios.
+
+
+<br><br>
+
+
+## Backend - Compilación, Empaquetación y Ejecución
+Instalar previamente:
+
+- **Docker + Docker Desktop**
+  - `https://docs.docker.com/desktop/setup/install/windows-install/`
+  - (En Windows) Posiblemente al iniciar Docker salga que "WSL needs updating" y hasta provea el comando para actualizar el WSL. El comando es: `wsl --update`.
+- **make (MSYS2)** (En Windows, ya que en Unix-like ya viene instalado)
+	- `https://www.msys2.org/`
+	- Si no anda el comando make:<br>
+	  - Todo lo que se ejecuta a continuación se hace desde la consola `MSYS2 MINGW64` (Buscarla en el menú de Windows).<br>
+	  - Ahora sí, ejecutar `which make`. <br>
+	  - Si tira `which: no make in...` y al ejecutar `make --version` sigue tirando el `-bash: make: command not found` entonces hay que ejecutar: `pacman -S mingw-w64-x86_64-make`. <br>
+	  - Luego, si `make --version` sigue tirando el `-bash: make: command not found`, entonces ejecutar `ls /mingw64/bin | grep make` para verificar que se instaló al menos. Eso deberia imprimir: `mingw32-make.exe`. <br>
+	  - Eso quiere decir que el archivo no es `make.exe` a secas sino `mingw32-make.exe`. Por lo que probamos ejecutar `mingw32-make.exe --version` para comprobar. Eso debe tirar la versión del make. <br>
+	  - Entonces ahora hacemos `cp /mingw64/bin/mingw32-make.exe /mingw64/bin/make.exe` para copiar eso a `make.exe` y corroboramos que exista con `make --version`.<br>
+	  - Ejecutar `powershell -ExecutionPolicy Bypass -File .\setup.ps1` para setear las variables de entorno necesarias y que make, gcc y sh funcionen correctamente.
+
+- **Comanddos para ejecutar**: No se deberían necesitar ejecutar, ya que todo corre en Docker, pero si algo relacionado falla, posiblmente haya que ejecutar:
+Windows ENV local:
+  - `$env:DATABASE_URL="ecto://postgres:postgres@db:5432/echo_dev"`
+  - `$env:DATABASE_URL="ecto://postgres:postgres@localhost:5432/echo_dev"`
+  - `$env:GOOGLE_APPLICATION_CREDENTIALS="/app/priv/gcp/service-account.json"`
+- **Visual Studio Build Tools** (En Windos). Incluir mínimamente en la instalación:
+  - C++ Build Tools
+  - MSVC
+  - Windows SDK
+	
+	<br>
+
+
+
+
+	(Aclaración previa a los comandos: En Windows se ejecutan en la Powershell a partir de ahora)
+
+1. Abrir ``Docker Desktop``.
+3. `make up` -> Para levantar el contenedor de Docker.
+4. `make deps` -> Para instalar las dependencias necesarias.
+5. `make build` -> Para buildear la `app`
+5. `make setup` -> Para preparar la DB. (o `make reset` si tiene datos y se quieren borrar).
+6. `make seed` -> Para cargar datos de prueba en la DB.
+7. `make run` -> Correr la app.
+8. `make iex` -> Correr la app con ``iex``. Comandos para correr dentro de esa subconsola:
+	-	`:observer_cli.start()`: Descripción general de todos los procesos corriendo.
+	- `DynamicSupervisor.count_children(Echo.Users.UserSessionSup)`: Descripción del proceso ``UserSessionSup``.
+	- `DynamicSupervisor.count_children(Echo.Chats.ChatSessionSup)`: Descripción del proceso ``ChatSessionSup``.
+
+
+## Frontend - Ejecución
+
+1. Entrar a la carpeta `frontend` desde la terminal (otra a la del back).
+2. Ejecutar `make build`
+3. Ejecutar `make run`.
+
 
