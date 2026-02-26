@@ -616,6 +616,7 @@ async function onGroupAvatarSelected(e) {
 	max-height: 2.2rem;
 	max-width: 2.2rem;
 	color: var(--text-main);
+  flex-shrink: 0;
 }
 .icon-light {
  color: var(--text-main-light) !important; 

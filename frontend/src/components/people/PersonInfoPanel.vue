@@ -171,6 +171,7 @@
   align-items: center;
   background-color: var(--bg-peoplelist-panel);
   width: 100%;
+  min-width: 0;
 }
 .close-btn {
   display: flex;
@@ -197,6 +198,8 @@
   width: 50%;
   border-radius: 50%;
   margin: 4rem auto 2rem auto;
+  object-fit: cover;
+  object-position: center;
 }
 .main-name {
   font-size: 2.2rem;
@@ -256,6 +259,10 @@ input {
 	color: var(--text-main);
 	font-size: 2.2rem;
   text-align: center;
+
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
 }
 input[readonly] {
 	border: none;
@@ -269,8 +276,8 @@ input:not([readonly]) {
 
 .edit-button {
 	all: unset;
-	height: 3rem;
-	width: 3rem;
+	height: 3rem !important;
+	width: 3rem !important;
 	border-radius: 50%;
 	background-color: var(--msg-out);
 	display: flex;
@@ -287,10 +294,15 @@ input:not([readonly]) {
 	align-items: center;
 	justify-content: center;
 }
+.edit-button,
+.confirm-button {
+	flex: 0 0 3rem;
+}
 .icon {
 	max-height: 2.2rem;
 	max-width: 2.2rem;
 	color: var(--text-main);
+  flex-shrink: 0;
 }
 
 .mini-swap-enter-active,

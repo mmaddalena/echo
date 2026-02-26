@@ -335,6 +335,7 @@ async function uploadGroupAvatar(groupId, file) {
 	height: 36px;
 	border-radius: 50%;
 	object-fit: cover;
+  object-position: center;
 }
 
 .contact-item span {

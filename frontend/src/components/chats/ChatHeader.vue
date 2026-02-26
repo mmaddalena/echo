@@ -261,6 +261,8 @@ watch(showSearch, async (val) => {
 	height: 5rem;
 	width: 5rem;
 	border-radius: 50%;
+	object-fit: cover;
+  object-position: center;
 }
 .name {
 	color: var(--text-main);

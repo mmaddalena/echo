@@ -384,7 +384,8 @@ function handleCloseChatInfo() {
 	flex-direction: row;
 	flex: 1;
 	width: 100%;
-	min-height: 0; 
+	min-height: 0;
+	min-width: 0;
 }
 .right {
 	display: flex;
