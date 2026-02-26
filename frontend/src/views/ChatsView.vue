@@ -274,12 +274,10 @@ function handleCloseChatInfo() {
 	onMounted(() => {
 		updateViewportHeight();
 
-		window.visualViewport?.addEventListener(
-			"resize",
-			updateViewportHeight
-		);
+		window.visualViewport?.addEventListener("resize", updateViewportHeight);
+		window.visualViewport?.addEventListener("scroll", updateViewportHeight);
 
-		window.addEventListener("resize", updateViewportHeight);
+		window.addEventListener("orientationchange", updateViewportHeight);
 	});
 </script>
 
@@ -429,10 +427,10 @@ function handleCloseChatInfo() {
     flex: 1;
   }
 	.right {
-    width: 100%;
-    height: calc(100dvh - 6rem); /* resto la sidebar */
+		width: 100%;
+		height: calc(var(--app-height) - 6rem);
 		min-height: 0;
-  }
+	}
 }
 
 
