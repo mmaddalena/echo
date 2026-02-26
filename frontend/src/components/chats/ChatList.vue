@@ -50,6 +50,9 @@ function isChatSelected(chat_id) {
 	overflow-y: scroll;
 	padding: 1rem;
 	scroll-padding-top: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
 }
 @media (max-width: 768px) {
 	.chat-list {

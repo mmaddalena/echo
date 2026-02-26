@@ -113,6 +113,8 @@ const statusColor = computed(() => {
 	width: 5rem;
 	background-color: none;
 	border-radius: 50%;
+	object-fit: cover;
+  object-position: center;
 }
 
 .status-indicator {

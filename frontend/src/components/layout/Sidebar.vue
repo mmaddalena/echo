@@ -195,6 +195,8 @@ button {
   width: 5rem;
   border-radius: 50%;
   background-color: none;
+  object-fit: cover;
+  object-position: center;
 }
 .config-opts {
   display: flex;
