@@ -28,9 +28,15 @@ body {
   overflow: hidden !important;
 }
 #app {
+  position: fixed;
+  inset: 0;
+
   height: var(--app-height);
+  width: 100%;
+
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 p {

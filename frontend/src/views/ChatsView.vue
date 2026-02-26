@@ -275,7 +275,6 @@ function handleCloseChatInfo() {
 		updateViewportHeight();
 
 		window.visualViewport?.addEventListener("resize", updateViewportHeight);
-		window.visualViewport?.addEventListener("scroll", updateViewportHeight);
 
 		window.addEventListener("orientationchange", updateViewportHeight);
 	});
