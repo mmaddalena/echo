@@ -267,7 +267,7 @@ function handleCloseChatInfo() {
 
 		document.documentElement.style.setProperty(
 			"--app-height",
-			`${vh/2}px`
+			`${vh}px`
 		);
 	}
 
@@ -277,6 +277,9 @@ function handleCloseChatInfo() {
 		window.visualViewport?.addEventListener("resize", updateViewportHeight);
 
 		window.addEventListener("orientationchange", updateViewportHeight);
+
+		document.body.style.top = "0px";
+	  document.body.style.left = "0px";
 	});
 </script>
 
