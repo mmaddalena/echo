@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { generateId } from "@/utils/idGenerator";
-import { useThemeStore } from "@/stores/theme"
+import { useThemeStore } from "@/stores/theme";
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const useSocketStore = defineStore("socket", () => {
 	const socket = ref(null);
@@ -49,7 +49,7 @@ export const useSocketStore = defineStore("socket", () => {
 				});
 			}
 
-			window.addEventListener('beforeunload', handleBeforeUnload);
+			window.addEventListener("beforeunload", handleBeforeUnload);
 		};
 
 		socket.value.onmessage = (event) => {
@@ -74,7 +74,7 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "search_people_results") {
 				peopleSearchResults.value = payload.search_people_results;
 			} else if (payload.type === "private_chat_created") {
-				dispatch_private_chat_created(payload)
+				dispatch_private_chat_created(payload);
 			} else if (payload.type === "username_change_result") {
 				dispatch_change_username(payload);
 			} else if (payload.type === "name_change_result") {
@@ -84,9 +84,9 @@ export const useSocketStore = defineStore("socket", () => {
 			} else if (payload.type === "group_chat_created") {
 				dispatch_group_created(payload);
 			} else if (payload.type === "contact_addition") {
-				dispatch_contact_addition(payload)
+				dispatch_contact_addition(payload);
 			} else if (payload.type === "contact_deletion") {
-				dispatch_contact_deletion(payload)
+				dispatch_contact_deletion(payload);
 			} else if (payload.type === "chat_member_removed") {
 				dispatch_chat_member_removed(payload);
 			} else if (payload.type === "chat_members_added") {
@@ -98,21 +98,21 @@ export const useSocketStore = defineStore("socket", () => {
 					activeChatId.value = null;
 					sessionStorage.removeItem("activeChatId");
 				}
-				chats.value = chats.value.filter(c => c.id !== payload.chat_id);
+				chats.value = chats.value.filter((c) => c.id !== payload.chat_id);
 				const { [payload.chat_id]: _, ...rest } = chatsInfo.value;
 				chatsInfo.value = rest;
 			} else if (payload.type === "chat_admin_changed") {
 				dispatch_chat_admin_changed(payload);
-			} else if (payload.type === 'group_name_change_result') {
-				dispatch_group_name_changed(payload)
-			} else if (payload.type === 'group_description_change_result') {
-				dispatch_group_description_changed(payload)
-			} else if (payload.type === 'admin_given_to_member') {
-				dispatch_admin_given_to_member(payload)
-			} else if (payload.type === 'group_avatar_updated') {
-				dispatch_group_avatar_updated(payload)
+			} else if (payload.type === "group_name_change_result") {
+				dispatch_group_name_changed(payload);
+			} else if (payload.type === "group_description_change_result") {
+				dispatch_group_description_changed(payload);
+			} else if (payload.type === "admin_given_to_member") {
+				dispatch_admin_given_to_member(payload);
+			} else if (payload.type === "group_avatar_updated") {
+				dispatch_group_avatar_updated(payload);
 			} else if (payload.type === "user_status_changed") {
-				console.log("user status changedddddd!")
+				console.log("user status changedddddd!");
 				dispatch_user_status_changed(payload);
 			}
 		};
@@ -121,8 +121,29 @@ export const useSocketStore = defineStore("socket", () => {
 			console.error("Error en WS");
 		};
 
-		socket.value.onclose = () => {
-			window.removeEventListener('beforeunload', handleBeforeUnload);
+		socket.value.onclose = (event) => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+
+			// Check if the connection was closed abnormally (killed by server)
+			// WebSocket close codes:
+			// 1000 = normal closure
+			// 1006 = abnormal closure (process killed, no close frame sent)
+			if (event.code === 1006 || event.code === 1001) {
+				console.log(
+					"Conexión cerrada - probablemente login desde otro dispositivo",
+				);
+
+				// Clear any stored data
+				localStorage.removeItem("token");
+				sessionStorage.removeItem("token");
+				sessionStorage.removeItem("activeChatId");
+
+				// Redirect to login with reason
+				window.location.href = "/login";
+			} else {
+				console.log("Conexión cerrada con código:", event.code);
+				// Optional: handle other close reasons
+			}
 		};
 	}
 
@@ -158,7 +179,7 @@ export const useSocketStore = defineStore("socket", () => {
 	function dispatch_new_message(payload) {
 		const msg = payload.message;
 		const chatId = msg.chat_id;
-		console.log(`LLegó un nuevo mensaje '${msg.content}'`)
+		console.log(`LLegó un nuevo mensaje '${msg.content}'`);
 
 		// Actualizo la lista de chats
 		chats.value = chats.value.map((chat) => {
@@ -201,9 +222,9 @@ export const useSocketStore = defineStore("socket", () => {
 			};
 
 			const chat = chatsInfo.value[chatId];
-			
-			const isActive = chatId === activeChatId.value
-			const isIncoming = msg.user_id !== userInfo.value.id
+
+			const isActive = chatId === activeChatId.value;
+			const isIncoming = msg.user_id !== userInfo.value.id;
 
 			if (chat) {
 				chatsInfo.value = {
@@ -211,9 +232,10 @@ export const useSocketStore = defineStore("socket", () => {
 					[chatId]: {
 						...chat,
 						messages: [...chat.messages, normalizedMsg],
-						unread_messages: (!isActive && isIncoming)
-							? chat.unread_messages + 1
-							: chat.unread_messages
+						unread_messages:
+							!isActive && isIncoming
+								? chat.unread_messages + 1
+								: chat.unread_messages,
 					},
 				};
 			}
@@ -349,9 +371,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 				// Actualizamos chats
 				chats.value = chats.value.map((chat) =>
-					chat.id === private_chat_id 
-						? { ...chat, name: new_nickname } 
-						: chat,
+					chat.id === private_chat_id ? { ...chat, name: new_nickname } : chat,
 				);
 			}
 
@@ -363,16 +383,14 @@ export const useSocketStore = defineStore("socket", () => {
 				const isMember = chat.members.some((m) => m.user_id === contact_id);
 				if (!isMember) return;
 
-				const updatedMessages = chat.messages.map(msg =>
+				const updatedMessages = chat.messages.map((msg) =>
 					msg.user_id === contact_id
 						? { ...msg, sender_name: new_nickname }
 						: msg,
 				);
 
 				const updatedMembers = chat.members.map((m) =>
-					m.user_id === contact_id
-						? { ...m, nickname: new_nickname }
-						: m,
+					m.user_id === contact_id ? { ...m, nickname: new_nickname } : m,
 				);
 
 				chatsInfo.value = {
@@ -380,7 +398,7 @@ export const useSocketStore = defineStore("socket", () => {
 					[chatId]: {
 						...chat,
 						messages: updatedMessages,
-						members: updatedMembers
+						members: updatedMembers,
 					},
 				};
 			});
@@ -448,9 +466,7 @@ export const useSocketStore = defineStore("socket", () => {
 		const private_chat_id = Object.values(chatsInfo.value).find((chat) => {
 			if (chat.type !== "private") return false;
 
-			const other = chat.members.find(
-				m => m.user_id !== userInfo.value.id
-			);
+			const other = chat.members.find((m) => m.user_id !== userInfo.value.id);
 
 			return other?.user_id === contact_id;
 		})?.id;
@@ -465,22 +481,17 @@ export const useSocketStore = defineStore("socket", () => {
 			[private_chat_id]: {
 				...chat,
 				name: nickname,
-				members: chat.members.map(m =>
-					m.user_id === contact_id
-						? { ...m, nickname }
-						: m
+				members: chat.members.map((m) =>
+					m.user_id === contact_id ? { ...m, nickname } : m,
 				),
 			},
 		};
 
 		// 5️⃣ actualizar chats list
-		chats.value = chats.value.map(chat =>
-			chat.id === private_chat_id
-				? { ...chat, name: nickname }
-				: chat
+		chats.value = chats.value.map((chat) =>
+			chat.id === private_chat_id ? { ...chat, name: nickname } : chat,
 		);
 	}
-
 
 	function dispatch_contact_deletion(payload) {
 		if (payload.status !== "success") return;
@@ -488,9 +499,7 @@ export const useSocketStore = defineStore("socket", () => {
 		const contact_id = payload.data.user_id;
 
 		// 1️⃣ eliminar de contactos
-		contacts.value = contacts.value.filter(
-			c => c.id !== contact_id
-		);
+		contacts.value = contacts.value.filter((c) => c.id !== contact_id);
 
 		// 2️⃣ limpiar panel
 		if (openedPersonInfo.value?.id === contact_id) {
@@ -519,15 +528,13 @@ export const useSocketStore = defineStore("socket", () => {
 					messages: updatedMessages,
 				},
 			};
-		})
+		});
 
 		// 3️⃣ buscar private chat
 		const private_chat_id = Object.values(chatsInfo.value).find((chat) => {
 			if (chat.type !== "private") return false;
 
-			const other = chat.members.find(
-				m => m.user_id !== userInfo.value.id
-			);
+			const other = chat.members.find((m) => m.user_id !== userInfo.value.id);
 
 			return other?.user_id === contact_id;
 		})?.id;
@@ -536,9 +543,7 @@ export const useSocketStore = defineStore("socket", () => {
 
 		const chat = chatsInfo.value[private_chat_id];
 
-		const realName = chat.members.find(
-			m => m.user_id === contact_id
-		)?.name;
+		const realName = chat.members.find((m) => m.user_id === contact_id)?.name;
 
 		// 4️⃣ actualizar chatsInfo
 		chatsInfo.value = {
@@ -546,19 +551,15 @@ export const useSocketStore = defineStore("socket", () => {
 			[private_chat_id]: {
 				...chat,
 				name: realName,
-				members: chat.members.map(m =>
-					m.user_id === contact_id
-						? { ...m, nickname: null }
-						: m
+				members: chat.members.map((m) =>
+					m.user_id === contact_id ? { ...m, nickname: null } : m,
 				),
 			},
 		};
 
 		// 5️⃣ actualizar chats list
-		chats.value = chats.value.map(chat =>
-			chat.id === private_chat_id
-				? { ...chat, name: realName }
-				: chat
+		chats.value = chats.value.map((chat) =>
+			chat.id === private_chat_id ? { ...chat, name: realName } : chat,
 		);
 	}
 
@@ -613,61 +614,63 @@ export const useSocketStore = defineStore("socket", () => {
 		chatsInfo.value = {
 			...chatsInfo.value,
 			[chat_id]: {
-			...chat,
-			members: chat.members.map((m) =>
-				m.user_id === new_admin_id ? { ...m, role: "admin" } : { ...m, role: "member" }
-			),
+				...chat,
+				members: chat.members.map((m) =>
+					m.user_id === new_admin_id
+						? { ...m, role: "admin" }
+						: { ...m, role: "member" },
+				),
 			},
 		};
 
 		// Optionally, update the chat list if you show admin info there
 		chats.value = chats.value.map((c) =>
 			c.id === chat_id
-			? {
-				...c,
-					members: chatsInfo.value[chat_id].members,
-				}
-			: c
+				? {
+						...c,
+						members: chatsInfo.value[chat_id].members,
+					}
+				: c,
 		);
 	}
 
 	function dispatch_group_name_changed(payload) {
-		if (payload.status === 'success') {
+		if (payload.status === "success") {
 			chats.value = chats.value.map((c) =>
 				c.id === payload.chat_id
-				? {
-					...c,
-						name: payload.new_name
-					}
-				: c
+					? {
+							...c,
+							name: payload.new_name,
+						}
+					: c,
 			);
-			const chat = chatsInfo.value[payload.chat_id]
+			const chat = chatsInfo.value[payload.chat_id];
 			chatsInfo.value = {
 				...chatsInfo.value,
 				[payload.chat_id]: {
 					...chat,
-						name: payload.new_name
+					name: payload.new_name,
 				},
 			};
 		}
 	}
-	
+
 	function dispatch_group_description_changed(payload) {
-		if (payload.status === 'success') {
+		if (payload.status === "success") {
 			chats.value = chats.value.map((c) =>
 				c.id === payload.chat_id
-				? {
-					...c,
-						description: payload.new_description
-					}
-				: c
+					? {
+							...c,
+							description: payload.new_description,
+						}
+					: c,
 			);
-			const chat = chatsInfo.value[payload.chat_id]
+			const chat = chatsInfo.value[payload.chat_id];
 			chatsInfo.value = {
 				...chatsInfo.value,
 				[payload.chat_id]: {
 					...chat,
-						description: payload.new_description
+					description: payload.new_description,
 				},
 			};
 		}
@@ -677,23 +680,21 @@ export const useSocketStore = defineStore("socket", () => {
 		const chat_id = payload.chat_id;
 		const member = payload.member;
 
-		const chat = chatsInfo.value[chat_id]
-		console.log(`CHAT`)
-		console.log(chat)
+		const chat = chatsInfo.value[chat_id];
+		console.log(`CHAT`);
+		console.log(chat);
 
 		const updatedMembers = chat.members.map((m) =>
-			m.user_id === member.user_id
-				? member
-				: m,
+			m.user_id === member.user_id ? member : m,
 		);
 
 		chatsInfo.value = {
-			...chatsInfo.value, 
+			...chatsInfo.value,
 			[chat_id]: {
 				...chat,
-					members: updatedMembers
-			}
-		}
+				members: updatedMembers,
+			},
+		};
 	}
 
 	function dispatch_group_avatar_updated(payload) {
@@ -707,11 +708,11 @@ export const useSocketStore = defineStore("socket", () => {
 			...chatsInfo.value,
 			[chat_id]: {
 				...chat,
-				avatar_url: avatar_url
-			}
+				avatar_url: avatar_url,
+			},
 		};
 
-		chats.value = chats.value.map(chat => {
+		chats.value = chats.value.map((chat) => {
 			if (chat.id === chat_id) {
 				return { ...chat, avatar_url: avatar_url };
 			}
@@ -723,12 +724,12 @@ export const useSocketStore = defineStore("socket", () => {
 		const { user_id, is_online, last_seen_at } = payload;
 
 		// 1. Update contacts list
-		contacts.value = contacts.value.map(contact => {
+		contacts.value = contacts.value.map((contact) => {
 			if (contact.id === user_id) {
 				return {
 					...contact,
-					status: is_online ? 'Online' : 'Offline',
-					last_seen_at: last_seen_at || contact.last_seen_at
+					status: is_online ? "Online" : "Offline",
+					last_seen_at: last_seen_at || contact.last_seen_at,
 				};
 			}
 			return contact;
@@ -738,30 +739,30 @@ export const useSocketStore = defineStore("socket", () => {
 		if (openedPersonInfo.value?.id === user_id) {
 			openedPersonInfo.value = {
 				...openedPersonInfo.value,
-				status: is_online ? 'Online' : 'Offline',
-				last_seen_at: last_seen_at || openedPersonInfo.value.last_seen_at
+				status: is_online ? "Online" : "Offline",
+				last_seen_at: last_seen_at || openedPersonInfo.value.last_seen_at,
 			};
 		}
 
 		// 3. Update chats list (this is the most important part for unopened chats)
-		chats.value = chats.value.map(chat => {
+		chats.value = chats.value.map((chat) => {
 			// For private chats
-			if (chat.type === 'private') {
+			if (chat.type === "private") {
 				// Check if this chat involves the user whose status changed
 				// We need to determine this from the chat info we have
-				
+
 				// If we have the full chat info in chatsInfo
 				if (chatsInfo.value[chat.id]?.members) {
 					const otherMember = chatsInfo.value[chat.id].members.find(
-						m => m.user_id !== userInfo.value.id
+						(m) => m.user_id !== userInfo.value.id,
 					);
 					if (otherMember?.user_id === user_id) {
 						return {
 							...chat,
-							status: is_online ? 'Online' : 'Offline'
+							status: is_online ? "Online" : "Offline",
 						};
 					}
-				} 
+				}
 				// If we don't have full chat info, we need to infer from available data
 				else {
 					// You might have the other user's info in the chat summary
@@ -770,7 +771,7 @@ export const useSocketStore = defineStore("socket", () => {
 					if (chat.other_user_id === user_id) {
 						return {
 							...chat,
-							status: is_online ? 'Online' : 'Offline'
+							status: is_online ? "Online" : "Offline",
 						};
 					}
 				}
@@ -784,37 +785,37 @@ export const useSocketStore = defineStore("socket", () => {
 
 		Object.entries(chatsInfo.value).forEach(([chatId, chat]) => {
 			let chatUpdated = false;
-			
+
 			// Update members array
-			const updatedMembers = chat.members?.map(member => {
+			const updatedMembers = chat.members?.map((member) => {
 				if (member.user_id === user_id) {
 					chatUpdated = true;
 					return {
 						...member,
-						last_seen_at: last_seen_at || member.last_seen_at
+						last_seen_at: last_seen_at || member.last_seen_at,
 					};
 				}
 				return member;
 			});
 
 			// For private chats, update the status field
-			if (chat.type === 'private') {
-				const isUserInChat = chat.members?.some(m => m.user_id === user_id);
-				
+			if (chat.type === "private") {
+				const isUserInChat = chat.members?.some((m) => m.user_id === user_id);
+
 				if (isUserInChat) {
 					chatUpdated = true;
 					updatedChatsInfo[chatId] = {
 						...chat,
-						status: is_online ? 'Online' : 'Offline',
-						members: updatedMembers || chat.members
+						status: is_online ? "Online" : "Offline",
+						members: updatedMembers || chat.members,
 					};
 				}
-			} 
+			}
 			// For group chats, only update members
-			else if (chat.type === 'group' && chatUpdated) {
+			else if (chat.type === "group" && chatUpdated) {
 				updatedChatsInfo[chatId] = {
 					...chat,
-					members: updatedMembers
+					members: updatedMembers,
 				};
 			}
 
@@ -829,10 +830,10 @@ export const useSocketStore = defineStore("socket", () => {
 	}
 
 	function disconnect() {
-		window.removeEventListener('beforeunload', handleBeforeUnload);
+		window.removeEventListener("beforeunload", handleBeforeUnload);
 
 		if (socket.value) {
-			send({ type: "logout"});
+			send({ type: "logout" });
 			socket.value.close();
 		}
 		socket.value = null;
@@ -855,8 +856,8 @@ export const useSocketStore = defineStore("socket", () => {
 			avatar: null,
 		};
 
-		themeStore.setTheme('dark');
-		
+		themeStore.setTheme("dark");
+
 		// sessionStorage.clear();
 	}
 
@@ -871,9 +872,9 @@ export const useSocketStore = defineStore("socket", () => {
 
 	function openChat(chatId) {
 		// Primero seteamos el unread_messages del actual en 0.
-		const chat = chatsInfo.value[activeChatId.value]
+		const chat = chatsInfo.value[activeChatId.value];
 		if (activeChatId.value && chat)
-		chatsInfo.value = {
+			chatsInfo.value = {
 				...chatsInfo.value,
 				[activeChatId.value]: {
 					...chat,
@@ -1111,7 +1112,7 @@ export const useSocketStore = defineStore("socket", () => {
 		send({
 			type: "change_group_name",
 			chat_id: chat_id,
-			new_name: new_name
+			new_name: new_name,
 		});
 	}
 
@@ -1119,23 +1120,23 @@ export const useSocketStore = defineStore("socket", () => {
 		send({
 			type: "change_group_description",
 			chat_id: chat_id,
-			new_description: new_description
+			new_description: new_description,
 		});
 	}
 
 	function getOtherMemberId(chatInfo) {
-		if (!chatInfo?.members) return null
+		if (!chatInfo?.members) return null;
 
 		return chatInfo.members.find(
-			m => String(m.user_id) !== String(userInfo.value.id)
-		)?.user_id
+			(m) => String(m.user_id) !== String(userInfo.value.id),
+		)?.user_id;
 	}
 
 	function giveAdmin(chat_id, member_id) {
 		send({
 			type: "give_admin",
 			chat_id: chat_id,
-			user_id: member_id
+			user_id: member_id,
 		});
 	}
 
@@ -1143,7 +1144,7 @@ export const useSocketStore = defineStore("socket", () => {
 		send({
 			type: "add_members",
 			chat_id: chat_id,
-			member_ids: member_ids
+			member_ids: member_ids,
 		});
 	}
 
@@ -1151,24 +1152,24 @@ export const useSocketStore = defineStore("socket", () => {
 		send({
 			type: "remove_member",
 			chat_id: chat_id,
-			member_id: member_id
+			member_id: member_id,
 		});
 	}
 
 	function changeGroupAvatar(chatId, avatarUrl) {
-		if (!chatsInfo.value[chatId]) return
+		if (!chatsInfo.value[chatId]) return;
 
 		// Create new references to trigger reactivity
 		chatsInfo.value = {
 			...chatsInfo.value,
 			[chatId]: {
 				...chatsInfo.value[chatId],
-				avatar_url: avatarUrl
-			}
+				avatar_url: avatarUrl,
+			},
 		};
 
 		// Also update the chat in the chats list
-		chats.value = chats.value.map(chat => {
+		chats.value = chats.value.map((chat) => {
 			if (chat.id === chatId) {
 				return { ...chat, avatar_url: avatarUrl };
 			}

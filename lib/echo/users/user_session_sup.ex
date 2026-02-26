@@ -8,9 +8,7 @@ defmodule Echo.Users.UserSessionSup do
 
   @impl true
   def init(:ok) do
-    DynamicSupervisor.init(
-      strategy: :one_for_one
-    )
+    DynamicSupervisor.init(strategy: :one_for_one)
   end
 
   def get_or_start(user_id) do
@@ -27,9 +25,7 @@ defmodule Echo.Users.UserSessionSup do
     end
   end
 
-
   defp start_session(user_id) do
-
     spec = %{
       id: {Echo.Users.UserSession, user_id},
       start: {Echo.Users.UserSession, :start_link, [user_id]},
