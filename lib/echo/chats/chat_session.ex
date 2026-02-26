@@ -66,10 +66,24 @@ defmodule Echo.Chats.ChatSession do
       chat_id: chat_id,
       chat: Chat.get(chat_id),
       last_messages: Chat.get_last_messages(chat_id),
-      members: Chat.get_members(chat_id),
+      members: Chat.get_members(chat_id)
     }
 
+    schedule_cleanup()
+
     {:ok, state}
+  end
+
+  @impl true
+  def handle_info(:cleanup, state) do
+    case any_user_online?(state.members) do
+      false ->
+        {:stop, :normal, state}
+
+      true ->
+        schedule_cleanup()
+        {:noreply, state}
+    end
   end
 
   @impl true
@@ -80,7 +94,6 @@ defmodule Echo.Chats.ChatSession do
 
     {:noreply, state}
   end
-
 
   @impl true
   def handle_cast({:send_message, msg_front, sender_us_pid}, state) do
@@ -93,7 +106,6 @@ defmodule Echo.Chats.ChatSession do
 
     self_chat? =
       state.chat.type == "private" and length(state.members) == 1
-
 
     msg_state =
       if state.chat.type == "private" do
@@ -110,7 +122,6 @@ defmodule Echo.Chats.ChatSession do
             _ ->
               nil
           end
-
 
         case ProcessRegistry.whereis_user_session(other_user_id) do
           nil ->
@@ -150,7 +161,6 @@ defmodule Echo.Chats.ChatSession do
         IO.puts("\n\n\n\n\nSTATE.MEMBERS:")
         IO.inspect(state.members)
 
-
         {alive_sessions, _dead_users} =
           Enum.reduce(state.members, {[], []}, fn member, {alive, dead} ->
             user_id = member.user_id
@@ -177,7 +187,11 @@ defmodule Echo.Chats.ChatSession do
                   |> Map.put(:sender_name, User.get_name(sender_user_id))
               }
             )
-            IO.puts("=|=|=|=|=|=|=|=|=|=|=|=|  MANDAMOS UN SOLO MENSAJE AL USUARIO |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|")
+
+            IO.puts(
+              "=|=|=|=|=|=|=|=|=|=|=|=|  MANDAMOS UN SOLO MENSAJE AL USUARIO |=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|=|"
+            )
+
           true ->
             Enum.each(alive_sessions, fn {sess_user_id, us_pid} ->
               username = Repo.get(Echo.Schemas.User, sess_user_id).username
@@ -225,7 +239,7 @@ defmodule Echo.Chats.ChatSession do
         {:noreply,
          %{
            state
-            | last_messages: [base_message | state.last_messages]
+           | last_messages: [base_message | state.last_messages]
          }}
 
       {:error, _changeset} ->
@@ -284,8 +298,7 @@ defmodule Echo.Chats.ChatSession do
           UserSession.send_payload(us_pid, payload)
         end
 
-        {:noreply,
-        %{state | members: new_members}}
+        {:noreply, %{state | members: new_members}}
 
       "chat_members_added" ->
         new_members = Chat.get_members(state.chat_id)
@@ -347,80 +360,86 @@ defmodule Echo.Chats.ChatSession do
         end)
 
         {:noreply, %{state | chat: updated_chat, last_activity: DateTime.utc_now()}}
+    end
   end
-end
 
   def handle_cast({:change_group_name, chat_id, new_name, changer_user_id}, state) do
-    payload = case Chat.change_group_name(chat_id, new_name, changer_user_id) do
-      {:ok, _result} ->
-        %{
-          type: "group_name_change_result",
-          status: "success",
-          chat_id: chat_id,
-          new_name: new_name,
-          changer_user_id: changer_user_id
-        }
+    payload =
+      case Chat.change_group_name(chat_id, new_name, changer_user_id) do
+        {:ok, _result} ->
+          %{
+            type: "group_name_change_result",
+            status: "success",
+            chat_id: chat_id,
+            new_name: new_name,
+            changer_user_id: changer_user_id
+          }
 
-      {:error, reason} ->
-        %{
-          type: "group_name_change_result",
-          status: "failure",
-          chat_id: chat_id,
-          reason: reason
-        }
-    end
+        {:error, reason} ->
+          %{
+            type: "group_name_change_result",
+            status: "failure",
+            chat_id: chat_id,
+            reason: reason
+          }
+      end
 
-    if (payload.status == "success") do
+    if payload.status == "success" do
       # Notificamos a los miembros del cambio
       Enum.each(state.members, fn member ->
         if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
           UserSession.send_payload(us_pid, payload)
         end
       end)
+
       {:noreply, %{state | chat: %{state.chat | name: new_name}}}
     else
       # Notificamos sólo al que quiso hacer el cambio
       if us_pid = ProcessRegistry.whereis_user_session(changer_user_id) do
         UserSession.send_payload(us_pid, payload)
       end
+
       {:noreply, state}
     end
   end
 
   def handle_cast({:change_group_description, chat_id, new_description, changer_user_id}, state) do
-    payload = case Chat.change_group_description(chat_id, new_description, changer_user_id) do
-      {:ok, _result} ->
-        %{
-          type: "group_description_change_result",
-          status: "success",
-          chat_id: chat_id,
-          new_description: new_description,
-          changer_user_id: changer_user_id
-        }
+    payload =
+      case Chat.change_group_description(chat_id, new_description, changer_user_id) do
+        {:ok, _result} ->
+          %{
+            type: "group_description_change_result",
+            status: "success",
+            chat_id: chat_id,
+            new_description: new_description,
+            changer_user_id: changer_user_id
+          }
 
-      {:error, reason} ->
-        %{
-          type: "group_description_change_result",
-          status: "failure",
-          chat_id: chat_id,
-          changer_user_id: changer_user_id,
-          reason: reason
-        }
-    end
+        {:error, reason} ->
+          %{
+            type: "group_description_change_result",
+            status: "failure",
+            chat_id: chat_id,
+            changer_user_id: changer_user_id,
+            reason: reason
+          }
+      end
 
-    if (payload.status == "success") do
+    if payload.status == "success" do
       # Notificamos a los miembros del cambio
       Enum.each(state.members, fn member ->
         if us_pid = ProcessRegistry.whereis_user_session(member.user_id) do
           UserSession.send_payload(us_pid, payload)
         end
       end)
+
       {:noreply, %{state | chat: %{state.chat | description: new_description}}}
     else
       # Notificamos sólo al que quiso hacer el cambio
       if us_pid = ProcessRegistry.whereis_user_session(changer_user_id) do
         UserSession.send_payload(us_pid, payload)
       end
+
       {:noreply, state}
     end
   end
@@ -451,7 +470,6 @@ end
           end
         end)
 
-
         {:noreply, %{state | members: new_members}}
 
       {:error, _reason} ->
@@ -471,17 +489,22 @@ end
     {:noreply, %{state | members: new_members}}
   end
 
-
   def enrich_member(member, viewer_id) do
     Map.put(member, :nickname, User.get_nickname(viewer_id, member.user_id))
   end
 
+  defp schedule_cleanup do
+    Process.send_after(self(), :cleanup, Constants.cleanup_interval())
+  end
 
-
-
-
-
-
+  defp any_user_online?(members) do
+    Enum.any?(members, fn member ->
+      case ProcessRegistry.whereis_user_session(member.user_id) do
+        nil -> false
+        pid -> UserSession.socket_alive?(pid)
+      end
+    end)
+  end
 
   @doc """
   Broadcast a message to all processes subscribed to a chat
