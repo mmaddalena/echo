@@ -40,13 +40,35 @@ defmodule Echo.WS.UserSocket do
   # El proceso YA es un WS (sería equivalente a GenServer.init)
   @impl true
   def websocket_init(state) do
-    {:ok, us_pid} = Echo.Users.UserSessionSup.get_or_start(state.user_id)
+    case Echo.Users.UserSessionSup.get_or_start(state.user_id) do
+      {:ok, existing_pid} ->
+        if UserSession.socket_alive?(existing_pid) do
+          Logger.warning("User #{state.user_id} already has active session - killing old one")
 
-    UserSession.login(us_pid, self())
+          # Kill the old session (this will trigger its logout and close its socket)
+          Process.exit(existing_pid, :kill)
 
-    {:ok, %{state | user_session: us_pid}}
+          Process.sleep(100)
+
+          case Echo.Users.UserSessionSup.get_or_start(state.user_id) do
+            {:ok, new_pid} ->
+              UserSession.login(new_pid, self())
+              {:ok, %{state | user_session: new_pid}}
+
+            {:error, reason} ->
+              Logger.error("Failed to create new session: #{inspect(reason)}")
+              {:stop, state}
+          end
+        else
+          UserSession.login(existing_pid, self())
+          {:ok, %{state | user_session: existing_pid}}
+        end
+
+      {:error, reason} ->
+        Logger.error("Failed to get/create user session: #{inspect(reason)}")
+        {:stop, state}
+    end
   end
-
 
   # Mensajes que llegan DESDE el cliente
   @impl true
@@ -59,7 +81,6 @@ defmodule Echo.WS.UserSocket do
         {:ok, state}
     end
   end
-
 
   # Dispatch de mensajes del cliente
   defp dispatch(%{"type" => "open_chat", "chat_id" => chat_id}, state) do
@@ -107,7 +128,10 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "change_nickname", "user_id" => contact_id, "new_nickname" => new_nickname}, state) do
+  defp dispatch(
+         %{"type" => "change_nickname", "user_id" => contact_id, "new_nickname" => new_nickname},
+         state
+       ) do
     UserSession.change_nickname(state.user_session, contact_id, new_nickname)
     {:ok, state}
   end
@@ -123,15 +147,15 @@ defmodule Echo.WS.UserSocket do
   end
 
   defp dispatch(
-    %{
-      "type" => "create_group",
-      "name" => name,
-      "description" => description,
-      "avatar_url" => avatar_url,
-      "member_ids" => member_ids
-    },
-    state
-  ) do
+         %{
+           "type" => "create_group",
+           "name" => name,
+           "description" => description,
+           "avatar_url" => avatar_url,
+           "member_ids" => member_ids
+         },
+         state
+       ) do
     UserSession.create_group(
       state.user_session,
       %{
@@ -145,12 +169,22 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "change_group_name", "chat_id" => chat_id, "new_name" => new_name}, state) do
+  defp dispatch(
+         %{"type" => "change_group_name", "chat_id" => chat_id, "new_name" => new_name},
+         state
+       ) do
     UserSession.change_group_name(state.user_session, chat_id, new_name)
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "change_group_description", "chat_id" => chat_id, "new_description" => new_description}, state) do
+  defp dispatch(
+         %{
+           "type" => "change_group_description",
+           "chat_id" => chat_id,
+           "new_description" => new_description
+         },
+         state
+       ) do
     UserSession.change_group_description(state.user_session, chat_id, new_description)
     {:ok, state}
   end
@@ -160,27 +194,31 @@ defmodule Echo.WS.UserSocket do
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "remove_member", "chat_id" => chat_id, "member_id" => member_id}, state) do
+  defp dispatch(
+         %{"type" => "remove_member", "chat_id" => chat_id, "member_id" => member_id},
+         state
+       ) do
     UserSession.remove_member(state.user_session, chat_id, member_id)
     {:ok, state}
   end
 
-  defp dispatch(%{"type" => "add_members", "chat_id" => chat_id, "member_ids" => member_ids}, state) do
+  defp dispatch(
+         %{"type" => "add_members", "chat_id" => chat_id, "member_ids" => member_ids},
+         state
+       ) do
     UserSession.add_members(state.user_session, chat_id, member_ids)
     {:ok, state}
   end
 
   defp dispatch(%{"type" => "logout"}, state) do
     UserSession.logout(state.user_session)
-    #Process.exit(state.user_session, :normal)
+    # Process.exit(state.user_session, :normal)
     {:ok, state}
   end
 
   defp dispatch(_unknown, state) do
     {:ok, state}
   end
-
-
 
   # Mensajes que llegan DESDE el backend (OTP)
   # El :reply hace que Cowboy le mande el segundo arg al Cliente
@@ -193,7 +231,6 @@ defmodule Echo.WS.UserSocket do
   def websocket_info(_msg, state) do
     {:ok, state}
   end
-
 
   # Helper
   defp extract_token(req) do
@@ -223,5 +260,4 @@ defmodule Echo.WS.UserSocket do
         end
     end
   end
-
 end
