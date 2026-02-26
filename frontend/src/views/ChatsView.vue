@@ -388,6 +388,7 @@ function handleCloseChatInfo() {
 	display: flex;
 	flex-direction: row;
 	height: var(--app-height);
+	overflow: hidden;
 }
 .left {
 	display: flex;
@@ -413,6 +414,7 @@ function handleCloseChatInfo() {
 	flex-direction: column;
 	flex: 1;
 	height: 100%;
+	overflow: hidden;
 }
 
 @media (max-width: 768px) {
