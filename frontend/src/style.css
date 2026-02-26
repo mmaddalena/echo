@@ -26,6 +26,7 @@ body {
   height: 100% !important;
   margin: 0;
   overflow: hidden !important;
+  position: fixed !important;
 }
 #app {
   position: fixed;
@@ -37,6 +38,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  overscroll-behavior: none;
 }
 
 p {

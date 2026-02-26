@@ -189,6 +189,8 @@ watch(
 	background-color: var(--bg-chat);
 
 	min-height: 0;
+
+	overscroll-behavior: contain;
 }
 .day-separator {
 	align-self: center;
