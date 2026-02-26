@@ -229,6 +229,7 @@ const unselectedContacts = computed(() =>
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center;
 }
 
 .main-name {
