@@ -272,6 +272,7 @@ input:not([readonly]) {
 	max-width: 2.2rem;
 	color: var(--text-main-light);
 	padding: 0.1rem;
+	flex-shrink: 0;
 }
 
 .mini-swap-enter-active,
@@ -300,8 +301,9 @@ input:not([readonly]) {
 	width: 72px;
 	height: 72px;
 	border-radius: 50%;
-	object-fit: cover;
 	border: 2px solid var(--avatar-border);
+	object-fit: cover;
+  object-position: center;
 }
 
 .avatar-block button {

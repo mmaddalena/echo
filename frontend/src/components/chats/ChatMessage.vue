@@ -167,6 +167,8 @@ watch(
 	width: 3rem;
 	border-radius: 50%;
 	background-color: none;
+	object-fit: cover;
+  object-position: center;
 }
 .user-name {
 	font-size: 1.28rem;
