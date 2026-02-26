@@ -187,6 +187,8 @@ watch(
 	padding: 2rem;
 	overflow-y: auto;
 	background-color: var(--bg-chat);
+
+	min-height: 0;
 }
 .day-separator {
 	align-self: center;
