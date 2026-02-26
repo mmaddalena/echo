@@ -258,6 +258,29 @@ function handleCloseChatInfo() {
 		socketStore.closeActiveChat()
 		uiStore.showChats()
 	}
+
+	// Ajuste de altura cuando se abre el teclado del mobile
+	function updateViewportHeight() {
+		const vh = window.visualViewport
+			? window.visualViewport.height
+			: window.innerHeight;
+
+		document.documentElement.style.setProperty(
+			"--app-height",
+			`${vh}px`
+		);
+	}
+
+	onMounted(() => {
+		updateViewportHeight();
+
+		window.visualViewport?.addEventListener(
+			"resize",
+			updateViewportHeight
+		);
+
+		window.addEventListener("resize", updateViewportHeight);
+	});
 </script>
 
 <template>
@@ -366,7 +389,7 @@ function handleCloseChatInfo() {
 .chats-layout {
 	display: flex;
 	flex-direction: row;
-	height: 100dvh;
+	height: var(--app-height);
 }
 .left {
 	display: flex;
@@ -408,6 +431,7 @@ function handleCloseChatInfo() {
 	.right {
     width: 100%;
     height: calc(100dvh - 6rem); /* resto la sidebar */
+		min-height: 0;
   }
 }
 
