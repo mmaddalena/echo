@@ -267,7 +267,7 @@ function handleCloseChatInfo() {
 
 		document.documentElement.style.setProperty(
 			"--app-height",
-			`${vh}px`
+			`${vh/2}px`
 		);
 	}
 
