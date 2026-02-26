@@ -156,41 +156,50 @@ watch(
 
 <template>
 	<div class="chat-messages" ref="messagesContainer">
-		<template v-for="item in messagesCompleteList" :key="item.front_msg_id">
-			<div v-if="item.kind === 'day'" class="day-separator">
-				{{ item.label }}
-			</div>
-
-			<div v-else-if="item.kind === 'unread'" class="unread-wrapper">
-				<div class="unread-separator">
+		<div class="messages-inner">
+			<template v-for="item in messagesCompleteList" :key="item.front_msg_id">
+				<div v-if="item.kind === 'day'" class="day-separator">
 					{{ item.label }}
 				</div>
-			</div>
 
-			<div v-else>
-				<ChatMessage 
-					:message="item" 
-					:chatType="chatType"
-					:data-msg-id="item.id"
-					/>
-			</div>
-		</template>
+				<div v-else-if="item.kind === 'unread'" class="unread-wrapper">
+					<div class="unread-separator">
+						{{ item.label }}
+					</div>
+				</div>
+
+				<div v-else>
+					<ChatMessage 
+						:message="item" 
+						:chatType="chatType"
+						:data-msg-id="item.id"
+						/>
+				</div>
+			</template>
+		</div>
 	</div>
 </template>
 
 <style scoped>
 .chat-messages {
-	display: flex;
-	flex-direction: column;
-	gap: 0.2rem;
-	flex: 1;
-	padding: 2rem;
-	overflow-y: auto;
-	background-color: var(--bg-chat);
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		flex: 1;
+		overflow-y: auto;
+		background-color: var(--bg-chat);
+		min-height: 0;
 
-	min-height: 0;
+		overscroll-behavior: contain;
 
-	overscroll-behavior: contain;
+		padding: 0;
+	}
+
+.messages-inner {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 .day-separator {
 	align-self: center;
