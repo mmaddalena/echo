@@ -137,10 +137,11 @@ Y aunque no esté implementado aún, está listo para:
 - Evitar nuevos chats.
 - Restringir interacción.
 
+
+![Modelo Relacional](/priv/docs/readme/DB_diagram.png)
+
+
 ---
-
-
-
 ### Árbol OTP (supervisado)
 
 ![Árbol de supervisión](/priv/docs/readme/supervision_tree.png)
@@ -362,3 +363,11 @@ Windows ENV local:
 3. Ejecutar `make run`.
 
 
+
+<br><br><br>
+
+## Tests - Ejecución
+
+Ejecutar `make test`.
+
+Las tests corren en un nuevo contenedor Docker, y la DB que usan es una distinta a la de dev y también corre en otro contenedor Docker diferente.
